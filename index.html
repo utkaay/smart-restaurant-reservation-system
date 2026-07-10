@@ -28,37 +28,60 @@
 
     <main>
         <div class="page-view" id="discoveryPage">
-        <section class="hero" id="home">
-            <div class="hero-content">
-                <p class="eyebrow">Discover, compare, reserve</p>
-                <h1>Book the right table for every craving.</h1>
-                <p class="hero-copy">
-                    Search standout restaurants by cuisine, name, location, or dining style while the reservation flow is still being built.
-                </p>
+       <section class="home-hero" id="home">
+    <video
+        class="home-hero-video"
+        autoplay
+        muted
+        loop
+        playsinline
+        aria-hidden="true"
+    >
+        <source
+            src="assets/videos/restaurant-background.mp4"
+            type="video/mp4"
+        >
+    </video>
 
-                <form class="search-bar" id="searchForm" role="search">
-                    <label class="sr-only" for="searchInput">Search restaurants</label>
-                    <input
-                        id="searchInput"
-                        type="search"
-                        placeholder="Cuisine, restaurant, location, or badge"
-                        autocomplete="off"
-                    >
-                    <button type="submit">Search</button>
-                </form>
+    <div class="home-hero-overlay" aria-hidden="true"></div>
 
-                <div class="filter-pills" id="filterPills" aria-label="Restaurant categories"></div>
-            </div>
+    <div class="home-hero-content">
+        <p class="eyebrow home-hero-eyebrow">
+            Discover, compare, reserve
+        </p>
 
-            <div class="hero-visual" aria-label="Featured dining recommendation">
-                <div class="hero-photo"></div>
-                <div class="hero-card">
-                    <span class="panel-label">Recommended for you</span>
-                    <strong>Saffron Lane</strong>
-                    <p>Indian fine dining with chef specials and private dining availability tonight.</p>
-                </div>
-            </div>
-        </section>
+        <h1>Book the right table for every craving.</h1>
+
+        <p class="home-hero-copy">
+            Search restaurants by cuisine, name, location, or dining style.
+        </p>
+
+        <form
+            class="search-bar home-hero-search"
+            id="searchForm"
+            role="search"
+        >
+            <label class="sr-only" for="searchInput">
+                Search restaurants
+            </label>
+
+            <input
+                id="searchInput"
+                type="search"
+                placeholder="Cuisine, restaurant, location, or badge"
+                autocomplete="off"
+            >
+
+            <button type="submit">Search</button>
+        </form>
+
+        <div
+            class="filter-pills home-hero-filters"
+            id="filterPills"
+            aria-label="Restaurant categories"
+        ></div>
+    </div>
+</section>
 
         <section class="restaurants-section" id="restaurants">
             <div class="section-heading">
