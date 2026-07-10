@@ -165,6 +165,11 @@ const BOOKING_TIME_ZONE = "Asia/Dubai";
 const TIME_SLOT_INTERVAL_MINUTES = 30;
 const DEFAULT_OPENING_TIME = "11:00";
 const DEFAULT_CLOSING_TIME = "22:00";
+const ADMIN_EMAIL = "firezzutkay@gmail.com";
+const USER_ROLES = {
+    admin: "admin",
+    guest: "guest"
+};
 
 const storageKeys = {
     searchTerm: "searchTerm",
@@ -745,9 +750,26 @@ const getGuestProfile = () => {
     return getFromStorage(storageKeys.guestProfile);
 };
 
+const getRoleForEmail = (email = "") => {
+    return normalizeEmail(email) === ADMIN_EMAIL
+        ? USER_ROLES.admin
+        : USER_ROLES.guest;
+};
+
+const getUserRole = (user = {}) => {
+    return getRoleForEmail(user.email);
+};
+
+const withUserRole = (user) => {
+    return {
+        ...user,
+        role: getUserRole(user)
+    };
+};
+
 const getUsers = () => {
     const users = getFromStorage(storageKeys.users);
-    return Array.isArray(users) ? users : [];
+    return Array.isArray(users) ? users.map(withUserRole) : [];
 };
 
 const saveUsers = (users) => {
@@ -798,6 +820,7 @@ const getUserProfile = (user) => {
         name,
         email,
         phone,
+        role: getUserRole(user),
         favoriteCuisines,
         dietaryTags,
         contactPreference
@@ -826,6 +849,12 @@ const getCurrentUserProfile = () => {
     return currentUser ? getUserProfile(currentUser) : null;
 };
 
+const isCurrentUserAdmin = () => {
+    const currentUser = getCurrentUser();
+
+    return isGuestLoggedIn() && currentUser && getUserRole(currentUser) === USER_ROLES.admin;
+};
+
 const getAuthSession = () => {
     return getFromStorage(storageKeys.authSession);
 };
@@ -837,7 +866,8 @@ const saveAuthSession = (profile, userId = profile.id || getCurrentUserId()) => 
 
     saveToStorage(storageKeys.authSession, {
         userId,
-        email: profile.email
+        email: profile.email,
+        role: getRoleForEmail(profile.email)
     });
 };
 
@@ -3135,6 +3165,7 @@ const createUserFromAuthValues = (values) => {
         email: values.email,
         phone: values.phone,
         password: values.password,
+        role: getRoleForEmail(values.email),
         favoriteCuisines: values.favoriteCuisines,
         dietaryTags: values.dietaryTags,
         contactPreference: values.contactPreference,
@@ -3188,12 +3219,16 @@ const handleLoginSubmit = (event) => {
         return;
     }
 
-    const profile = getUserProfile(user);
+    const userWithRole = withUserRole(user);
+    const profile = getUserProfile(userWithRole);
 
     authErrors = {};
     authFormValues = {};
     authMessage = "";
     profileMessage = "Logged in.";
+    saveUsers(getUsers().map((savedUser) => (
+        savedUser.id === user.id ? userWithRole : savedUser
+    )));
     saveGuestProfile(profile);
     saveAuthSession(profile, user.id);
     updateAuthNavigation();
@@ -3239,7 +3274,11 @@ const handleSignUpSubmit = (event) => {
 const handleProfileSubmit = (event) => {
     event.preventDefault();
 
-    const guestProfile = getGuestProfileFromForm(event.target);
+    const nextGuestProfile = getGuestProfileFromForm(event.target);
+    const guestProfile = {
+        ...nextGuestProfile,
+        role: getRoleForEmail(nextGuestProfile.email)
+    };
     const currentUserId = getCurrentUserId();
 
     profileMessage = "Profile saved.";
@@ -3253,7 +3292,8 @@ const handleProfileSubmit = (event) => {
 
             return {
                 ...user,
-                ...guestProfile
+                ...guestProfile,
+                role: getRoleForEmail(guestProfile.email)
             };
         }));
     }
@@ -3362,11 +3402,16 @@ const handleRestaurantBookingClick = (event) => {
 
 const updateAuthNavigation = () => {
     const authNavLink = document.querySelector("#authNavLink");
+    const adminViewLink = document.querySelector("#adminViewLink");
     const logoutButton = document.querySelector("#logoutButton");
     const loggedIn = isGuestLoggedIn();
+    const isAdmin = isCurrentUserAdmin();
 
     authNavLink.textContent = loggedIn ? "Profile" : "Login";
     authNavLink.href = loggedIn ? "#guest" : "#login";
+
+    adminViewLink.hidden = !isAdmin;
+    adminViewLink.classList.toggle("is-hidden", !isAdmin);
 
     logoutButton.hidden = !loggedIn;
     logoutButton.classList.toggle("is-hidden", !loggedIn);
@@ -3400,6 +3445,15 @@ const scrollToRestaurantResults = () => {
 
 const updatePageHash = (sectionId) => {
     window.history.pushState(null, "", `#${sectionId}`);
+};
+
+const getRouteFromHash = () => {
+    const hashParts = window.location.hash
+        .split("#")
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+    return hashParts[hashParts.length - 1] || "";
 };
 
 const showDiscoveryPage = (sectionId = "home") => {
@@ -3461,6 +3515,11 @@ const showBookingPage = () => {
 };
 
 const showAdminPage = () => {
+    if (!isCurrentUserAdmin()) {
+        showDiscoveryPage("restaurants");
+        return;
+    }
+
     const adminPage = document.querySelector("#admin");
 
     renderAdminView();
@@ -3577,15 +3636,17 @@ renderAuthPage();
 updateAuthNavigation();
 setupEventListeners();
 
-if (window.location.hash === "#guest") {
+const initialRoute = getRouteFromHash();
+
+if (initialRoute === "guest") {
     showProfilePage();
-} else if (window.location.hash === "#login") {
+} else if (initialRoute === "login") {
     showLoginPage();
-} else if (window.location.hash === "#admin") {
+} else if (initialRoute === "admin") {
     showAdminPage();
-} else if (window.location.hash === "#concierge") {
+} else if (initialRoute === "concierge") {
     showSmartConciergePage();
-} else if (window.location.hash === "#contact") {
+} else if (initialRoute === "contact") {
     showContactPage();
 }
 const renderRealQRCode = (reservation) => {
