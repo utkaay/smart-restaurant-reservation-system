@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap");
 
 * {
     box-sizing: border-box;
@@ -144,7 +144,7 @@ button {
     max-width: 360px;
     font-family: var(--font-heading);
     font-size: 1.2rem;
-    font-weight: 900;
+    font-weight: 700;
     color: var(--brand-dark);
     line-height: 1.2;
 }
@@ -154,7 +154,7 @@ button {
     align-items: center;
     gap: 22px;
     color: var(--muted);
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 700;
 }
 
@@ -537,7 +537,7 @@ input[type="radio"] {
     color: var(--color-warning);
     background: var(--color-warning-soft);
     font-size: var(--type-caption);
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1;
 }
 
@@ -658,7 +658,7 @@ input[type="radio"] {
 }
 
 .home-hero-eyebrow {
-    color: #ead4a6;
+    color: #c78c0d;
 }
 
 .home-hero-copy {
@@ -710,9 +710,9 @@ input[type="radio"] {
 .eyebrow {
     margin: 0 0 12px;
     color: var(--accent);
-    font-size: 0.78rem;
-    font-weight: 900;
-    letter-spacing: 0;
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: .01;
     text-transform: uppercase;
 }
 
@@ -869,7 +869,7 @@ h3 {
     margin-bottom: 12px;
     color: var(--color-accent-soft);
     font-size: 0.82rem;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .hero-card strong {
@@ -2400,13 +2400,22 @@ h3 {
 }
 
 .section-heading {
-    margin-bottom: 26px;
+    display: block;
+    width: min(1180px, calc(100% - 32px));
+    max-width: none;
+    margin: 0 auto 40px;
 }
 
 .section-heading h2 {
+    margin: 0 0 10px;
+}
+
+.section-heading p {
     margin: 0;
-    font-size: var(--type-h2);
-    line-height: var(--line-heading);
+    max-width: 520px;
+    color: var(--accent);
+    font-size: 1rem;
+    line-height: 1.6;
 }
 
 .restaurant-grid {
@@ -2471,13 +2480,13 @@ h3 {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 14px;
+    gap: 6px;
+    margin-bottom: 16px;
 }
 
 .restaurant-card .rating {
     color: var(--brand-dark);
-    background: var(--color-success-soft);
+    background: var(--color-accent-soft);
 }
 
 .restaurant-card .rating,
@@ -2485,11 +2494,11 @@ h3 {
 .restaurant-card .cuisine {
     display: inline-flex;
     align-items: center;
-    min-height: 30px;
+    min-height: 28px;
     border-radius: var(--radius-pill);
-    padding: 7px 11px;
+    padding: 6px 10px;
     font-size: var(--type-caption);
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1;
 }
 
@@ -2499,8 +2508,8 @@ h3 {
 }
 
 .restaurant-card .cuisine {
-    color: var(--color-warning);
-    background: var(--color-warning-soft);
+    color: #9a6200;
+    background: #fff1d8;
 }
 
 .restaurant-card h3 {
