@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Jack's Restaurant Management Portal</title>
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="./admin.css">
+    <script src="./admin.js" defer></script>
+</head>
+<body class="admin-body" data-admin-page="dashboard">
+    <header class="admin-header">
+        <nav class="admin-nav" aria-label="Admin navigation">
+            <a class="admin-brand" href="./index.html">Jack's Restaurant Management Portal</a>
+            <div class="admin-nav-actions">
+                <button class="secondary-action" class="secondary-action" type="button" id="viewCustomerSiteButton">View Customer Site</button>
+                <button class="primary-action" type="button" id="adminLogoutButton">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="admin-main">
+        <div class="admin-page-heading">
+            <div>
+                <p class="eyebrow">Internal dashboard</p>
+                <h1>Restaurant data management</h1>
+            </div>
+        </div>
+
+        <div class="admin-view" id="adminDashboard" aria-live="polite"></div>
+    </main>
+</body>
+</html>

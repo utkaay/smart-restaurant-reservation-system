@@ -1,0 +1,773 @@
+const defaultRestaurants = [
+    {
+        id: 1,
+        name: "Olive & Ember",
+        cuisine: "Mediterranean",
+        rating: 4.8,
+        hours: "12:00 PM - 10:30 PM",
+        openingTime: "12:00",
+        closingTime: "22:30",
+        priceLevel: "$$$",
+        distanceCategory: "Nearby",
+        location: "Harbor District",
+        image: "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=900&q=80",
+        badges: ["Patio", "Seafood", "Date night"],
+        sustainabilityBadges: ["Eco Certified", "Locally Sourced"],
+        allergenBadges: ["Shellfish", "Dairy"],
+        menu: [
+            { id: "olive-flatbread", name: "Herb Flatbread", price: 9, category: "Starter", tags: ["Vegetarian"] },
+            { id: "olive-salmon", name: "Harbor Salmon", price: 24, category: "Main", tags: ["Seafood"] },
+            { id: "olive-citrus-tart", name: "Citrus Tart", price: 8, category: "Dessert", tags: ["Sweet"] }
+        ]
+    },
+    {
+        id: 2,
+        name: "Noodle House",
+        cuisine: "Japanese",
+        rating: 4.7,
+        hours: "11:30 AM - 11:00 PM",
+        openingTime: "11:30",
+        closingTime: "23:00",
+        priceLevel: "$$",
+        distanceCategory: "Nearby",
+        location: "Midtown",
+        image: "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?auto=format&fit=crop&w=900&q=80",
+        badges: ["Ramen", "Quick seating", "Vegetarian"],
+        sustainabilityBadges: ["Plastic Free"],
+        allergenBadges: ["Soy", "Gluten"],
+        menu: [
+            { id: "noodle-edamame", name: "Sea Salt Edamame", price: 6, category: "Starter", tags: ["Vegetarian"] },
+            { id: "noodle-tonkotsu", name: "Tonkotsu Ramen", price: 16, category: "Main", tags: ["Ramen"] },
+            { id: "noodle-mochi", name: "Mochi Trio", price: 7, category: "Dessert", tags: ["Sweet"] }
+        ]
+    },
+    {
+        id: 3,
+        name: "The Garden Table",
+        cuisine: "Modern American",
+        rating: 4.6,
+        hours: "9:00 AM - 9:00 PM",
+        openingTime: "09:00",
+        closingTime: "21:00",
+        priceLevel: "$$",
+        distanceCategory: "Medium",
+        location: "Park Avenue",
+        image: "https://images.unsplash.com/photo-1551218808-94e220e084d2?auto=format&fit=crop&w=900&q=80",
+        badges: ["Brunch", "Family friendly", "Organic"],
+        sustainabilityBadges: ["Organic", "Locally Sourced"],
+        allergenBadges: ["Dairy", "Eggs"],
+        menu: [
+            { id: "garden-salad", name: "Market Garden Salad", price: 12, category: "Starter", tags: ["Organic"] },
+            { id: "garden-chicken", name: "Roast Chicken Plate", price: 21, category: "Main", tags: ["Family friendly"] },
+            { id: "garden-cheesecake", name: "Honey Cheesecake", price: 8, category: "Dessert", tags: ["Sweet"] }
+        ]
+    },
+    {
+        id: 4,
+        name: "Saffron Lane",
+        cuisine: "Indian",
+        rating: 4.9,
+        hours: "1:00 PM - 11:30 PM",
+        openingTime: "13:00",
+        closingTime: "23:30",
+        priceLevel: "$$$",
+        distanceCategory: "Medium",
+        location: "Old Town",
+        image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=900&q=80",
+        badges: ["Spicy", "Private dining", "Chef special"],
+        sustainabilityBadges: ["Locally Sourced"],
+        allergenBadges: ["Dairy", "Nuts"],
+        menu: [
+            { id: "saffron-samosa", name: "Spiced Samosa Chaat", price: 10, category: "Starter", tags: ["Spicy"] },
+            { id: "saffron-biryani", name: "Saffron Biryani", price: 22, category: "Main", tags: ["Chef special"] },
+            { id: "saffron-kulfi", name: "Pistachio Kulfi", price: 7, category: "Dessert", tags: ["Sweet"] }
+        ]
+    },
+    {
+        id: 5,
+        name: "Casa Verde",
+        cuisine: "Mexican",
+        rating: 4.5,
+        hours: "12:00 PM - 12:00 AM",
+        openingTime: "12:00",
+        closingTime: "00:00",
+        priceLevel: "$$",
+        distanceCategory: "Far",
+        location: "Riverside",
+        image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=900&q=80",
+        badges: ["Tacos", "Rooftop", "Late night"],
+        sustainabilityBadges: ["Plastic Free", "Locally Sourced"],
+        allergenBadges: ["Gluten", "Dairy"],
+        menu: [
+            { id: "casa-elote", name: "Street Corn Elote", price: 7, category: "Starter", tags: ["Vegetarian"] },
+            { id: "casa-tacos", name: "Birria Taco Plate", price: 17, category: "Main", tags: ["Tacos"] },
+            { id: "casa-churros", name: "Cinnamon Churros", price: 8, category: "Dessert", tags: ["Sweet"] }
+        ]
+    },
+    {
+        id: 6,
+        name: "Bistro Lumiere",
+        cuisine: "French",
+        rating: 4.8,
+        hours: "5:00 PM - 11:00 PM",
+        openingTime: "17:00",
+        closingTime: "23:00",
+        priceLevel: "$$$$",
+        distanceCategory: "Far",
+        location: "Arts Quarter",
+        image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=900&q=80",
+        badges: ["Fine dining", "Wine list", "Anniversary"],
+        sustainabilityBadges: ["Eco Certified"],
+        allergenBadges: ["Dairy", "Eggs"],
+        menu: [
+            { id: "bistro-soup", name: "French Onion Soup", price: 11, category: "Starter", tags: ["Classic"] },
+            { id: "bistro-duck", name: "Duck Confit", price: 29, category: "Main", tags: ["Fine dining"] },
+            { id: "bistro-creme", name: "Creme Brulee", price: 9, category: "Dessert", tags: ["Classic"] }
+        ]
+    }
+];
+
+const ADMIN_EMAIL = "firezzutkay@gmail.com";
+const USER_ROLES = {
+    admin: "admin",
+    guest: "guest"
+};
+const storageKeys = {
+    users: "users",
+    restaurants: "restaurants",
+    priceTiers: "priceTiers",
+    adminSession: "adminSession"
+};
+const defaultPriceTiers = {
+    2: 0,
+    4: 10,
+    6: 20,
+    8: 30
+};
+const defaultTableLayout = [
+    { tableId: "A1", seats: 2 },
+    { tableId: "A2", seats: 2 },
+    { tableId: "A3", seats: 2 },
+    { tableId: "A4", seats: 2 },
+    { tableId: "B1", seats: 4 },
+    { tableId: "B2", seats: 4 },
+    { tableId: "B3", seats: 4 },
+    { tableId: "B4", seats: 4 },
+    { tableId: "C1", seats: 6 },
+    { tableId: "C2", seats: 6 },
+    { tableId: "D1", seats: 8 },
+    { tableId: "D2", seats: 8 }
+];
+const sustainabilityBadgeOptions = ["Eco Certified", "Locally Sourced", "Plastic Free", "Organic"];
+const allergenBadgeOptions = ["Nuts", "Dairy", "Gluten", "Shellfish", "Eggs", "Soy"];
+const DEFAULT_OPENING_TIME = "11:00";
+const DEFAULT_CLOSING_TIME = "22:00";
+
+let editingRestaurantId = null;
+
+const normalizeEmail = (email = "") => String(email).trim().toLowerCase();
+
+const getRoleForEmail = (email = "") => {
+    return normalizeEmail(email) === ADMIN_EMAIL
+        ? USER_ROLES.admin
+        : USER_ROLES.guest;
+};
+
+const withUserRole = (user) => ({
+    ...user,
+    role: getRoleForEmail(user.email)
+});
+
+const saveToStorage = (key, value) => {
+    localStorage.setItem(key, JSON.stringify(value));
+};
+
+const getFromStorage = (key) => {
+    const savedValue = localStorage.getItem(key);
+
+    try {
+        return savedValue ? JSON.parse(savedValue) : null;
+    } catch {
+        return null;
+    }
+};
+
+const removeFromStorage = (key) => {
+    localStorage.removeItem(key);
+};
+
+const getUsers = () => {
+    const users = getFromStorage(storageKeys.users);
+    return Array.isArray(users) ? users.map(withUserRole) : [];
+};
+
+const findUserByEmail = (email) => {
+    const normalizedEmail = normalizeEmail(email);
+    return getUsers().find((user) => normalizeEmail(user.email) === normalizedEmail) || null;
+};
+
+const getAdminUser = () => findUserByEmail(ADMIN_EMAIL);
+
+const getAdminSession = () => getFromStorage(storageKeys.adminSession);
+
+const hasValidAdminSession = () => {
+    const session = getAdminSession();
+    const adminUser = getAdminUser();
+
+    return Boolean(
+        session
+        && adminUser
+        && session.userId === adminUser.id
+        && normalizeEmail(session.email) === ADMIN_EMAIL
+        && getRoleForEmail(adminUser.email) === USER_ROLES.admin
+    );
+};
+
+const saveAdminSession = (adminUser) => {
+    saveToStorage(storageKeys.adminSession, {
+        userId: adminUser.id,
+        email: adminUser.email,
+        role: USER_ROLES.admin,
+        createdAt: new Date().toISOString()
+    });
+};
+
+const clearAdminSession = () => {
+    removeFromStorage(storageKeys.adminSession);
+};
+
+const escapeHTML = (text = "") => {
+    return String(text).replace(/[&<>"']/g, (character) => {
+        const replacements = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            "\"": "&quot;",
+            "'": "&#039;"
+        };
+
+        return replacements[character];
+    });
+};
+
+const getFormValue = (formData, key) => String(formData.get(key) || "").trim();
+
+const isValidEmail = (email = "") => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+const isValidRestaurantTime = (time = "") => /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
+
+const parseDisplayTimeTo24Hour = (displayTime = "") => {
+    const match = String(displayTime).trim().match(/^(\d{1,2})(?::([0-5]\d))?\s*(AM|PM)$/i);
+
+    if (!match) {
+        return "";
+    }
+
+    const period = match[3].toUpperCase();
+    let hours = Number(match[1]);
+    const minutes = match[2] || "00";
+
+    if (hours < 1 || hours > 12) {
+        return "";
+    }
+
+    if (period === "AM") {
+        hours = hours === 12 ? 0 : hours;
+    } else {
+        hours = hours === 12 ? 12 : hours + 12;
+    }
+
+    return `${String(hours).padStart(2, "0")}:${minutes}`;
+};
+
+const getStructuredHoursFromDisplay = (hours = "") => {
+    const [openingDisplay, closingDisplay] = String(hours).split(/\s*-\s*/);
+    const openingTime = parseDisplayTimeTo24Hour(openingDisplay);
+    const closingTime = parseDisplayTimeTo24Hour(closingDisplay);
+
+    if (!openingTime || !closingTime) {
+        return null;
+    }
+
+    return { openingTime, closingTime };
+};
+
+const normalizeRestaurantHours = (restaurant = {}) => {
+    const parsedHours = getStructuredHoursFromDisplay(restaurant.hours);
+    const openingTime = isValidRestaurantTime(restaurant.openingTime)
+        ? restaurant.openingTime
+        : parsedHours?.openingTime || DEFAULT_OPENING_TIME;
+    const closingTime = isValidRestaurantTime(restaurant.closingTime)
+        ? restaurant.closingTime
+        : parsedHours?.closingTime || DEFAULT_CLOSING_TIME;
+
+    return {
+        ...restaurant,
+        openingTime,
+        closingTime
+    };
+};
+
+const getRestaurants = () => {
+    const savedRestaurants = getFromStorage(storageKeys.restaurants);
+    const restaurants = Array.isArray(savedRestaurants)
+        ? savedRestaurants
+        : defaultRestaurants;
+
+    return restaurants.map((restaurant) => ({
+        ...normalizeRestaurantHours(restaurant),
+        distanceCategory: restaurant.distanceCategory || "Medium",
+        sustainabilityBadges: restaurant.sustainabilityBadges || [],
+        allergenBadges: restaurant.allergenBadges || []
+    }));
+};
+
+const saveRestaurants = (restaurants) => {
+    saveToStorage(storageKeys.restaurants, restaurants.map(normalizeRestaurantHours));
+};
+
+const getPriceTiers = () => {
+    const savedPriceTiers = getFromStorage(storageKeys.priceTiers) || {};
+
+    return {
+        ...defaultPriceTiers,
+        ...savedPriceTiers
+    };
+};
+
+const savePriceTiers = (priceTiers) => {
+    saveToStorage(storageKeys.priceTiers, priceTiers);
+};
+
+const createCheckboxChoices = (options, selectedValues, inputName) => {
+    return options.map((option) => `
+        <label class="choice-chip">
+            <input
+                type="checkbox"
+                name="${inputName}"
+                value="${escapeHTML(option)}"
+                ${selectedValues.includes(option) ? "checked" : ""}
+            >
+            <span>${escapeHTML(option)}</span>
+        </label>
+    `).join("");
+};
+
+const renderAdminRestaurantList = () => {
+    const restaurants = getRestaurants();
+
+    if (restaurants.length === 0) {
+        return `
+            <div class="empty-state">
+                <h3>No restaurants saved</h3>
+                <p>Add a restaurant to restore customer-facing cards.</p>
+            </div>
+        `;
+    }
+
+    return restaurants.map(({ id, name, cuisine, location, rating, priceLevel }) => `
+        <article class="admin-list-item">
+            <div>
+                <strong>${escapeHTML(name)}</strong>
+                <span>${escapeHTML(cuisine)} in ${escapeHTML(location)}</span>
+            </div>
+            <span>${escapeHTML(priceLevel)} &middot; ${escapeHTML(rating)}</span>
+            <div class="admin-list-actions">
+                <button class="secondary-action" type="button" data-edit-restaurant-id="${id}">Edit</button>
+                <button class="danger-action" type="button" data-delete-restaurant-id="${id}">Delete</button>
+            </div>
+        </article>
+    `).join("");
+};
+
+const renderAdminTableLayout = () => {
+    return defaultTableLayout.map(({ tableId, seats }) => `
+        <span class="summary-chip">${escapeHTML(tableId)} &middot; ${seats} seats</span>
+    `).join("");
+};
+
+const renderAdminView = () => {
+    const adminView = document.querySelector("#adminDashboard");
+    const priceTiers = getPriceTiers();
+
+    if (!adminView) {
+        return;
+    }
+
+    adminView.innerHTML = `
+        <section class="profile-panel admin-panel">
+            <div class="form-heading">
+                <p class="eyebrow">Restaurant manager</p>
+                <h3>${editingRestaurantId ? "Edit restaurant" : "Add a restaurant"}</h3>
+            </div>
+
+            <form class="admin-form" id="addRestaurantForm">
+                <label>
+                    Name
+                    <input type="text" name="name" required>
+                </label>
+                <label>
+                    Cuisine
+                    <input type="text" name="cuisine" required>
+                </label>
+                <label>
+                    Location
+                    <input type="text" name="location" required>
+                </label>
+                <label>
+                    Hours
+                    <input type="text" name="hours" placeholder="12:00 PM - 10:30 PM" required>
+                </label>
+                <label>
+                    Rating
+                    <input type="number" name="rating" min="0" max="5" step="0.1" required>
+                </label>
+                <label>
+                    Price level
+                    <select name="priceLevel" required>
+                        ${["$", "$$", "$$$", "$$$$"].map((priceLevel) => `
+                            <option value="${priceLevel}">${priceLevel}</option>
+                        `).join("")}
+                    </select>
+                </label>
+                <label>
+                    Distance category
+                    <select name="distanceCategory" required>
+                        ${["Nearby", "Medium", "Far"].map((distanceCategory) => `
+                            <option value="${distanceCategory}">${distanceCategory}</option>
+                        `).join("")}
+                    </select>
+                </label>
+                <label>
+                    Badges
+                    <input type="text" name="badges" placeholder="Patio, Seafood, Date night">
+                </label>
+                <fieldset>
+                    <legend>Sustainability badges</legend>
+                    <div class="choice-grid compact">
+                        ${createCheckboxChoices(sustainabilityBadgeOptions, [], "sustainabilityBadges")}
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Allergen badges</legend>
+                    <div class="choice-grid compact">
+                        ${createCheckboxChoices(allergenBadgeOptions, [], "allergenBadges")}
+                    </div>
+                </fieldset>
+                <label>
+                    Image URL
+                    <input type="url" name="image" required>
+                </label>
+                <div class="admin-form-actions">
+                    <button class="primary-action" type="submit" id="restaurantSubmitButton">
+                        ${editingRestaurantId ? "Update Restaurant" : "Add Restaurant"}
+                    </button>
+                    <button class="secondary-action" type="button" id="cancelEditRestaurantButton" ${editingRestaurantId ? "" : "hidden"}>Cancel Edit</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="profile-panel admin-panel">
+            <div class="form-heading">
+                <p class="eyebrow">Price tiers</p>
+                <h3>Table fees</h3>
+            </div>
+            <div class="price-tier-grid">
+                ${Object.keys(defaultPriceTiers).map((seats) => `
+                    <label>
+                        ${seats} seats
+                        <input type="number" min="0" step="1" value="${priceTiers[seats]}" data-price-tier-seats="${seats}">
+                    </label>
+                `).join("")}
+            </div>
+        </section>
+
+        <section class="profile-panel admin-panel">
+            <div class="form-heading">
+                <p class="eyebrow">Default layout</p>
+                <h3>Table map reference</h3>
+            </div>
+            <div class="admin-table-layout">
+                ${renderAdminTableLayout()}
+            </div>
+        </section>
+
+        <section class="profile-panel admin-panel admin-panel-wide">
+            <div class="form-heading">
+                <p class="eyebrow">Saved restaurants</p>
+                <h3>${getRestaurants().length} restaurants</h3>
+            </div>
+            <div class="admin-list">
+                ${renderAdminRestaurantList()}
+            </div>
+            <button class="secondary-action" type="button" id="resetAdminDataButton">Reset Restaurants and Price Tiers</button>
+        </section>
+    `;
+
+    adminView.querySelector("#addRestaurantForm").addEventListener("submit", handleAddRestaurant);
+    adminView.querySelectorAll("[data-edit-restaurant-id]").forEach((button) => {
+        button.addEventListener("click", () => startEditRestaurant(button.dataset.editRestaurantId));
+    });
+    adminView.querySelectorAll("[data-delete-restaurant-id]").forEach((button) => {
+        button.addEventListener("click", handleDeleteRestaurant);
+    });
+    adminView.querySelector("#cancelEditRestaurantButton").addEventListener("click", cancelRestaurantEdit);
+    adminView.querySelectorAll("[data-price-tier-seats]").forEach((input) => {
+        input.addEventListener("change", handlePriceTierUpdate);
+    });
+    adminView.querySelector("#resetAdminDataButton").addEventListener("click", resetAdminData);
+
+    if (editingRestaurantId) {
+        const restaurant = getRestaurants().find(({ id }) => String(id) === String(editingRestaurantId));
+
+        if (restaurant) {
+            fillRestaurantForm(restaurant);
+        }
+    }
+};
+
+const getRestaurantDataFromForm = (formData) => {
+    const hours = getFormValue(formData, "hours");
+    const structuredHours = getStructuredHoursFromDisplay(hours) || {};
+
+    return {
+        name: getFormValue(formData, "name"),
+        cuisine: getFormValue(formData, "cuisine"),
+        location: getFormValue(formData, "location"),
+        hours,
+        openingTime: structuredHours.openingTime || DEFAULT_OPENING_TIME,
+        closingTime: structuredHours.closingTime || DEFAULT_CLOSING_TIME,
+        rating: Number(formData.get("rating")) || 0,
+        priceLevel: formData.get("priceLevel") || "$$",
+        distanceCategory: formData.get("distanceCategory") || "Medium",
+        sustainabilityBadges: formData.getAll("sustainabilityBadges"),
+        allergenBadges: formData.getAll("allergenBadges"),
+        badges: getFormValue(formData, "badges")
+            .split(",")
+            .map((badge) => badge.trim())
+            .filter(Boolean),
+        image: getFormValue(formData, "image")
+    };
+};
+
+const handleAddRestaurant = (event) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const restaurantData = getRestaurantDataFromForm(formData);
+
+    if (editingRestaurantId) {
+        updateRestaurant(editingRestaurantId, restaurantData);
+    } else {
+        saveRestaurants([...getRestaurants(), {
+            id: Date.now(),
+            ...restaurantData,
+            menu: []
+        }]);
+    }
+
+    editingRestaurantId = null;
+    renderAdminView();
+};
+
+const fillRestaurantForm = (restaurant) => {
+    const form = document.querySelector("#addRestaurantForm");
+
+    if (!form) {
+        return;
+    }
+
+    form.elements.name.value = restaurant.name || "";
+    form.elements.cuisine.value = restaurant.cuisine || "";
+    form.elements.location.value = restaurant.location || "";
+    form.elements.hours.value = restaurant.hours || "";
+    form.elements.rating.value = restaurant.rating || "";
+    form.elements.priceLevel.value = restaurant.priceLevel || "$$";
+    form.elements.distanceCategory.value = restaurant.distanceCategory || "Medium";
+    form.elements.badges.value = (restaurant.badges || []).join(", ");
+    form.querySelectorAll('input[name="sustainabilityBadges"]').forEach((input) => {
+        input.checked = (restaurant.sustainabilityBadges || []).includes(input.value);
+    });
+    form.querySelectorAll('input[name="allergenBadges"]').forEach((input) => {
+        input.checked = (restaurant.allergenBadges || []).includes(input.value);
+    });
+    form.elements.image.value = restaurant.image || "";
+    form.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+const startEditRestaurant = (restaurantId) => {
+    const restaurant = getRestaurants().find(({ id }) => String(id) === String(restaurantId));
+
+    if (!restaurant) {
+        return;
+    }
+
+    editingRestaurantId = restaurant.id;
+    renderAdminView();
+};
+
+const updateRestaurant = (restaurantId, updatedData) => {
+    saveRestaurants(getRestaurants().map((restaurant) => {
+        if (String(restaurant.id) !== String(restaurantId)) {
+            return restaurant;
+        }
+
+        return {
+            ...restaurant,
+            ...updatedData,
+            id: restaurant.id,
+            menu: restaurant.menu || []
+        };
+    }));
+};
+
+const cancelRestaurantEdit = () => {
+    editingRestaurantId = null;
+    renderAdminView();
+};
+
+const handleDeleteRestaurant = (event) => {
+    const restaurantId = event.currentTarget.dataset.deleteRestaurantId;
+
+    saveRestaurants(getRestaurants().filter(({ id }) => String(id) !== String(restaurantId)));
+
+    if (String(editingRestaurantId) === String(restaurantId)) {
+        editingRestaurantId = null;
+    }
+
+    renderAdminView();
+};
+
+const handlePriceTierUpdate = (event) => {
+    const seats = event.target.dataset.priceTierSeats;
+    const nextPriceTiers = {
+        ...getPriceTiers(),
+        [seats]: Math.max(0, Number(event.target.value) || 0)
+    };
+
+    savePriceTiers(nextPriceTiers);
+    event.target.value = nextPriceTiers[seats];
+};
+
+const resetAdminData = () => {
+    editingRestaurantId = null;
+    saveRestaurants(defaultRestaurants);
+    savePriceTiers(defaultPriceTiers);
+    renderAdminView();
+};
+
+const showAdminLoginMessage = (message) => {
+    const messageElement = document.querySelector("#adminLoginMessage");
+
+    if (!messageElement) {
+        return;
+    }
+
+    messageElement.textContent = message;
+    messageElement.hidden = !message;
+};
+
+const handlePasswordToggle = (event) => {
+    const toggleButton = event.currentTarget;
+    const passwordField = toggleButton.closest(".password-field");
+    const passwordInput = passwordField ? passwordField.querySelector('input[name="password"]') : null;
+
+    if (!passwordInput) {
+        return;
+    }
+
+    const shouldShowPassword = passwordInput.type === "password";
+    passwordInput.type = shouldShowPassword ? "text" : "password";
+    toggleButton.classList.toggle("is-visible", shouldShowPassword);
+    toggleButton.setAttribute("aria-label", shouldShowPassword ? "Hide password" : "Show password");
+};
+
+const handleAdminLoginSubmit = (event) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const email = getFormValue(formData, "email");
+    const password = String(formData.get("password") || "");
+
+    if (!email || !password || !isValidEmail(email)) {
+        showAdminLoginMessage("Enter the admin email and password.");
+        return;
+    }
+
+    const adminUser = findUserByEmail(email);
+
+    if (
+        normalizeEmail(email) !== ADMIN_EMAIL
+        || !adminUser
+        || adminUser.password !== password
+    ) {
+        clearAdminSession();
+        showAdminLoginMessage("Invalid admin credentials.");
+        return;
+    }
+
+    saveAdminSession(adminUser);
+    window.location.replace("./index.html");
+};
+
+const setupLoginPage = () => {
+    const loginForm = document.querySelector("#adminLoginForm");
+    const passwordToggle = document.querySelector("[data-admin-password-toggle]");
+
+    if (hasValidAdminSession()) {
+        window.location.replace("./index.html");
+        return;
+    }
+
+    if (loginForm) {
+        loginForm.addEventListener("submit", handleAdminLoginSubmit);
+        loginForm.addEventListener("input", () => showAdminLoginMessage(""));
+    }
+
+    if (passwordToggle) {
+        passwordToggle.addEventListener("click", handlePasswordToggle);
+    }
+};
+
+const viewCustomerSiteButton = document.getElementById("viewCustomerSiteButton");
+
+if(viewCustomerSiteButton) {
+    viewCustomerSiteButton.addEventListener("click",() => {
+        window.location.href = "../index.html";
+    });
+}
+
+const setupDashboardPage = () => {
+    const logoutButton = document.querySelector("#adminLogoutButton");
+
+    if (!hasValidAdminSession()) {
+        window.location.replace("./login.html");
+        return;
+    }
+
+    saveRestaurants(getRestaurants());
+    savePriceTiers(getPriceTiers());
+    renderAdminView();
+
+    if (logoutButton) {
+        logoutButton.addEventListener("click", () => {
+            clearAdminSession();
+            window.location.replace("./login.html");
+        });
+    }
+};
+
+const setupAdminPortal = () => {
+    const page = document.body.dataset.adminPage;
+
+    if (page === "login") {
+        setupLoginPage();
+        return;
+    }
+
+    if (page === "dashboard") {
+        setupDashboardPage();
+    }
+};
+
+setupAdminPortal();

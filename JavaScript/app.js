@@ -131,8 +131,6 @@ const filters = ["Mediterranean", "Japanese", "Indian", "Mexican", "French", "Ro
 const favoriteCuisineOptions = ["Mediterranean", "Japanese", "Indian", "Mexican", "French", "Modern American"];
 const dietaryTagOptions = ["Vegetarian", "Vegan", "Gluten free", "Halal", "Seafood", "Organic"];
 const contactPreferenceOptions = ["Email", "SMS", "Phone Call"];
-const sustainabilityBadgeOptions = ["Eco Certified", "Locally Sourced", "Plastic Free", "Organic"];
-const allergenBadgeOptions = ["Nuts", "Dairy", "Gluten", "Shellfish", "Eggs", "Soy"];
 const peakHours = ["18:00", "19:00", "20:00", "21:00"];
 const offPeakHours = ["11:00", "12:00", "13:00", "14:00", "15:00", "16:00"];
 const memberDiscountRates = {
@@ -175,6 +173,7 @@ const storageKeys = {
     searchTerm: "searchTerm",
     activeFilter: "activeFilter",
     authSession: "authSession",
+    adminSession: "adminSession",
     currentUserId: "currentUserId",
     guestProfile: "guestProfile",
     pendingAction: "pendingAction",
@@ -318,7 +317,6 @@ let bookingState = {
 };
 let bookingMessage = "";
 let invitedGuestMessage = "";
-let editingRestaurantId = null;
 let smartMatchFilters = {
     mood: "Date Night",
     budget: "$$",
@@ -849,12 +847,6 @@ const getCurrentUserProfile = () => {
     return currentUser ? getUserProfile(currentUser) : null;
 };
 
-const isCurrentUserAdmin = () => {
-    const currentUser = getCurrentUser();
-
-    return isGuestLoggedIn() && currentUser && getUserRole(currentUser) === USER_ROLES.admin;
-};
-
 const getAuthSession = () => {
     return getFromStorage(storageKeys.authSession);
 };
@@ -873,6 +865,7 @@ const saveAuthSession = (profile, userId = profile.id || getCurrentUserId()) => 
 
 const clearAuthSession = () => {
     removeFromStorage(storageKeys.authSession);
+    removeFromStorage(storageKeys.adminSession);
     clearCurrentUserId();
 };
 
@@ -2788,304 +2781,6 @@ const handleClearTestReservations = () => {
     renderGuestProfile();
 };
 
-const renderAdminRestaurantList = () => {
-    return getRestaurants().map(({ id, name, cuisine, location, rating, priceLevel }) => `
-        <article class="admin-list-item">
-            <div>
-                <strong>${escapeHTML(name)}</strong>
-                <span>${escapeHTML(cuisine)} in ${escapeHTML(location)}</span>
-            </div>
-            <span>${escapeHTML(priceLevel)} · ${escapeHTML(rating)}</span>
-            <div class="admin-list-actions">
-                <button class="secondary-action" type="button" data-edit-restaurant-id="${id}">Edit</button>
-                <button class="secondary-action" type="button" data-delete-restaurant-id="${id}">Delete</button>
-            </div>
-        </article>
-    `).join("");
-};
-
-const renderAdminTableLayout = () => {
-    return defaultTableLayout.map(({ tableId, seats }) => `
-        <span class="summary-chip">${escapeHTML(tableId)} · ${seats} seats</span>
-    `).join("");
-};
-
-const renderAdminView = () => {
-    const adminView = document.querySelector("#adminView");
-    const priceTiers = getPriceTiers();
-
-    adminView.innerHTML = `
-        <section class="profile-panel admin-panel">
-            <div class="form-heading">
-                <p class="eyebrow">Restaurant manager</p>
-                <h3>Add a restaurant</h3>
-            </div>
-
-            <form class="admin-form" id="addRestaurantForm">
-                <label>
-                    Name
-                    <input type="text" name="name" required>
-                </label>
-                <label>
-                    Cuisine
-                    <input type="text" name="cuisine" required>
-                </label>
-                <label>
-                    Location
-                    <input type="text" name="location" required>
-                </label>
-                <label>
-                    Hours
-                    <input type="text" name="hours" required>
-                </label>
-                <label>
-                    Rating
-                    <input type="number" name="rating" min="0" max="5" step="0.1" required>
-                </label>
-                <label>
-                    Price level
-                    <select name="priceLevel" required>
-                        ${["$", "$$", "$$$", "$$$$"].map((priceLevel) => `
-                            <option value="${priceLevel}">${priceLevel}</option>
-                        `).join("")}
-                    </select>
-                </label>
-                <label>
-                    Distance category
-                    <select name="distanceCategory" required>
-                        ${["Nearby", "Medium", "Far"].map((distanceCategory) => `
-                            <option value="${distanceCategory}">${distanceCategory}</option>
-                        `).join("")}
-                    </select>
-                </label>
-                <label>
-                    Badges
-                    <input type="text" name="badges" placeholder="Patio, Seafood, Date night">
-                </label>
-                <fieldset>
-                    <legend>Sustainability badges</legend>
-                    <div class="choice-grid compact">
-                        ${createCheckboxChoices(sustainabilityBadgeOptions, [], "sustainabilityBadges")}
-                    </div>
-                </fieldset>
-                <fieldset>
-                    <legend>Allergen badges</legend>
-                    <div class="choice-grid compact">
-                        ${createCheckboxChoices(allergenBadgeOptions, [], "allergenBadges")}
-                    </div>
-                </fieldset>
-                <label>
-                    Image URL
-                    <input type="url" name="image" required>
-                </label>
-                <div class="admin-form-actions">
-                    <button class="primary-action" type="submit" id="restaurantSubmitButton">Add Restaurant</button>
-                    <button class="secondary-action" type="button" id="cancelEditRestaurantButton" hidden>Cancel Edit</button>
-                </div>
-            </form>
-        </section>
-
-        <section class="profile-panel admin-panel">
-            <div class="form-heading">
-                <p class="eyebrow">Price tiers</p>
-                <h3>Table fees</h3>
-            </div>
-            <div class="price-tier-grid">
-                ${Object.keys(defaultPriceTiers).map((seats) => `
-                    <label>
-                        ${seats} seats
-                        <input type="number" min="0" step="1" value="${priceTiers[seats]}" data-price-tier-seats="${seats}">
-                    </label>
-                `).join("")}
-            </div>
-        </section>
-
-        <section class="profile-panel admin-panel">
-            <div class="form-heading">
-                <p class="eyebrow">Default layout</p>
-                <h3>Table map reference</h3>
-            </div>
-            <div class="admin-table-layout">
-                ${renderAdminTableLayout()}
-            </div>
-        </section>
-
-        <section class="profile-panel admin-panel">
-            <div class="form-heading">
-                <p class="eyebrow">Saved restaurants</p>
-                <h3>${getRestaurants().length} restaurants</h3>
-            </div>
-            <div class="admin-list">
-                ${renderAdminRestaurantList()}
-            </div>
-            <button class="secondary-action" type="button" id="resetAdminDataButton">Reset Restaurants and Price Tiers</button>
-        </section>
-    `;
-
-    adminView.querySelector("#addRestaurantForm").addEventListener("submit", handleAddRestaurant);
-    adminView.querySelectorAll("[data-edit-restaurant-id]").forEach((button) => {
-        button.addEventListener("click", () => startEditRestaurant(button.dataset.editRestaurantId));
-    });
-    adminView.querySelectorAll("[data-delete-restaurant-id]").forEach((button) => {
-        button.addEventListener("click", handleDeleteRestaurant);
-    });
-    adminView.querySelector("#cancelEditRestaurantButton").addEventListener("click", cancelRestaurantEdit);
-    adminView.querySelectorAll("[data-price-tier-seats]").forEach((input) => {
-        input.addEventListener("change", handlePriceTierUpdate);
-    });
-    adminView.querySelector("#resetAdminDataButton").addEventListener("click", resetAdminData);
-};
-
-const handleAddRestaurant = (event) => {
-    event.preventDefault();
-
-    const formData = new FormData(event.target);
-    const restaurantData = getRestaurantDataFromForm(formData);
-
-    if (editingRestaurantId) {
-        updateRestaurant(editingRestaurantId, restaurantData);
-    } else {
-        saveRestaurants([...getRestaurants(), {
-            id: Date.now(),
-            ...restaurantData,
-            menu: []
-        }]);
-    }
-
-    cancelRestaurantEdit();
-    renderAdminView();
-    updateRestaurantResults();
-};
-
-const getRestaurantDataFromForm = (formData) => {
-    const hours = getFormValue(formData, "hours");
-    const structuredHours = getStructuredHoursFromDisplay(hours) || {};
-
-    return {
-        name: getFormValue(formData, "name"),
-        cuisine: getFormValue(formData, "cuisine"),
-        location: getFormValue(formData, "location"),
-        hours,
-        openingTime: structuredHours.openingTime || DEFAULT_OPENING_TIME,
-        closingTime: structuredHours.closingTime || DEFAULT_CLOSING_TIME,
-        rating: Number(formData.get("rating")) || 0,
-        priceLevel: formData.get("priceLevel") || "$$",
-        distanceCategory: formData.get("distanceCategory") || "Medium",
-        sustainabilityBadges: formData.getAll("sustainabilityBadges"),
-        allergenBadges: formData.getAll("allergenBadges"),
-        badges: getFormValue(formData, "badges")
-            .split(",")
-            .map((badge) => badge.trim())
-            .filter(Boolean),
-        image: getFormValue(formData, "image")
-    };
-};
-
-const fillRestaurantForm = (restaurant) => {
-    const form = document.querySelector("#addRestaurantForm");
-    const submitButton = document.querySelector("#restaurantSubmitButton");
-    const cancelButton = document.querySelector("#cancelEditRestaurantButton");
-
-    if (!form || !submitButton || !cancelButton) {
-        return;
-    }
-
-    form.elements.name.value = restaurant.name || "";
-    form.elements.cuisine.value = restaurant.cuisine || "";
-    form.elements.location.value = restaurant.location || "";
-    form.elements.hours.value = restaurant.hours || "";
-    form.elements.rating.value = restaurant.rating || "";
-    form.elements.priceLevel.value = restaurant.priceLevel || "$$";
-    form.elements.distanceCategory.value = restaurant.distanceCategory || "Medium";
-    form.elements.badges.value = (restaurant.badges || []).join(", ");
-    form.querySelectorAll('input[name="sustainabilityBadges"]').forEach((input) => {
-        input.checked = (restaurant.sustainabilityBadges || []).includes(input.value);
-    });
-    form.querySelectorAll('input[name="allergenBadges"]').forEach((input) => {
-        input.checked = (restaurant.allergenBadges || []).includes(input.value);
-    });
-    form.elements.image.value = restaurant.image || "";
-    submitButton.textContent = "Update Restaurant";
-    cancelButton.hidden = false;
-    form.scrollIntoView({ behavior: "smooth", block: "start" });
-};
-
-const startEditRestaurant = (restaurantId) => {
-    const restaurant = getRestaurants().find(({ id }) => String(id) === String(restaurantId));
-
-    if (!restaurant) {
-        return;
-    }
-
-    editingRestaurantId = restaurant.id;
-    fillRestaurantForm(restaurant);
-};
-
-const updateRestaurant = (restaurantId, updatedData) => {
-    saveRestaurants(getRestaurants().map((restaurant) => {
-        if (String(restaurant.id) !== String(restaurantId)) {
-            return restaurant;
-        }
-
-        return {
-            ...restaurant,
-            ...updatedData,
-            id: restaurant.id,
-            menu: restaurant.menu || []
-        };
-    }));
-};
-
-const cancelRestaurantEdit = () => {
-    const form = document.querySelector("#addRestaurantForm");
-    const submitButton = document.querySelector("#restaurantSubmitButton");
-    const cancelButton = document.querySelector("#cancelEditRestaurantButton");
-
-    editingRestaurantId = null;
-
-    if (form) {
-        form.reset();
-    }
-
-    if (submitButton) {
-        submitButton.textContent = "Add Restaurant";
-    }
-
-    if (cancelButton) {
-        cancelButton.hidden = true;
-    }
-};
-
-const handleDeleteRestaurant = (event) => {
-    const restaurantId = event.currentTarget.dataset.deleteRestaurantId;
-
-    saveRestaurants(getRestaurants().filter(({ id }) => String(id) !== String(restaurantId)));
-
-    cancelRestaurantEdit();
-
-    renderAdminView();
-    updateRestaurantResults();
-};
-
-const handlePriceTierUpdate = (event) => {
-    const seats = event.target.dataset.priceTierSeats;
-    const nextPriceTiers = {
-        ...getPriceTiers(),
-        [seats]: Math.max(0, Number(event.target.value) || 0)
-    };
-
-    savePriceTiers(nextPriceTiers);
-    event.target.value = nextPriceTiers[seats];
-};
-
-const resetAdminData = () => {
-    editingRestaurantId = null;
-    saveRestaurants(defaultRestaurants);
-    savePriceTiers(defaultPriceTiers);
-    renderAdminView();
-    updateRestaurantResults();
-};
-
 const getGuestProfileFromForm = (form) => {
     const formData = new FormData(form);
 
@@ -3402,16 +3097,11 @@ const handleRestaurantBookingClick = (event) => {
 
 const updateAuthNavigation = () => {
     const authNavLink = document.querySelector("#authNavLink");
-    const adminViewLink = document.querySelector("#adminViewLink");
     const logoutButton = document.querySelector("#logoutButton");
     const loggedIn = isGuestLoggedIn();
-    const isAdmin = isCurrentUserAdmin();
 
     authNavLink.textContent = loggedIn ? "Profile" : "Login";
     authNavLink.href = loggedIn ? "#guest" : "#login";
-
-    adminViewLink.hidden = !isAdmin;
-    adminViewLink.classList.toggle("is-hidden", !isAdmin);
 
     logoutButton.hidden = !loggedIn;
     logoutButton.classList.toggle("is-hidden", !loggedIn);
@@ -3514,20 +3204,6 @@ const showBookingPage = () => {
     bookingPage.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
-const showAdminPage = () => {
-    if (!isCurrentUserAdmin()) {
-        showDiscoveryPage("restaurants");
-        return;
-    }
-
-    const adminPage = document.querySelector("#admin");
-
-    renderAdminView();
-    showPage(adminPage);
-    updatePageHash("admin");
-    adminPage.scrollIntoView({ behavior: "smooth", block: "start" });
-};
-
 const showSmartConciergePage = () => {
     const smartConciergePage = document.querySelector("#concierge");
 
@@ -3567,12 +3243,6 @@ const handleNavigation = (event) => {
         return;
     }
 
-    if (sectionId === "admin") {
-        event.preventDefault();
-        showAdminPage();
-        return;
-    }
-
     if (sectionId === "concierge") {
         event.preventDefault();
         showSmartConciergePage();
@@ -3600,7 +3270,6 @@ const setupEventListeners = () => {
     const backToDiscoveryButton = document.querySelector("#backToDiscoveryButton");
     const backFromLoginButton = document.querySelector("#backFromLoginButton");
     const backFromBookingButton = document.querySelector("#backFromBookingButton");
-    const backFromAdminButton = document.querySelector("#backFromAdminButton");
     const backFromConciergeButton = document.querySelector("#backFromConciergeButton");
     const smartConciergeView = document.querySelector("#smartConciergeView");
     const logoutButton = document.querySelector("#logoutButton");
@@ -3616,7 +3285,6 @@ const setupEventListeners = () => {
     backToDiscoveryButton.addEventListener("click", () => showDiscoveryPage("restaurants"));
     backFromLoginButton.addEventListener("click", () => showDiscoveryPage("restaurants"));
     backFromBookingButton.addEventListener("click", () => showDiscoveryPage("restaurants"));
-    backFromAdminButton.addEventListener("click", () => showDiscoveryPage("restaurants"));
     backFromConciergeButton.addEventListener("click", () => showDiscoveryPage("restaurants"));
     logoutButton.addEventListener("click", handleLogout);
     contactForm.addEventListener("submit", handleContactSubmit);
@@ -3642,8 +3310,6 @@ if (initialRoute === "guest") {
     showProfilePage();
 } else if (initialRoute === "login") {
     showLoginPage();
-} else if (initialRoute === "admin") {
-    showAdminPage();
 } else if (initialRoute === "concierge") {
     showSmartConciergePage();
 } else if (initialRoute === "contact") {
