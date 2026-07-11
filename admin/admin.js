@@ -138,6 +138,7 @@ const storageKeys = {
     priceTiers: "priceTiers",
     reservations: "reservations",
     waitlist: "waitlist",
+    contactMessages: "contactMessages",
     adminSession: "adminSession"
 };
 const defaultPriceTiers = {
@@ -214,6 +215,11 @@ const removeFromStorage = (key) => {
 const getUsers = () => {
     const users = getFromStorage(storageKeys.users);
     return Array.isArray(users) ? users.map(withUserRole) : [];
+};
+
+const getStoredRecordCount = (key) => {
+    const records = getFromStorage(key);
+    return Array.isArray(records) ? records.length : 0;
 };
 
 const findUserByEmail = (email) => {
@@ -889,15 +895,16 @@ const createPriceTiersPanel = () => {
     const priceTiers = getPriceTiers();
 
     return `
-        <section class="profile-panel admin-panel">
+        <section class="profile-panel admin-panel settings-card">
             <div class="form-heading">
                 <p class="eyebrow">Price tiers</p>
-                <h3>Table fees</h3>
+                <h3>Booking table fees</h3>
+                <p>Changes are saved to the existing price tier configuration used by customer booking pricing.</p>
             </div>
             <div class="price-tier-grid">
                 ${Object.keys(defaultPriceTiers).map((seats) => `
                     <label>
-                        ${seats} seats
+                        ${seats}-seat fee
                         <input type="number" min="0" step="1" value="${priceTiers[seats]}" data-price-tier-seats="${seats}">
                     </label>
                 `).join("")}
@@ -906,14 +913,68 @@ const createPriceTiersPanel = () => {
     `;
 };
 
-const createTableLayoutPanel = () => `
-    <section class="profile-panel admin-panel">
+const createSettingsTableLayoutPanel = () => `
+    <section class="profile-panel admin-panel settings-card">
         <div class="form-heading">
-            <p class="eyebrow">Default layout</p>
-            <h3>Table map reference</h3>
+            <p class="eyebrow">Default table layout</p>
+            <h2>Reusable table map</h2>
+            <p>Read-only reference for the shared default table layout used by booking and table monitoring.</p>
         </div>
         <div class="admin-table-layout">
             ${renderAdminTableLayout()}
+        </div>
+    </section>
+`;
+
+const renderDataOverview = () => {
+    const overviewItems = [
+        ["users", storageKeys.users],
+        ["restaurants", storageKeys.restaurants],
+        ["reservations", storageKeys.reservations],
+        ["waitlist entries", storageKeys.waitlist],
+        ["contact messages", storageKeys.contactMessages]
+    ];
+
+    return `
+        <section class="profile-panel admin-panel settings-card">
+            <div class="form-heading">
+                <p class="eyebrow">Data overview</p>
+                <h2>Local storage records</h2>
+                <p>Read-only counts for existing application records. User credentials are not displayed.</p>
+            </div>
+            <div class="settings-count-grid">
+                ${overviewItems.map(([label, key]) => `
+                    <article class="settings-count-card">
+                        <span>${escapeHTML(label)}</span>
+                        <strong>${getStoredRecordCount(key)}</strong>
+                    </article>
+                `).join("")}
+            </div>
+        </section>
+    `;
+};
+
+const renderDataToolsPanel = () => `
+    <section class="profile-panel admin-panel settings-card">
+        <div class="form-heading">
+            <p class="eyebrow">Data tools</p>
+            <h2>Demo resets</h2>
+        </div>
+        <div class="settings-tools-grid">
+            <article class="settings-tool-card">
+                <div>
+                    <h3>Reset Restaurants</h3>
+                    <p>Restores the default restaurant listings. Existing price tiers are preserved.</p>
+                </div>
+                <button class="secondary-action" type="button" id="resetRestaurantsButton">Reset Restaurants</button>
+            </article>
+            <article class="settings-tool-card">
+                <div>
+                    <h3>Reset Price Tiers</h3>
+                    <p>Restores the default 2-seat, 4-seat, 6-seat, and 8-seat table fees.</p>
+                </div>
+                <button class="secondary-action" type="button" id="resetPriceTiersButton">Reset Price Tiers</button>
+            </article>
         </div>
     </section>
 `;
@@ -939,7 +1000,6 @@ const createSavedRestaurantsPanel = () => `
         <div class="admin-list" id="adminRestaurantList">
             ${renderAdminRestaurantList()}
         </div>
-        <button class="secondary-action" type="button" id="resetAdminDataButton">Reset Restaurants and Price Tiers</button>
     </section>
 `;
 
@@ -952,7 +1012,8 @@ const attachManagementHandlers = () => {
 
     const restaurantForm = adminView.querySelector("#addRestaurantForm");
     const cancelEditButton = adminView.querySelector("#cancelEditRestaurantButton");
-    const resetButton = adminView.querySelector("#resetAdminDataButton");
+    const resetRestaurantsButton = adminView.querySelector("#resetRestaurantsButton");
+    const resetPriceTiersButton = adminView.querySelector("#resetPriceTiersButton");
     const restaurantSearch = adminView.querySelector("#adminRestaurantSearch");
     const imageInput = adminView.querySelector("#restaurantImageInput");
     const reservationSearch = adminView.querySelector("#reservationSearchInput");
@@ -982,8 +1043,12 @@ const attachManagementHandlers = () => {
         cancelEditButton.addEventListener("click", cancelRestaurantEdit);
     }
 
-    if (resetButton) {
-        resetButton.addEventListener("click", resetAdminData);
+    if (resetRestaurantsButton) {
+        resetRestaurantsButton.addEventListener("click", resetRestaurantsData);
+    }
+
+    if (resetPriceTiersButton) {
+        resetPriceTiersButton.addEventListener("click", resetPriceTiersData);
     }
 
     if (restaurantSearch) {
@@ -1167,7 +1232,7 @@ const getSectionMeta = (section = activeAdminSection) => {
         },
         settings: {
             title: "Settings",
-            subtitle: "Access reset actions and admin portal controls."
+            subtitle: "Configure pricing, defaults, and demo data."
         }
     };
 
@@ -1627,25 +1692,10 @@ const renderTablesView = () => {
 
 const renderSettingsView = () => `
     <section class="admin-section">
-        <section class="profile-panel admin-panel">
-            <div class="form-heading">
-                <p class="eyebrow">Portal settings</p>
-                <h2>Admin controls</h2>
-            </div>
-            <div class="settings-list">
-                <article class="settings-row">
-                    <span class="settings-detail">Shared restaurant storage</span>
-                    <strong>${storageKeys.restaurants}</strong>
-                    <p>Restaurant manager changes continue to use the existing customer-facing dataset.</p>
-                </article>
-                <article class="settings-row">
-                    <span class="settings-detail">Shared pricing storage</span>
-                    <strong>${storageKeys.priceTiers}</strong>
-                    <p>Table fees continue to use the existing pricing data key.</p>
-                </article>
-            </div>
-            <button class="secondary-action" type="button" id="resetAdminDataButton">Reset Restaurants and Price Tiers</button>
-        </section>
+        ${createPriceTiersPanel()}
+        ${createSettingsTableLayoutPanel()}
+        ${renderDataToolsPanel()}
+        ${renderDataOverview()}
     </section>
 `;
 
@@ -1861,9 +1911,21 @@ const handleReservationStatusChange = (event) => {
     renderActiveAdminSection();
 };
 
-const resetAdminData = () => {
+const resetRestaurantsData = () => {
+    if (!window.confirm("Reset restaurants to the default demo listings?")) {
+        return;
+    }
+
     editingRestaurantId = null;
     saveRestaurants(defaultRestaurants);
+    renderActiveAdminSection();
+};
+
+const resetPriceTiersData = () => {
+    if (!window.confirm("Reset price tiers to the default table fees?")) {
+        return;
+    }
+
     savePriceTiers(defaultPriceTiers);
     renderActiveAdminSection();
 };

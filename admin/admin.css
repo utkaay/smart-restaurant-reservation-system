@@ -233,6 +233,70 @@
     overflow-wrap: anywhere;
 }
 
+.settings-card .form-heading p:not(.eyebrow) {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-weight: 700;
+}
+
+.settings-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.settings-tool-card,
+.settings-count-card {
+    min-width: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    background: var(--color-field);
+}
+
+.settings-tool-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.settings-tool-card h3,
+.settings-tool-card p {
+    margin: 0;
+}
+
+.settings-tool-card p {
+    margin-top: 5px;
+    color: var(--color-text-muted);
+    font-weight: 700;
+}
+
+.settings-count-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.settings-count-card {
+    display: grid;
+    gap: 8px;
+}
+
+.settings-count-card span {
+    color: var(--color-text-muted);
+    font-size: var(--type-caption);
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.settings-count-card strong {
+    color: var(--color-primary-hover);
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    line-height: 1;
+}
+
 .reservation-controls-grid {
     display: grid;
     grid-template-columns: minmax(220px, 1.4fr) repeat(4, minmax(150px, 1fr));
@@ -826,7 +890,8 @@
 
     .reservation-controls-grid,
     .reservation-card-main,
-    .table-controls-grid {
+    .table-controls-grid,
+    .settings-count-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
@@ -904,7 +969,9 @@
     .reservation-controls-grid,
     .reservation-card-main,
     .reservation-details-panel,
-    .table-controls-grid {
+    .table-controls-grid,
+    .settings-tools-grid,
+    .settings-count-grid {
         grid-template-columns: 1fr;
     }
 
@@ -950,5 +1017,14 @@
 
     .admin-table-grid {
         grid-template-columns: 1fr;
+    }
+
+    .settings-tool-card {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .settings-tool-card .secondary-action {
+        width: 100%;
     }
 }
