@@ -168,6 +168,12 @@ const DEFAULT_CLOSING_TIME = "22:00";
 let editingRestaurantId = null;
 let activeAdminSection = "dashboard";
 let adminRestaurantSearchTerm = "";
+let adminReservationSearchTerm = "";
+let adminReservationStatusFilter = "all";
+let adminReservationRestaurantFilter = "all";
+let adminReservationDateFilter = "";
+let adminReservationSort = "nearest";
+let expandedReservationId = null;
 
 const normalizeEmail = (email = "") => String(email).trim().toLowerCase();
 
@@ -364,6 +370,10 @@ const getReservations = () => {
     return Array.isArray(reservations) ? reservations : [];
 };
 
+const saveReservations = (reservations) => {
+    saveToStorage(storageKeys.reservations, reservations);
+};
+
 const getWaitlist = () => {
     const waitlist = getFromStorage(storageKeys.waitlist);
     return Array.isArray(waitlist) ? waitlist : [];
@@ -392,6 +402,136 @@ const getAverageRestaurantRating = () => {
 
 const formatReservationDateTime = (reservation = {}) => {
     return [reservation.date, reservation.time].filter(Boolean).join(" at ") || "Time not set";
+};
+
+const formatUSD = (amount) => {
+    return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD"
+    }).format(Number(amount) || 0);
+};
+
+const getTodayDateValue = () => {
+    const today = new Date();
+    return [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, "0"),
+        String(today.getDate()).padStart(2, "0")
+    ].join("-");
+};
+
+const getReservationTimestamp = (reservation = {}) => {
+    if (reservation.date && reservation.time) {
+        const timestamp = new Date(`${reservation.date}T${reservation.time}`).getTime();
+
+        if (Number.isFinite(timestamp)) {
+            return timestamp;
+        }
+    }
+
+    return Number.MAX_SAFE_INTEGER;
+};
+
+const getReservationCreatedTimestamp = (reservation = {}) => {
+    if (reservation.createdAt) {
+        const timestamp = new Date(reservation.createdAt).getTime();
+
+        if (Number.isFinite(timestamp)) {
+            return timestamp;
+        }
+    }
+
+    const idTimestamp = String(reservation.reservationId || "").match(/(\d{10,})/);
+    return idTimestamp ? Number(idTimestamp[1]) : 0;
+};
+
+const getReservationTotalAmount = (reservation = {}) => {
+    return Number(reservation.splitBill?.totalAmount)
+        || Number(reservation.pricing?.finalTotal)
+        || 0;
+};
+
+const getAcceptedAttendeeCount = (reservation = {}) => {
+    const acceptedGuests = Array.isArray(reservation.guests)
+        ? reservation.guests.filter(({ rsvpStatus }) => rsvpStatus === "accepted").length
+        : 0;
+
+    return 1 + acceptedGuests;
+};
+
+const getReservationStatus = (reservation = {}) => reservation.status || "unknown";
+
+const getKnownReservationStatuses = () => {
+    const statuses = getReservations()
+        .map(getReservationStatus)
+        .filter(Boolean);
+
+    return [...new Set(["active", "confirmed", "completed", "cancelled", ...statuses])];
+};
+
+const getReservationRestaurantOptions = () => {
+    return [...new Set(getReservations()
+        .map(({ restaurantName }) => restaurantName)
+        .filter(Boolean))]
+        .sort((firstName, secondName) => firstName.localeCompare(secondName));
+};
+
+const getReservationSummary = () => {
+    const reservations = getReservations();
+    const today = getTodayDateValue();
+
+    return {
+        total: reservations.length,
+        active: reservations.filter(({ status }) => status === "active").length,
+        upcomingToday: reservations.filter((reservation) => (
+            reservation.date === today
+            && ["active", "confirmed"].includes(reservation.status)
+            && getReservationTimestamp(reservation) >= Date.now()
+        )).length,
+        completedOrCancelled: reservations.filter(({ status }) => (
+            ["completed", "cancelled"].includes(status)
+        )).length
+    };
+};
+
+const getFilteredReservations = () => {
+    const cleanSearchTerm = adminReservationSearchTerm.trim().toLowerCase();
+
+    return getReservations()
+        .filter((reservation) => {
+            const searchableText = [
+                reservation.guestName,
+                reservation.guestEmail,
+                reservation.restaurantName,
+                reservation.reservationId
+            ].filter(Boolean).join(" ").toLowerCase();
+
+            return searchableText.includes(cleanSearchTerm);
+        })
+        .filter((reservation) => {
+            return adminReservationStatusFilter === "all"
+                || getReservationStatus(reservation) === adminReservationStatusFilter;
+        })
+        .filter((reservation) => {
+            return adminReservationRestaurantFilter === "all"
+                || reservation.restaurantName === adminReservationRestaurantFilter;
+        })
+        .filter((reservation) => {
+            return !adminReservationDateFilter
+                || reservation.date === adminReservationDateFilter;
+        })
+        .sort((firstReservation, secondReservation) => {
+            if (adminReservationSort === "newest") {
+                return getReservationCreatedTimestamp(secondReservation) - getReservationCreatedTimestamp(firstReservation);
+            }
+
+            if (adminReservationSort === "guest") {
+                return String(firstReservation.guestName || "")
+                    .localeCompare(String(secondReservation.guestName || ""));
+            }
+
+            return getReservationTimestamp(firstReservation) - getReservationTimestamp(secondReservation);
+        });
 };
 
 const createCheckboxChoices = (options, selectedValues, inputName) => {
@@ -633,6 +773,11 @@ const attachManagementHandlers = () => {
     const resetButton = adminView.querySelector("#resetAdminDataButton");
     const restaurantSearch = adminView.querySelector("#adminRestaurantSearch");
     const imageInput = adminView.querySelector("#restaurantImageInput");
+    const reservationSearch = adminView.querySelector("#reservationSearchInput");
+    const reservationStatusFilter = adminView.querySelector("#reservationStatusFilter");
+    const reservationRestaurantFilter = adminView.querySelector("#reservationRestaurantFilter");
+    const reservationDateFilter = adminView.querySelector("#reservationDateFilter");
+    const reservationSortSelect = adminView.querySelector("#reservationSortSelect");
 
     if (restaurantForm) {
         restaurantForm.addEventListener("submit", handleAddRestaurant);
@@ -668,6 +813,43 @@ const attachManagementHandlers = () => {
         updateRestaurantImagePreview(imageInput.value);
     }
 
+    if (reservationSearch) {
+        reservationSearch.addEventListener("input", (event) => {
+            adminReservationSearchTerm = event.target.value;
+            updateReservationManagementList();
+        });
+    }
+
+    if (reservationStatusFilter) {
+        reservationStatusFilter.addEventListener("change", (event) => {
+            adminReservationStatusFilter = event.target.value;
+            renderActiveAdminSection();
+        });
+    }
+
+    if (reservationRestaurantFilter) {
+        reservationRestaurantFilter.addEventListener("change", (event) => {
+            adminReservationRestaurantFilter = event.target.value;
+            renderActiveAdminSection();
+        });
+    }
+
+    if (reservationDateFilter) {
+        reservationDateFilter.addEventListener("change", (event) => {
+            adminReservationDateFilter = event.target.value;
+            renderActiveAdminSection();
+        });
+    }
+
+    if (reservationSortSelect) {
+        reservationSortSelect.addEventListener("change", (event) => {
+            adminReservationSort = event.target.value;
+            renderActiveAdminSection();
+        });
+    }
+
+    attachReservationListHandlers();
+
     if (editingRestaurantId && restaurantForm) {
         const restaurant = getRestaurants().find(({ id }) => String(id) === String(editingRestaurantId));
 
@@ -682,6 +864,41 @@ const updateAdminRestaurantList = () => {
 
     if (restaurantList) {
         restaurantList.innerHTML = renderAdminRestaurantList();
+    }
+};
+
+const attachReservationListHandlers = () => {
+    const adminView = document.querySelector("#adminDashboard");
+
+    if (!adminView) {
+        return;
+    }
+
+    adminView.querySelectorAll("[data-reservation-status-id]").forEach((select) => {
+        select.addEventListener("change", handleReservationStatusChange);
+    });
+
+    adminView.querySelectorAll("[data-reservation-details-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+            expandedReservationId = expandedReservationId === button.dataset.reservationDetailsId
+                ? null
+                : button.dataset.reservationDetailsId;
+            updateReservationManagementList();
+        });
+    });
+};
+
+const updateReservationManagementList = () => {
+    const reservationList = document.querySelector("#reservationManagementList");
+    const reservationCount = document.querySelector("#reservationShownCount");
+
+    if (reservationList) {
+        reservationList.innerHTML = renderReservationList();
+        attachReservationListHandlers();
+    }
+
+    if (reservationCount) {
+        reservationCount.textContent = `${getFilteredReservations().length} shown`;
     }
 };
 
@@ -732,7 +949,7 @@ const getSectionMeta = (section = activeAdminSection) => {
         },
         reservations: {
             title: "Reservations",
-            subtitle: "Review reservation activity from the existing booking data."
+            subtitle: "Review and manage customer bookings."
         },
         tables: {
             title: "Tables",
@@ -808,6 +1025,222 @@ const renderRecentReservations = (limit = 5) => {
     `).join("");
 };
 
+const renderReservationSummaryCards = () => {
+    const summary = getReservationSummary();
+
+    return `
+        <section class="dashboard-overview-grid" aria-label="Reservation overview">
+            <article class="overview-card">
+                <span>Total Reservations</span>
+                <strong>${summary.total}</strong>
+                <p>All saved booking records</p>
+            </article>
+            <article class="overview-card">
+                <span>Active Reservations</span>
+                <strong>${summary.active}</strong>
+                <p>Status is active</p>
+            </article>
+            <article class="overview-card">
+                <span>Upcoming Today</span>
+                <strong>${summary.upcomingToday}</strong>
+                <p>Active or confirmed today</p>
+            </article>
+            <article class="overview-card">
+                <span>Completed or Cancelled</span>
+                <strong>${summary.completedOrCancelled}</strong>
+                <p>Status is completed or cancelled</p>
+            </article>
+        </section>
+    `;
+};
+
+const renderReservationControls = () => `
+    <section class="profile-panel admin-panel reservation-controls-panel">
+        <div class="reservation-controls-grid">
+            <label>
+                Search reservations
+                <input
+                    type="search"
+                    id="reservationSearchInput"
+                    value="${escapeHTML(adminReservationSearchTerm)}"
+                    placeholder="Guest, email, restaurant, or reservation ID"
+                    autocomplete="off"
+                >
+            </label>
+            <label>
+                Status
+                <select id="reservationStatusFilter">
+                    <option value="all">All statuses</option>
+                    ${getKnownReservationStatuses().map((status) => `
+                        <option value="${escapeHTML(status)}" ${adminReservationStatusFilter === status ? "selected" : ""}>
+                            ${escapeHTML(status)}
+                        </option>
+                    `).join("")}
+                </select>
+            </label>
+            <label>
+                Restaurant
+                <select id="reservationRestaurantFilter">
+                    <option value="all">All restaurants</option>
+                    ${getReservationRestaurantOptions().map((restaurantName) => `
+                        <option value="${escapeHTML(restaurantName)}" ${adminReservationRestaurantFilter === restaurantName ? "selected" : ""}>
+                            ${escapeHTML(restaurantName)}
+                        </option>
+                    `).join("")}
+                </select>
+            </label>
+            <label>
+                Date
+                <input type="date" id="reservationDateFilter" value="${escapeHTML(adminReservationDateFilter)}">
+            </label>
+            <label>
+                Sort
+                <select id="reservationSortSelect">
+                    <option value="nearest" ${adminReservationSort === "nearest" ? "selected" : ""}>Nearest upcoming</option>
+                    <option value="newest" ${adminReservationSort === "newest" ? "selected" : ""}>Newest created</option>
+                    <option value="guest" ${adminReservationSort === "guest" ? "selected" : ""}>Guest name</option>
+                </select>
+            </label>
+        </div>
+    </section>
+`;
+
+const renderStatusBadge = (status = "unknown") => {
+    const normalizedStatus = String(status || "unknown").toLowerCase();
+    return `<span class="reservation-status-badge status-${escapeHTML(normalizedStatus)}">${escapeHTML(normalizedStatus)}</span>`;
+};
+
+const renderReservationDetails = (reservation = {}) => {
+    const guests = Array.isArray(reservation.guests) ? reservation.guests : [];
+    const splitBill = reservation.splitBill || {};
+    const preOrderItems = Array.isArray(reservation.preOrder?.items) ? reservation.preOrder.items : [];
+    const pricing = reservation.pricing || {};
+
+    return `
+        <div class="reservation-details-panel">
+            <section>
+                <h3>Invited guests</h3>
+                ${guests.length === 0 ? `<p class="summary-muted">No invited guests.</p>` : `
+                    <div class="reservation-detail-list">
+                        ${guests.map(({ name, email, rsvpStatus }) => `
+                            <div>
+                                <strong>${escapeHTML(name || "Guest")}</strong>
+                                <span>${escapeHTML(email || "No email")} &middot; ${escapeHTML(rsvpStatus || "pending")}</span>
+                            </div>
+                        `).join("")}
+                    </div>
+                `}
+            </section>
+            <section>
+                <h3>Split bill</h3>
+                <div class="reservation-detail-list">
+                    <div><span>Reservation total</span><strong>${formatUSD(splitBill.reservationTotal || pricing.finalTotal || 0)}</strong></div>
+                    <div><span>Pre-order subtotal</span><strong>${formatUSD(splitBill.preOrderSubtotal || reservation.preOrder?.subtotal || 0)}</strong></div>
+                    <div><span>Total amount</span><strong>${formatUSD(splitBill.totalAmount || getReservationTotalAmount(reservation))}</strong></div>
+                    <div><span>Participants</span><strong>${escapeHTML(splitBill.participantCount || getAcceptedAttendeeCount(reservation))}</strong></div>
+                    ${(splitBill.participants || []).map(({ name, email, share }) => `
+                        <div>
+                            <span>${escapeHTML(email || "No email")}</span>
+                            <strong>${escapeHTML(name || "Participant")} &middot; ${formatUSD(share || 0)}</strong>
+                        </div>
+                    `).join("")}
+                </div>
+            </section>
+            <section>
+                <h3>Pre-order items</h3>
+                ${preOrderItems.length === 0 ? `<p class="summary-muted">No pre-order items.</p>` : `
+                    <div class="reservation-detail-list">
+                        ${preOrderItems.map(({ name, quantity, price }) => `
+                            <div>
+                                <strong>${escapeHTML(name || "Item")}</strong>
+                                <span>${escapeHTML(quantity || 0)} x ${formatUSD(price || 0)}</span>
+                            </div>
+                        `).join("")}
+                    </div>
+                `}
+            </section>
+            <section>
+                <h3>Pricing breakdown</h3>
+                <div class="reservation-detail-list">
+                    <div><span>Table fee</span><strong>${formatUSD(pricing.tableFee || 0)}</strong></div>
+                    <div><span>Time adjustment</span><strong>${formatUSD(pricing.timeAdjustment || 0)}</strong></div>
+                    <div><span>Coupon discount</span><strong>${formatUSD(pricing.couponDiscount || 0)}</strong></div>
+                    <div><span>Member discount</span><strong>${formatUSD(pricing.memberDiscount || 0)}</strong></div>
+                    <div><span>Final total</span><strong>${formatUSD(pricing.finalTotal || 0)}</strong></div>
+                </div>
+            </section>
+            <section>
+                <h3>QR/check-in code</h3>
+                <p class="profile-message">${escapeHTML(reservation.checkInCode || "No check-in code available")}</p>
+            </section>
+        </div>
+    `;
+};
+
+const renderReservationList = () => {
+    const reservations = getFilteredReservations();
+
+    if (reservations.length === 0) {
+        return `
+            <div class="empty-state reservation-empty-state">
+                <h3>No reservations match your filters.</h3>
+                <p>Adjust search, status, restaurant, date, or sorting controls.</p>
+            </div>
+        `;
+    }
+
+    return reservations.map((reservation) => {
+        const reservationId = reservation.reservationId || "";
+        const isExpanded = expandedReservationId === reservationId;
+
+        return `
+            <article class="reservation-management-card">
+                <div class="reservation-card-main">
+                    <div>
+                        <strong>${escapeHTML(reservation.guestName || "Guest")}</strong>
+                        <span>${escapeHTML(reservation.guestEmail || "No email")}</span>
+                    </div>
+                    <div>
+                        <strong>${escapeHTML(reservation.restaurantName || "Restaurant not set")}</strong>
+                        <span>${escapeHTML(formatReservationDateTime(reservation))}</span>
+                    </div>
+                    <div>
+                        <span>Table</span>
+                        <strong>${escapeHTML(reservation.tableId || "Not set")}</strong>
+                    </div>
+                    <div>
+                        <span>Accepted attendees</span>
+                        <strong>${getAcceptedAttendeeCount(reservation)}</strong>
+                    </div>
+                    <div>
+                        <span>Total amount</span>
+                        <strong>${formatUSD(getReservationTotalAmount(reservation))}</strong>
+                    </div>
+                    <div>
+                        <span>Check-in</span>
+                        <strong>${escapeHTML(reservation.checkInCode || "Not available")}</strong>
+                    </div>
+                </div>
+                <div class="reservation-card-actions">
+                    ${renderStatusBadge(getReservationStatus(reservation))}
+                    <label>
+                        Status
+                        <select data-reservation-status-id="${escapeHTML(reservationId)}">
+                            ${["active", "confirmed", "completed", "cancelled"].map((status) => `
+                                <option value="${status}" ${getReservationStatus(reservation) === status ? "selected" : ""}>${status}</option>
+                            `).join("")}
+                        </select>
+                    </label>
+                    <button class="secondary-action" type="button" data-reservation-details-id="${escapeHTML(reservationId)}">
+                        ${isExpanded ? "Hide Details" : "View Details"}
+                    </button>
+                </div>
+                ${isExpanded ? renderReservationDetails(reservation) : ""}
+            </article>
+        `;
+    }).join("");
+};
+
 const renderDashboardView = () => `
     <section class="admin-section">
         ${renderOverviewCards()}
@@ -846,13 +1279,15 @@ const renderRestaurantManagerView = () => `
 
 const renderReservationsView = () => `
     <section class="admin-section">
+        ${renderReservationSummaryCards()}
+        ${renderReservationControls()}
         <section class="profile-panel admin-panel">
             <div class="form-heading">
                 <p class="eyebrow">Reservations</p>
-                <h2>${getReservations().length} total reservations</h2>
+                <h2 id="reservationShownCount">${getFilteredReservations().length} shown</h2>
             </div>
-            <div class="reservation-list">
-                ${renderRecentReservations(20)}
+            <div class="reservation-management-list" id="reservationManagementList">
+                ${renderReservationList()}
             </div>
         </section>
     </section>
@@ -1081,6 +1516,24 @@ const handlePriceTierUpdate = (event) => {
 
     savePriceTiers(nextPriceTiers);
     event.target.value = nextPriceTiers[seats];
+};
+
+const handleReservationStatusChange = (event) => {
+    const reservationId = event.target.dataset.reservationStatusId;
+    const nextStatus = event.target.value;
+
+    saveReservations(getReservations().map((reservation) => {
+        if (String(reservation.reservationId) !== String(reservationId)) {
+            return reservation;
+        }
+
+        return {
+            ...reservation,
+            status: nextStatus
+        };
+    }));
+
+    renderActiveAdminSection();
 };
 
 const resetAdminData = () => {
