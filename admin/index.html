@@ -9,25 +9,41 @@
     <script src="./admin.js" defer></script>
 </head>
 <body class="admin-body" data-admin-page="dashboard">
-    <header class="admin-header">
-        <nav class="admin-nav" aria-label="Admin navigation">
+    <div class="admin-shell">
+        <aside class="admin-sidebar" id="adminSidebar" aria-label="Admin sections">
             <a class="admin-brand" href="./index.html">Jack's Restaurant Management Portal</a>
-            <div class="admin-nav-actions">
-                <button class="secondary-action" class="secondary-action" type="button" id="viewCustomerSiteButton">View Customer Site</button>
+
+            <nav class="admin-section-nav" aria-label="Admin section navigation">
+                <button class="admin-nav-item is-active" type="button" data-admin-section="dashboard">Dashboard</button>
+                <button class="admin-nav-item" type="button" data-admin-section="restaurants">Restaurant Manager</button>
+                <button class="admin-nav-item" type="button" data-admin-section="reservations">Reservations</button>
+                <button class="admin-nav-item" type="button" data-admin-section="tables">Tables</button>
+                <button class="admin-nav-item" type="button" data-admin-section="settings">Settings</button>
+            </nav>
+
+            <div class="admin-sidebar-actions">
+                <button class="secondary-action" type="button" id="viewCustomerSiteButton">View Customer Site</button>
                 <button class="primary-action" type="button" id="adminLogoutButton">Logout</button>
             </div>
-        </nav>
-    </header>
+        </aside>
 
-    <main class="admin-main">
-        <div class="admin-page-heading">
-            <div>
-                <p class="eyebrow">Internal dashboard</p>
-                <h1>Restaurant data management</h1>
-            </div>
+        <div class="admin-content-shell">
+            <header class="admin-mobile-header">
+                <button class="secondary-action admin-menu-button" type="button" id="adminMenuButton" aria-controls="adminSidebar" aria-expanded="false">Menu</button>
+                <span class="admin-mobile-brand">Jack's Portal</span>
+            </header>
+
+            <main class="admin-main">
+                <div class="admin-page-heading">
+                    <div>
+                        <h1 id="adminPageTitle">Dashboard</h1>
+                        <p id="adminPageSubtitle">Manage restaurants, reservations, pricing, and table availability.</p>
+                    </div>
+                </div>
+
+                <div class="admin-view" id="adminDashboard" aria-live="polite"></div>
+            </main>
         </div>
-
-        <div class="admin-view" id="adminDashboard" aria-live="polite"></div>
-    </main>
+    </div>
 </body>
 </html>

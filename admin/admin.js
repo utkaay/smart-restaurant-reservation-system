@@ -136,6 +136,8 @@ const storageKeys = {
     users: "users",
     restaurants: "restaurants",
     priceTiers: "priceTiers",
+    reservations: "reservations",
+    waitlist: "waitlist",
     adminSession: "adminSession"
 };
 const defaultPriceTiers = {
@@ -164,6 +166,7 @@ const DEFAULT_OPENING_TIME = "11:00";
 const DEFAULT_CLOSING_TIME = "22:00";
 
 let editingRestaurantId = null;
+let activeAdminSection = "dashboard";
 
 const normalizeEmail = (email = "") => String(email).trim().toLowerCase();
 
@@ -339,6 +342,41 @@ const savePriceTiers = (priceTiers) => {
     saveToStorage(storageKeys.priceTiers, priceTiers);
 };
 
+const getReservations = () => {
+    const reservations = getFromStorage(storageKeys.reservations);
+    return Array.isArray(reservations) ? reservations : [];
+};
+
+const getWaitlist = () => {
+    const waitlist = getFromStorage(storageKeys.waitlist);
+    return Array.isArray(waitlist) ? waitlist : [];
+};
+
+const getActiveReservations = () => {
+    return getReservations().filter(({ status }) => status === "active");
+};
+
+const getWaitingEntries = () => {
+    return getWaitlist().filter(({ status }) => status === "waiting");
+};
+
+const getAverageRestaurantRating = () => {
+    const ratings = getRestaurants()
+        .map(({ rating }) => Number(rating))
+        .filter((rating) => Number.isFinite(rating));
+
+    if (ratings.length === 0) {
+        return "0.0";
+    }
+
+    const total = ratings.reduce((sum, rating) => sum + rating, 0);
+    return (total / ratings.length).toFixed(1);
+};
+
+const formatReservationDateTime = (reservation = {}) => {
+    return [reservation.date, reservation.time].filter(Boolean).join(" at ") || "Time not set";
+};
+
 const createCheckboxChoices = (options, selectedValues, inputName) => {
     return options.map((option) => `
         <label class="choice-chip">
@@ -386,87 +424,84 @@ const renderAdminTableLayout = () => {
     `).join("");
 };
 
-const renderAdminView = () => {
-    const adminView = document.querySelector("#adminDashboard");
+const createRestaurantFormPanel = () => `
+    <section class="profile-panel admin-panel" id="restaurantManagerPanel">
+        <div class="form-heading">
+            <p class="eyebrow">Restaurant manager</p>
+            <h3>${editingRestaurantId ? "Edit restaurant" : "Add a restaurant"}</h3>
+        </div>
+
+        <form class="admin-form" id="addRestaurantForm">
+            <label>
+                Name
+                <input type="text" name="name" required>
+            </label>
+            <label>
+                Cuisine
+                <input type="text" name="cuisine" required>
+            </label>
+            <label>
+                Location
+                <input type="text" name="location" required>
+            </label>
+            <label>
+                Hours
+                <input type="text" name="hours" placeholder="12:00 PM - 10:30 PM" required>
+            </label>
+            <label>
+                Rating
+                <input type="number" name="rating" min="0" max="5" step="0.1" required>
+            </label>
+            <label>
+                Price level
+                <select name="priceLevel" required>
+                    ${["$", "$$", "$$$", "$$$$"].map((priceLevel) => `
+                        <option value="${priceLevel}">${priceLevel}</option>
+                    `).join("")}
+                </select>
+            </label>
+            <label>
+                Distance category
+                <select name="distanceCategory" required>
+                    ${["Nearby", "Medium", "Far"].map((distanceCategory) => `
+                        <option value="${distanceCategory}">${distanceCategory}</option>
+                    `).join("")}
+                </select>
+            </label>
+            <label>
+                Badges
+                <input type="text" name="badges" placeholder="Patio, Seafood, Date night">
+            </label>
+            <fieldset>
+                <legend>Sustainability badges</legend>
+                <div class="choice-grid compact">
+                    ${createCheckboxChoices(sustainabilityBadgeOptions, [], "sustainabilityBadges")}
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Allergen badges</legend>
+                <div class="choice-grid compact">
+                    ${createCheckboxChoices(allergenBadgeOptions, [], "allergenBadges")}
+                </div>
+            </fieldset>
+            <label>
+                Image URL
+                <input type="url" name="image" required>
+            </label>
+            <div class="admin-form-actions">
+                <button class="primary-action" type="submit" id="restaurantSubmitButton">
+                    ${editingRestaurantId ? "Update Restaurant" : "Add Restaurant"}
+                </button>
+                <button class="secondary-action" type="button" id="cancelEditRestaurantButton" ${editingRestaurantId ? "" : "hidden"}>Cancel Edit</button>
+            </div>
+        </form>
+    </section>
+`;
+
+const createPriceTiersPanel = () => {
     const priceTiers = getPriceTiers();
 
-    if (!adminView) {
-        return;
-    }
-
-    adminView.innerHTML = `
-        <section class="profile-panel admin-panel">
-            <div class="form-heading">
-                <p class="eyebrow">Restaurant manager</p>
-                <h3>${editingRestaurantId ? "Edit restaurant" : "Add a restaurant"}</h3>
-            </div>
-
-            <form class="admin-form" id="addRestaurantForm">
-                <label>
-                    Name
-                    <input type="text" name="name" required>
-                </label>
-                <label>
-                    Cuisine
-                    <input type="text" name="cuisine" required>
-                </label>
-                <label>
-                    Location
-                    <input type="text" name="location" required>
-                </label>
-                <label>
-                    Hours
-                    <input type="text" name="hours" placeholder="12:00 PM - 10:30 PM" required>
-                </label>
-                <label>
-                    Rating
-                    <input type="number" name="rating" min="0" max="5" step="0.1" required>
-                </label>
-                <label>
-                    Price level
-                    <select name="priceLevel" required>
-                        ${["$", "$$", "$$$", "$$$$"].map((priceLevel) => `
-                            <option value="${priceLevel}">${priceLevel}</option>
-                        `).join("")}
-                    </select>
-                </label>
-                <label>
-                    Distance category
-                    <select name="distanceCategory" required>
-                        ${["Nearby", "Medium", "Far"].map((distanceCategory) => `
-                            <option value="${distanceCategory}">${distanceCategory}</option>
-                        `).join("")}
-                    </select>
-                </label>
-                <label>
-                    Badges
-                    <input type="text" name="badges" placeholder="Patio, Seafood, Date night">
-                </label>
-                <fieldset>
-                    <legend>Sustainability badges</legend>
-                    <div class="choice-grid compact">
-                        ${createCheckboxChoices(sustainabilityBadgeOptions, [], "sustainabilityBadges")}
-                    </div>
-                </fieldset>
-                <fieldset>
-                    <legend>Allergen badges</legend>
-                    <div class="choice-grid compact">
-                        ${createCheckboxChoices(allergenBadgeOptions, [], "allergenBadges")}
-                    </div>
-                </fieldset>
-                <label>
-                    Image URL
-                    <input type="url" name="image" required>
-                </label>
-                <div class="admin-form-actions">
-                    <button class="primary-action" type="submit" id="restaurantSubmitButton">
-                        ${editingRestaurantId ? "Update Restaurant" : "Add Restaurant"}
-                    </button>
-                    <button class="secondary-action" type="button" id="cancelEditRestaurantButton" ${editingRestaurantId ? "" : "hidden"}>Cancel Edit</button>
-                </div>
-            </form>
-        </section>
-
+    return `
         <section class="profile-panel admin-panel">
             <div class="form-heading">
                 <p class="eyebrow">Price tiers</p>
@@ -481,48 +516,309 @@ const renderAdminView = () => {
                 `).join("")}
             </div>
         </section>
-
-        <section class="profile-panel admin-panel">
-            <div class="form-heading">
-                <p class="eyebrow">Default layout</p>
-                <h3>Table map reference</h3>
-            </div>
-            <div class="admin-table-layout">
-                ${renderAdminTableLayout()}
-            </div>
-        </section>
-
-        <section class="profile-panel admin-panel admin-panel-wide">
-            <div class="form-heading">
-                <p class="eyebrow">Saved restaurants</p>
-                <h3>${getRestaurants().length} restaurants</h3>
-            </div>
-            <div class="admin-list">
-                ${renderAdminRestaurantList()}
-            </div>
-            <button class="secondary-action" type="button" id="resetAdminDataButton">Reset Restaurants and Price Tiers</button>
-        </section>
     `;
+};
 
-    adminView.querySelector("#addRestaurantForm").addEventListener("submit", handleAddRestaurant);
+const createTableLayoutPanel = () => `
+    <section class="profile-panel admin-panel">
+        <div class="form-heading">
+            <p class="eyebrow">Default layout</p>
+            <h3>Table map reference</h3>
+        </div>
+        <div class="admin-table-layout">
+            ${renderAdminTableLayout()}
+        </div>
+    </section>
+`;
+
+const createSavedRestaurantsPanel = () => `
+    <section class="profile-panel admin-panel admin-panel-wide">
+        <div class="form-heading">
+            <p class="eyebrow">Saved restaurants</p>
+            <h3>${getRestaurants().length} restaurants</h3>
+        </div>
+        <div class="admin-list">
+            ${renderAdminRestaurantList()}
+        </div>
+        <button class="secondary-action" type="button" id="resetAdminDataButton">Reset Restaurants and Price Tiers</button>
+    </section>
+`;
+
+const attachManagementHandlers = () => {
+    const adminView = document.querySelector("#adminDashboard");
+
+    if (!adminView) {
+        return;
+    }
+
+    const restaurantForm = adminView.querySelector("#addRestaurantForm");
+    const cancelEditButton = adminView.querySelector("#cancelEditRestaurantButton");
+    const resetButton = adminView.querySelector("#resetAdminDataButton");
+
+    if (restaurantForm) {
+        restaurantForm.addEventListener("submit", handleAddRestaurant);
+    }
+
     adminView.querySelectorAll("[data-edit-restaurant-id]").forEach((button) => {
         button.addEventListener("click", () => startEditRestaurant(button.dataset.editRestaurantId));
     });
     adminView.querySelectorAll("[data-delete-restaurant-id]").forEach((button) => {
         button.addEventListener("click", handleDeleteRestaurant);
     });
-    adminView.querySelector("#cancelEditRestaurantButton").addEventListener("click", cancelRestaurantEdit);
     adminView.querySelectorAll("[data-price-tier-seats]").forEach((input) => {
         input.addEventListener("change", handlePriceTierUpdate);
     });
-    adminView.querySelector("#resetAdminDataButton").addEventListener("click", resetAdminData);
 
-    if (editingRestaurantId) {
+    if (cancelEditButton) {
+        cancelEditButton.addEventListener("click", cancelRestaurantEdit);
+    }
+
+    if (resetButton) {
+        resetButton.addEventListener("click", resetAdminData);
+    }
+
+    if (editingRestaurantId && restaurantForm) {
         const restaurant = getRestaurants().find(({ id }) => String(id) === String(editingRestaurantId));
 
         if (restaurant) {
             fillRestaurantForm(restaurant);
         }
+    }
+};
+
+const getSectionMeta = (section = activeAdminSection) => {
+    const sectionMeta = {
+        dashboard: {
+            title: "Dashboard",
+            subtitle: "Manage restaurants, reservations, pricing, and table availability."
+        },
+        restaurants: {
+            title: "Restaurant Manager",
+            subtitle: "Add, edit, delete, and review restaurants shown on the customer site."
+        },
+        reservations: {
+            title: "Reservations",
+            subtitle: "Review reservation activity from the existing booking data."
+        },
+        tables: {
+            title: "Tables",
+            subtitle: "Review table layout references and manage table fee tiers."
+        },
+        settings: {
+            title: "Settings",
+            subtitle: "Access reset actions and admin portal controls."
+        }
+    };
+
+    return sectionMeta[section] || sectionMeta.dashboard;
+};
+
+const renderOverviewCards = () => {
+    const restaurants = getRestaurants();
+    const activeReservations = getActiveReservations();
+    const waitingEntries = getWaitingEntries();
+
+    return `
+        <section class="dashboard-overview-grid" aria-label="Dashboard overview">
+            <article class="overview-card">
+                <span>Total Restaurants</span>
+                <strong>${restaurants.length}</strong>
+                <p>Saved in localStorage</p>
+            </article>
+            <article class="overview-card">
+                <span>Active Reservations</span>
+                <strong>${activeReservations.length}</strong>
+                <p>Reservations marked active</p>
+            </article>
+            <article class="overview-card">
+                <span>Waitlist Entries</span>
+                <strong>${waitingEntries.length}</strong>
+                <p>Entries marked waiting</p>
+            </article>
+            <article class="overview-card">
+                <span>Average Restaurant Rating</span>
+                <strong>${getAverageRestaurantRating()}</strong>
+                <p>Calculated from restaurant ratings</p>
+            </article>
+        </section>
+    `;
+};
+
+const renderRecentReservations = (limit = 5) => {
+    const reservations = getReservations()
+        .slice()
+        .sort((firstReservation, secondReservation) => {
+            const firstValue = String(firstReservation.reservationId || firstReservation.createdAt || "");
+            const secondValue = String(secondReservation.reservationId || secondReservation.createdAt || "");
+            return secondValue.localeCompare(firstValue);
+        })
+        .slice(0, limit);
+
+    if (reservations.length === 0) {
+        return `
+            <div class="empty-state">
+                <h3>No reservations yet</h3>
+                <p>Reservations created through the customer booking flow will appear here.</p>
+            </div>
+        `;
+    }
+
+    return reservations.map((reservation) => `
+        <article class="reservation-list-item">
+            <div>
+                <strong>${escapeHTML(reservation.guestName || "Guest")}</strong>
+                <p>${escapeHTML(reservation.restaurantName || "Restaurant not set")} &middot; ${escapeHTML(formatReservationDateTime(reservation))}</p>
+            </div>
+            <span class="reservation-meta">${escapeHTML(reservation.status || "unknown")}</span>
+        </article>
+    `).join("");
+};
+
+const renderDashboardView = () => `
+    <section class="admin-section">
+        ${renderOverviewCards()}
+        <div class="dashboard-grid">
+            <section class="profile-panel admin-panel">
+                <div class="form-heading">
+                    <p class="eyebrow">Recent Reservations</p>
+                    <h2>Latest booking activity</h2>
+                </div>
+                <div class="reservation-list">
+                    ${renderRecentReservations()}
+                </div>
+            </section>
+
+            <section class="profile-panel admin-panel">
+                <div class="form-heading">
+                    <p class="eyebrow">Quick Actions</p>
+                    <h2>Common tasks</h2>
+                </div>
+                <div class="quick-action-list">
+                    <button class="quick-action-button" type="button" data-admin-section-target="restaurants">Add Restaurant</button>
+                    <button class="quick-action-button" type="button" data-admin-section-target="reservations">View Reservations</button>
+                    <button class="quick-action-button" type="button" data-admin-section-target="tables">Manage Tables</button>
+                </div>
+            </section>
+        </div>
+    </section>
+`;
+
+const renderRestaurantManagerView = () => `
+    <section class="admin-section admin-view">
+        ${createRestaurantFormPanel()}
+        ${createSavedRestaurantsPanel()}
+        ${createPriceTiersPanel()}
+        ${createTableLayoutPanel()}
+    </section>
+`;
+
+const renderReservationsView = () => `
+    <section class="admin-section">
+        <section class="profile-panel admin-panel">
+            <div class="form-heading">
+                <p class="eyebrow">Reservations</p>
+                <h2>${getReservations().length} total reservations</h2>
+            </div>
+            <div class="reservation-list">
+                ${renderRecentReservations(20)}
+            </div>
+        </section>
+    </section>
+`;
+
+const renderTablesView = () => `
+    <section class="admin-section admin-view">
+        ${createPriceTiersPanel()}
+        ${createTableLayoutPanel()}
+    </section>
+`;
+
+const renderSettingsView = () => `
+    <section class="admin-section">
+        <section class="profile-panel admin-panel">
+            <div class="form-heading">
+                <p class="eyebrow">Portal settings</p>
+                <h2>Admin controls</h2>
+            </div>
+            <div class="settings-list">
+                <article class="settings-row">
+                    <span class="settings-detail">Shared restaurant storage</span>
+                    <strong>${storageKeys.restaurants}</strong>
+                    <p>Restaurant manager changes continue to use the existing customer-facing dataset.</p>
+                </article>
+                <article class="settings-row">
+                    <span class="settings-detail">Shared pricing storage</span>
+                    <strong>${storageKeys.priceTiers}</strong>
+                    <p>Table fees continue to use the existing pricing data key.</p>
+                </article>
+            </div>
+            <button class="secondary-action" type="button" id="resetAdminDataButton">Reset Restaurants and Price Tiers</button>
+        </section>
+    </section>
+`;
+
+const getSectionHTML = () => {
+    const renderers = {
+        dashboard: renderDashboardView,
+        restaurants: renderRestaurantManagerView,
+        reservations: renderReservationsView,
+        tables: renderTablesView,
+        settings: renderSettingsView
+    };
+
+    return (renderers[activeAdminSection] || renderDashboardView)();
+};
+
+const updateSectionNavigation = () => {
+    document.querySelectorAll("[data-admin-section]").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.adminSection === activeAdminSection);
+    });
+};
+
+const updateAdminHeader = () => {
+    const title = document.querySelector("#adminPageTitle");
+    const subtitle = document.querySelector("#adminPageSubtitle");
+    const meta = getSectionMeta();
+
+    if (title) {
+        title.textContent = meta.title;
+    }
+
+    if (subtitle) {
+        subtitle.textContent = meta.subtitle;
+    }
+};
+
+const renderActiveAdminSection = () => {
+    const adminView = document.querySelector("#adminDashboard");
+
+    if (!adminView) {
+        return;
+    }
+
+    updateAdminHeader();
+    updateSectionNavigation();
+    adminView.innerHTML = getSectionHTML();
+    attachManagementHandlers();
+
+    adminView.querySelectorAll("[data-admin-section-target]").forEach((button) => {
+        button.addEventListener("click", () => setActiveAdminSection(button.dataset.adminSectionTarget));
+    });
+};
+
+const setActiveAdminSection = (section) => {
+    activeAdminSection = section || "dashboard";
+    renderActiveAdminSection();
+
+    const sidebar = document.querySelector("#adminSidebar");
+    const menuButton = document.querySelector("#adminMenuButton");
+
+    if (sidebar) {
+        sidebar.classList.remove("is-open");
+    }
+
+    if (menuButton) {
+        menuButton.setAttribute("aria-expanded", "false");
     }
 };
 
@@ -567,7 +863,7 @@ const handleAddRestaurant = (event) => {
     }
 
     editingRestaurantId = null;
-    renderAdminView();
+    renderActiveAdminSection();
 };
 
 const fillRestaurantForm = (restaurant) => {
@@ -603,7 +899,7 @@ const startEditRestaurant = (restaurantId) => {
     }
 
     editingRestaurantId = restaurant.id;
-    renderAdminView();
+    renderActiveAdminSection();
 };
 
 const updateRestaurant = (restaurantId, updatedData) => {
@@ -623,7 +919,7 @@ const updateRestaurant = (restaurantId, updatedData) => {
 
 const cancelRestaurantEdit = () => {
     editingRestaurantId = null;
-    renderAdminView();
+    renderActiveAdminSection();
 };
 
 const handleDeleteRestaurant = (event) => {
@@ -635,7 +931,7 @@ const handleDeleteRestaurant = (event) => {
         editingRestaurantId = null;
     }
 
-    renderAdminView();
+    renderActiveAdminSection();
 };
 
 const handlePriceTierUpdate = (event) => {
@@ -653,7 +949,7 @@ const resetAdminData = () => {
     editingRestaurantId = null;
     saveRestaurants(defaultRestaurants);
     savePriceTiers(defaultPriceTiers);
-    renderAdminView();
+    renderActiveAdminSection();
 };
 
 const showAdminLoginMessage = (message) => {
@@ -729,16 +1025,11 @@ const setupLoginPage = () => {
     }
 };
 
-const viewCustomerSiteButton = document.getElementById("viewCustomerSiteButton");
-
-if(viewCustomerSiteButton) {
-    viewCustomerSiteButton.addEventListener("click",() => {
-        window.location.href = "../index.html";
-    });
-}
-
 const setupDashboardPage = () => {
     const logoutButton = document.querySelector("#adminLogoutButton");
+    const viewCustomerSiteButton = document.querySelector("#viewCustomerSiteButton");
+    const menuButton = document.querySelector("#adminMenuButton");
+    const sidebar = document.querySelector("#adminSidebar");
 
     if (!hasValidAdminSession()) {
         window.location.replace("./login.html");
@@ -747,7 +1038,24 @@ const setupDashboardPage = () => {
 
     saveRestaurants(getRestaurants());
     savePriceTiers(getPriceTiers());
-    renderAdminView();
+    renderActiveAdminSection();
+
+    document.querySelectorAll("[data-admin-section]").forEach((button) => {
+        button.addEventListener("click", () => setActiveAdminSection(button.dataset.adminSection));
+    });
+
+    if (menuButton && sidebar) {
+        menuButton.addEventListener("click", () => {
+            const isOpen = sidebar.classList.toggle("is-open");
+            menuButton.setAttribute("aria-expanded", String(isOpen));
+        });
+    }
+
+    if (viewCustomerSiteButton) {
+        viewCustomerSiteButton.addEventListener("click", () => {
+            window.location.href = "../index.html";
+        });
+    }
 
     if (logoutButton) {
         logoutButton.addEventListener("click", () => {

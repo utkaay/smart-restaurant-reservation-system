@@ -1,54 +1,97 @@
 .admin-body {
     min-height: 100vh;
+    overflow-x: hidden;
     color: var(--color-text);
     background:
-        linear-gradient(180deg, rgba(255, 253, 248, 0.74), rgba(246, 239, 227, 0) 340px),
+        linear-gradient(180deg, rgba(255, 253, 248, 0.78), rgba(246, 239, 227, 0) 340px),
         var(--color-background);
 }
 
-.admin-header {
+.admin-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.admin-sidebar {
     position: sticky;
     top: 0;
-    z-index: 10;
-    border-bottom: 1px solid var(--color-border);
-    background: rgba(255, 252, 245, 0.92);
-    backdrop-filter: blur(16px);
-}
-
-.admin-nav,
-.admin-main {
-    width: min(1180px, calc(100% - 32px));
-    margin-inline: auto;
-}
-
-.admin-nav {
-    min-height: 74px;
+    height: 100vh;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 18px;
+    flex-direction: column;
+    gap: 28px;
+    border-right: 1px solid var(--color-border);
+    padding: 28px 18px;
+    background: rgba(255, 253, 248, 0.92);
+    box-shadow: 12px 0 34px rgba(39, 31, 21, 0.05);
 }
 
 .admin-brand {
     font-family: var(--font-heading);
     color: var(--color-primary-hover);
-    font-size: 1.22rem;
+    font-size: 1.18rem;
     font-weight: 700;
     line-height: 1.2;
 }
 
-.admin-nav-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.admin-section-nav {
+    display: grid;
+    gap: 8px;
 }
 
-.admin-nav-actions .secondary-action,
-.admin-nav-actions .primary-action {
-    min-height: 42px;
+.admin-nav-item {
+    min-height: 44px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 0 14px;
+    color: var(--color-text-muted);
+    background: transparent;
+    font-weight: 800;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background var(--transition-base),
+        border-color var(--transition-base),
+        color var(--transition-base),
+        box-shadow var(--transition-base);
+}
+
+.admin-nav-item:hover,
+.admin-nav-item:focus-visible,
+.admin-nav-item.is-active {
+    border-color: rgba(203, 169, 106, 0.46);
+    color: var(--color-primary-hover);
+    background: var(--color-accent-soft);
+}
+
+.admin-nav-item:focus-visible {
+    outline: 0;
+    box-shadow: var(--shadow-focus);
+}
+
+.admin-sidebar-actions {
+    display: grid;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.admin-sidebar-actions .secondary-action,
+.admin-sidebar-actions .primary-action {
+    width: 100%;
+    min-height: 44px;
+}
+
+.admin-content-shell {
+    min-width: 0;
+}
+
+.admin-mobile-header {
+    display: none;
 }
 
 .admin-main {
+    width: min(1240px, calc(100% - 48px));
+    margin-inline: auto;
     padding: 44px 0 72px;
 }
 
@@ -62,12 +105,74 @@
 
 .admin-page-heading h1 {
     max-width: 760px;
-    font-size: clamp(2.45rem, 5vw, 4rem);
+    margin: 0;
+    font-size: clamp(2.35rem, 5vw, 3.8rem);
 }
 
-.admin-view {
+.admin-page-heading p {
+    max-width: 720px;
+    margin: 12px 0 0;
+    color: var(--color-text-muted);
+    font-size: 1.02rem;
+    font-weight: 700;
+}
+
+.admin-view,
+.admin-section,
+.dashboard-grid,
+.dashboard-column,
+.admin-panel {
+    min-width: 0;
+}
+
+.admin-view,
+.admin-section {
     display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+    gap: 18px;
+}
+
+.dashboard-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.overview-card {
+    display: grid;
+    gap: 10px;
+    min-height: 142px;
+    border: 1px solid rgba(201, 181, 150, 0.72);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    background: var(--color-card);
+    box-shadow: var(--shadow-light);
+}
+
+.overview-card span,
+.reservation-meta,
+.settings-detail {
+    color: var(--color-text-muted);
+    font-size: var(--type-caption);
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.overview-card strong {
+    color: var(--color-primary-hover);
+    font-family: var(--font-heading);
+    font-size: 2.3rem;
+    line-height: 1;
+}
+
+.overview-card p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-weight: 700;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.75fr);
     gap: 18px;
     align-items: start;
 }
@@ -75,11 +180,84 @@
 .admin-panel {
     display: grid;
     gap: 18px;
+    border-color: rgba(201, 181, 150, 0.72);
     padding: 24px;
 }
 
 .admin-panel-wide {
     grid-column: 1 / -1;
+}
+
+.admin-panel h2,
+.admin-panel h3 {
+    margin: 0;
+}
+
+.admin-list,
+.reservation-list,
+.quick-action-list,
+.settings-list {
+    display: grid;
+    gap: 10px;
+}
+
+.reservation-list-item,
+.admin-list-item,
+.settings-row {
+    min-width: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    background: var(--color-field);
+}
+
+.reservation-list-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+}
+
+.reservation-list-item strong,
+.admin-list-item strong,
+.settings-row strong {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.reservation-list-item p,
+.settings-row p {
+    margin: 4px 0 0;
+    color: var(--color-text-muted);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.quick-action-list {
+    grid-template-columns: 1fr;
+}
+
+.quick-action-button {
+    min-height: 52px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 0 16px;
+    color: var(--color-primary-hover);
+    background: var(--color-card);
+    font-weight: 800;
+    text-align: left;
+    cursor: pointer;
+}
+
+.quick-action-button:hover,
+.quick-action-button:focus-visible {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+}
+
+.quick-action-button:focus-visible {
+    outline: 0;
+    box-shadow: var(--shadow-focus);
 }
 
 .admin-form {
@@ -131,29 +309,16 @@
     gap: 8px;
 }
 
-.admin-list {
-    display: grid;
-    gap: 10px;
-}
-
 .admin-list-item {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 14px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    padding: 14px;
-    background: var(--color-field);
 }
 
-.admin-list-item strong,
 .admin-list-item span {
     display: block;
     overflow-wrap: anywhere;
-}
-
-.admin-list-item span {
     color: var(--color-text-muted);
     font-size: 0.92rem;
     font-weight: 800;
@@ -233,55 +398,101 @@
     color: var(--color-primary-hover);
 }
 
-@media (max-width: 940px) {
-    .admin-view {
+@media (max-width: 1080px) {
+    .admin-shell {
+        grid-template-columns: 236px minmax(0, 1fr);
+    }
+
+    .dashboard-overview-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-grid {
         grid-template-columns: 1fr;
     }
+}
 
-    .admin-list-item {
-        grid-template-columns: minmax(0, 1fr) auto;
+@media (max-width: 820px) {
+    .admin-shell {
+        display: block;
     }
 
-    .admin-list-actions {
-        grid-column: 1 / -1;
-        justify-content: flex-start;
+    .admin-sidebar {
+        position: fixed;
+        inset: 64px 16px auto 16px;
+        z-index: 20;
+        height: auto;
+        max-height: calc(100vh - 88px);
+        overflow-y: auto;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: 18px;
+        box-shadow: var(--shadow-large);
+        transform: translateY(-14px);
+        opacity: 0;
+        pointer-events: none;
+        transition:
+            opacity var(--transition-base),
+            transform var(--transition-base);
+    }
+
+    .admin-sidebar.is-open {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+
+    .admin-mobile-header {
+        position: sticky;
+        top: 0;
+        z-index: 15;
+        min-height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid var(--color-border);
+        padding: 10px 16px;
+        background: rgba(255, 252, 245, 0.94);
+        backdrop-filter: blur(16px);
+    }
+
+    .admin-mobile-brand {
+        color: var(--color-primary-hover);
+        font-family: var(--font-heading);
+        font-weight: 700;
+    }
+
+    .admin-main {
+        width: min(100% - 28px, 760px);
+        padding: 32px 0 54px;
     }
 }
 
 @media (max-width: 640px) {
-    .admin-nav {
-        align-items: flex-start;
-        flex-direction: column;
-        padding: 16px 0;
-    }
-
-    .admin-nav-actions,
-    .admin-nav-actions .secondary-action,
-    .admin-nav-actions .primary-action,
-    .admin-form-actions,
-    .admin-form-actions .primary-action,
-    .admin-form-actions .secondary-action {
-        width: 100%;
-    }
-
-    .admin-nav-actions,
-    .admin-form-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .admin-main {
-        padding: 34px 0 54px;
-    }
-
     .admin-page-heading {
         align-items: flex-start;
         flex-direction: column;
     }
 
+    .dashboard-overview-grid,
     .admin-form,
     .price-tier-grid,
-    .admin-list-item {
+    .admin-list-item,
+    .reservation-list-item {
         grid-template-columns: 1fr;
+    }
+
+    .admin-form-actions,
+    .admin-sidebar-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-form-actions .primary-action,
+    .admin-form-actions .secondary-action,
+    .admin-list-actions .secondary-action,
+    .admin-list-actions .danger-action {
+        width: 100%;
     }
 }
