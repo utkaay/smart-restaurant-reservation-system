@@ -262,7 +262,6 @@
 
 .admin-form {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
 }
 
@@ -275,6 +274,26 @@
     color: var(--color-text);
     font-size: 0.9rem;
     font-weight: 800;
+}
+
+.admin-form input,
+.admin-form select,
+.admin-search-field input {
+    width: 100%;
+    min-height: 50px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 0 14px;
+    color: var(--color-text);
+    background: var(--color-field);
+    outline: 0;
+}
+
+.admin-form input:focus,
+.admin-form select:focus,
+.admin-search-field input:focus {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-focus);
 }
 
 .admin-form fieldset {
@@ -297,6 +316,71 @@
     gap: 10px;
 }
 
+.admin-form .admin-form-section {
+    display: grid;
+    gap: 14px;
+    border: 1px solid rgba(201, 181, 150, 0.62);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    background: rgba(255, 252, 245, 0.58);
+}
+
+.admin-form .admin-form-section > legend {
+    padding: 0 6px;
+    color: var(--color-primary-hover);
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+}
+
+.admin-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-checkbox-group {
+    display: grid;
+    gap: 10px;
+}
+
+.media-form-grid {
+    align-items: stretch;
+}
+
+.restaurant-image-preview {
+    min-height: 168px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    background: var(--color-field);
+    font-weight: 800;
+}
+
+.restaurant-image-preview img {
+    width: 100%;
+    height: 100%;
+    min-height: 168px;
+    object-fit: cover;
+}
+
+.restaurant-list-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
+    gap: 18px;
+    align-items: end;
+}
+
+.admin-search-field {
+    display: grid;
+    gap: 8px;
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
 .price-tier-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -314,6 +398,16 @@
     grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 14px;
+    transition:
+        border-color var(--transition-base),
+        box-shadow var(--transition-base),
+        transform var(--transition-base);
+}
+
+.admin-list-item:hover {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-light);
+    transform: translateY(-1px);
 }
 
 .admin-list-item span {
@@ -322,6 +416,27 @@
     color: var(--color-text-muted);
     font-size: 0.92rem;
     font-weight: 800;
+}
+
+.restaurant-management-main {
+    min-width: 0;
+}
+
+.restaurant-management-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.restaurant-management-meta span {
+    width: fit-content;
+    border-radius: var(--radius-pill);
+    padding: 7px 10px;
+    color: var(--color-primary-hover);
+    background: var(--color-accent-soft);
+    font-size: var(--type-caption);
+    line-height: 1;
 }
 
 .admin-list-actions {
@@ -334,6 +449,17 @@
 .admin-list-actions .secondary-action,
 .admin-list-actions .danger-action {
     min-height: 40px;
+}
+
+.restaurant-management-card .danger-action {
+    border: 1px solid rgba(168, 74, 66, 0.26);
+    color: var(--color-danger);
+    background: var(--color-danger-soft);
+}
+
+.restaurant-management-card .danger-action:hover {
+    color: var(--color-white);
+    background: var(--color-danger);
 }
 
 .admin-message {
@@ -477,10 +603,20 @@
 
     .dashboard-overview-grid,
     .admin-form,
+    .admin-form-grid,
     .price-tier-grid,
+    .restaurant-list-header,
     .admin-list-item,
     .reservation-list-item {
         grid-template-columns: 1fr;
+    }
+
+    .admin-form-section {
+        padding: 14px;
+    }
+
+    .restaurant-management-meta {
+        justify-content: flex-start;
     }
 
     .admin-form-actions,
@@ -494,5 +630,9 @@
     .admin-list-actions .secondary-action,
     .admin-list-actions .danger-action {
         width: 100%;
+    }
+
+    .admin-list-actions {
+        justify-content: stretch;
     }
 }

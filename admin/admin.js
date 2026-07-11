@@ -167,6 +167,7 @@ const DEFAULT_CLOSING_TIME = "22:00";
 
 let editingRestaurantId = null;
 let activeAdminSection = "dashboard";
+let adminRestaurantSearchTerm = "";
 
 const normalizeEmail = (email = "") => String(email).trim().toLowerCase();
 
@@ -295,6 +296,22 @@ const getStructuredHoursFromDisplay = (hours = "") => {
     return { openingTime, closingTime };
 };
 
+const formatTimeForDisplay = (time = "") => {
+    if (!isValidRestaurantTime(time)) {
+        return "";
+    }
+
+    const [hourValue, minuteValue] = time.split(":").map(Number);
+    const period = hourValue >= 12 ? "PM" : "AM";
+    const displayHour = hourValue % 12 || 12;
+
+    return `${displayHour}:${String(minuteValue).padStart(2, "0")} ${period}`;
+};
+
+const formatRestaurantHours = (openingTime, closingTime) => {
+    return `${formatTimeForDisplay(openingTime)} - ${formatTimeForDisplay(closingTime)}`;
+};
+
 const normalizeRestaurantHours = (restaurant = {}) => {
     const parsedHours = getStructuredHoursFromDisplay(restaurant.hours);
     const openingTime = isValidRestaurantTime(restaurant.openingTime)
@@ -392,24 +409,41 @@ const createCheckboxChoices = (options, selectedValues, inputName) => {
 };
 
 const renderAdminRestaurantList = () => {
-    const restaurants = getRestaurants();
+    const allRestaurants = getRestaurants();
+    const cleanSearchTerm = adminRestaurantSearchTerm.trim().toLowerCase();
+    const restaurants = allRestaurants.filter(({ name = "", cuisine = "", location = "" }) => {
+        const searchableText = `${name} ${cuisine} ${location}`.toLowerCase();
+        return searchableText.includes(cleanSearchTerm);
+    });
+
+    if (allRestaurants.length === 0) {
+        return `
+            <div class="empty-state">
+                <h3>No restaurants found.</h3>
+                <p>Add your first restaurant above.</p>
+            </div>
+        `;
+    }
 
     if (restaurants.length === 0) {
         return `
             <div class="empty-state">
-                <h3>No restaurants saved</h3>
-                <p>Add a restaurant to restore customer-facing cards.</p>
+                <h3>No restaurants found.</h3>
+                <p>Try a different restaurant name, cuisine, or location.</p>
             </div>
         `;
     }
 
     return restaurants.map(({ id, name, cuisine, location, rating, priceLevel }) => `
-        <article class="admin-list-item">
-            <div>
+        <article class="admin-list-item restaurant-management-card">
+            <div class="restaurant-management-main">
                 <strong>${escapeHTML(name)}</strong>
                 <span>${escapeHTML(cuisine)} in ${escapeHTML(location)}</span>
             </div>
-            <span>${escapeHTML(priceLevel)} &middot; ${escapeHTML(rating)}</span>
+            <div class="restaurant-management-meta">
+                <span>Rating ${escapeHTML(rating)}</span>
+                <span>${escapeHTML(priceLevel)}</span>
+            </div>
             <div class="admin-list-actions">
                 <button class="secondary-action" type="button" data-edit-restaurant-id="${id}">Edit</button>
                 <button class="danger-action" type="button" data-delete-restaurant-id="${id}">Delete</button>
@@ -432,62 +466,93 @@ const createRestaurantFormPanel = () => `
         </div>
 
         <form class="admin-form" id="addRestaurantForm">
-            <label>
-                Name
-                <input type="text" name="name" required>
-            </label>
-            <label>
-                Cuisine
-                <input type="text" name="cuisine" required>
-            </label>
-            <label>
-                Location
-                <input type="text" name="location" required>
-            </label>
-            <label>
-                Hours
-                <input type="text" name="hours" placeholder="12:00 PM - 10:30 PM" required>
-            </label>
-            <label>
-                Rating
-                <input type="number" name="rating" min="0" max="5" step="0.1" required>
-            </label>
-            <label>
-                Price level
-                <select name="priceLevel" required>
-                    ${["$", "$$", "$$$", "$$$$"].map((priceLevel) => `
-                        <option value="${priceLevel}">${priceLevel}</option>
-                    `).join("")}
-                </select>
-            </label>
-            <label>
-                Distance category
-                <select name="distanceCategory" required>
-                    ${["Nearby", "Medium", "Far"].map((distanceCategory) => `
-                        <option value="${distanceCategory}">${distanceCategory}</option>
-                    `).join("")}
-                </select>
-            </label>
-            <label>
-                Badges
-                <input type="text" name="badges" placeholder="Patio, Seafood, Date night">
-            </label>
-            <fieldset>
-                <legend>Sustainability badges</legend>
-                <div class="choice-grid compact">
-                    ${createCheckboxChoices(sustainabilityBadgeOptions, [], "sustainabilityBadges")}
+            <fieldset class="admin-form-section">
+                <legend>Basic Information</legend>
+                <div class="admin-form-grid">
+                    <label>
+                        Restaurant Name
+                        <input type="text" name="name" required>
+                    </label>
+                    <label>
+                        Cuisine
+                        <input type="text" name="cuisine" required>
+                    </label>
+                    <label>
+                        Location
+                        <input type="text" name="location" required>
+                    </label>
+                    <label>
+                        Opening Time
+                        <input type="time" name="openingTime" required>
+                    </label>
+                    <label>
+                        Closing Time
+                        <input type="time" name="closingTime" required>
+                    </label>
                 </div>
             </fieldset>
-            <fieldset>
-                <legend>Allergen badges</legend>
-                <div class="choice-grid compact">
-                    ${createCheckboxChoices(allergenBadgeOptions, [], "allergenBadges")}
+
+            <fieldset class="admin-form-section">
+                <legend>Restaurant Details</legend>
+                <div class="admin-form-grid">
+                    <label>
+                        Rating
+                        <input type="number" name="rating" min="0" max="5" step="0.1" required>
+                    </label>
+                    <label>
+                        Price Level
+                        <select name="priceLevel" required>
+                            ${["$", "$$", "$$$", "$$$$"].map((priceLevel) => `
+                                <option value="${priceLevel}">${priceLevel}</option>
+                            `).join("")}
+                        </select>
+                    </label>
+                    <label>
+                        Distance Category
+                        <select name="distanceCategory" required>
+                            ${["Nearby", "Medium", "Far"].map((distanceCategory) => `
+                                <option value="${distanceCategory}">${distanceCategory}</option>
+                            `).join("")}
+                        </select>
+                    </label>
+                    <label>
+                        Standard Badges
+                        <input type="text" name="badges" placeholder="Patio, Seafood, Date night">
+                    </label>
                 </div>
             </fieldset>
-            <label>
-                Image URL
-                <input type="url" name="image" required>
-            </label>
+
+            <fieldset class="admin-form-section">
+                <legend>Sustainability and Allergens</legend>
+                <div class="admin-form-grid">
+                    <fieldset class="admin-checkbox-group">
+                        <legend>Sustainability Badges</legend>
+                        <div class="choice-grid compact">
+                            ${createCheckboxChoices(sustainabilityBadgeOptions, [], "sustainabilityBadges")}
+                        </div>
+                    </fieldset>
+                    <fieldset class="admin-checkbox-group">
+                        <legend>Allergen Badges</legend>
+                        <div class="choice-grid compact">
+                            ${createCheckboxChoices(allergenBadgeOptions, [], "allergenBadges")}
+                        </div>
+                    </fieldset>
+                </div>
+            </fieldset>
+
+            <fieldset class="admin-form-section">
+                <legend>Media</legend>
+                <div class="admin-form-grid media-form-grid">
+                    <label>
+                        Image URL
+                        <input type="url" name="image" id="restaurantImageInput" required>
+                    </label>
+                    <div class="restaurant-image-preview" id="restaurantImagePreview" aria-live="polite">
+                        <span>Image preview</span>
+                    </div>
+                </div>
+            </fieldset>
+
             <div class="admin-form-actions">
                 <button class="primary-action" type="submit" id="restaurantSubmitButton">
                     ${editingRestaurantId ? "Update Restaurant" : "Add Restaurant"}
@@ -533,11 +598,23 @@ const createTableLayoutPanel = () => `
 
 const createSavedRestaurantsPanel = () => `
     <section class="profile-panel admin-panel admin-panel-wide">
-        <div class="form-heading">
-            <p class="eyebrow">Saved restaurants</p>
-            <h3>${getRestaurants().length} restaurants</h3>
+        <div class="restaurant-list-header">
+            <div class="form-heading">
+                <p class="eyebrow">Saved restaurants</p>
+                <h3>${getRestaurants().length} restaurants</h3>
+            </div>
+            <label class="admin-search-field">
+                <span>Search saved restaurants</span>
+                <input
+                    type="search"
+                    id="adminRestaurantSearch"
+                    value="${escapeHTML(adminRestaurantSearchTerm)}"
+                    placeholder="Search by name, cuisine, or location"
+                    autocomplete="off"
+                >
+            </label>
         </div>
-        <div class="admin-list">
+        <div class="admin-list" id="adminRestaurantList">
             ${renderAdminRestaurantList()}
         </div>
         <button class="secondary-action" type="button" id="resetAdminDataButton">Reset Restaurants and Price Tiers</button>
@@ -554,6 +631,8 @@ const attachManagementHandlers = () => {
     const restaurantForm = adminView.querySelector("#addRestaurantForm");
     const cancelEditButton = adminView.querySelector("#cancelEditRestaurantButton");
     const resetButton = adminView.querySelector("#resetAdminDataButton");
+    const restaurantSearch = adminView.querySelector("#adminRestaurantSearch");
+    const imageInput = adminView.querySelector("#restaurantImageInput");
 
     if (restaurantForm) {
         restaurantForm.addEventListener("submit", handleAddRestaurant);
@@ -577,12 +656,67 @@ const attachManagementHandlers = () => {
         resetButton.addEventListener("click", resetAdminData);
     }
 
+    if (restaurantSearch) {
+        restaurantSearch.addEventListener("input", (event) => {
+            adminRestaurantSearchTerm = event.target.value;
+            updateAdminRestaurantList();
+        });
+    }
+
+    if (imageInput) {
+        imageInput.addEventListener("input", () => updateRestaurantImagePreview(imageInput.value));
+        updateRestaurantImagePreview(imageInput.value);
+    }
+
     if (editingRestaurantId && restaurantForm) {
         const restaurant = getRestaurants().find(({ id }) => String(id) === String(editingRestaurantId));
 
         if (restaurant) {
             fillRestaurantForm(restaurant);
         }
+    }
+};
+
+const updateAdminRestaurantList = () => {
+    const restaurantList = document.querySelector("#adminRestaurantList");
+
+    if (restaurantList) {
+        restaurantList.innerHTML = renderAdminRestaurantList();
+    }
+};
+
+const isPreviewableImageURL = (imageUrl = "") => {
+    try {
+        const parsedUrl = new URL(imageUrl);
+        return ["http:", "https:"].includes(parsedUrl.protocol);
+    } catch {
+        return false;
+    }
+};
+
+const updateRestaurantImagePreview = (imageUrl = "") => {
+    const preview = document.querySelector("#restaurantImagePreview");
+
+    if (!preview) {
+        return;
+    }
+
+    if (!isPreviewableImageURL(imageUrl)) {
+        preview.innerHTML = "<span>Image preview</span>";
+        preview.classList.remove("has-image");
+        return;
+    }
+
+    preview.innerHTML = `<img src="${escapeHTML(imageUrl)}" alt="Restaurant image preview">`;
+    preview.classList.add("has-image");
+
+    const previewImage = preview.querySelector("img");
+
+    if (previewImage) {
+        previewImage.addEventListener("error", () => {
+            preview.innerHTML = "<span>Image preview</span>";
+            preview.classList.remove("has-image");
+        });
     }
 };
 
@@ -594,7 +728,7 @@ const getSectionMeta = (section = activeAdminSection) => {
         },
         restaurants: {
             title: "Restaurant Manager",
-            subtitle: "Add, edit, delete, and review restaurants shown on the customer site."
+            subtitle: "Add, edit, and maintain restaurant listings."
         },
         reservations: {
             title: "Reservations",
@@ -707,8 +841,6 @@ const renderRestaurantManagerView = () => `
     <section class="admin-section admin-view">
         ${createRestaurantFormPanel()}
         ${createSavedRestaurantsPanel()}
-        ${createPriceTiersPanel()}
-        ${createTableLayoutPanel()}
     </section>
 `;
 
@@ -823,16 +955,20 @@ const setActiveAdminSection = (section) => {
 };
 
 const getRestaurantDataFromForm = (formData) => {
-    const hours = getFormValue(formData, "hours");
-    const structuredHours = getStructuredHoursFromDisplay(hours) || {};
+    const openingTime = isValidRestaurantTime(getFormValue(formData, "openingTime"))
+        ? getFormValue(formData, "openingTime")
+        : DEFAULT_OPENING_TIME;
+    const closingTime = isValidRestaurantTime(getFormValue(formData, "closingTime"))
+        ? getFormValue(formData, "closingTime")
+        : DEFAULT_CLOSING_TIME;
 
     return {
         name: getFormValue(formData, "name"),
         cuisine: getFormValue(formData, "cuisine"),
         location: getFormValue(formData, "location"),
-        hours,
-        openingTime: structuredHours.openingTime || DEFAULT_OPENING_TIME,
-        closingTime: structuredHours.closingTime || DEFAULT_CLOSING_TIME,
+        hours: formatRestaurantHours(openingTime, closingTime),
+        openingTime,
+        closingTime,
         rating: Number(formData.get("rating")) || 0,
         priceLevel: formData.get("priceLevel") || "$$",
         distanceCategory: formData.get("distanceCategory") || "Medium",
@@ -876,7 +1012,8 @@ const fillRestaurantForm = (restaurant) => {
     form.elements.name.value = restaurant.name || "";
     form.elements.cuisine.value = restaurant.cuisine || "";
     form.elements.location.value = restaurant.location || "";
-    form.elements.hours.value = restaurant.hours || "";
+    form.elements.openingTime.value = restaurant.openingTime || DEFAULT_OPENING_TIME;
+    form.elements.closingTime.value = restaurant.closingTime || DEFAULT_CLOSING_TIME;
     form.elements.rating.value = restaurant.rating || "";
     form.elements.priceLevel.value = restaurant.priceLevel || "$$";
     form.elements.distanceCategory.value = restaurant.distanceCategory || "Medium";
@@ -888,6 +1025,7 @@ const fillRestaurantForm = (restaurant) => {
         input.checked = (restaurant.allergenBadges || []).includes(input.value);
     });
     form.elements.image.value = restaurant.image || "";
+    updateRestaurantImagePreview(restaurant.image || "");
     form.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
