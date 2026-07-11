@@ -1,10 +1,54 @@
 .admin-body {
+    --admin-card-radius: var(--radius-md);
+    --admin-card-padding: 24px;
+    --admin-control-height: 46px;
+    --admin-hover-lift: translateY(-2px);
+    --admin-transition: 220ms ease;
+    --admin-card-shadow: 0 16px 34px rgba(39, 31, 21, 0.07);
+    --admin-card-shadow-hover: 0 20px 42px rgba(39, 31, 21, 0.1);
+
     min-height: 100vh;
     overflow-x: hidden;
     color: var(--color-text);
     background:
         linear-gradient(180deg, rgba(255, 253, 248, 0.78), rgba(246, 239, 227, 0) 340px),
         var(--color-background);
+}
+
+.admin-body * {
+    min-width: 0;
+}
+
+.admin-body button,
+.admin-body a,
+.admin-body input,
+.admin-body select,
+.admin-body textarea {
+    transition:
+        background-color var(--admin-transition),
+        border-color var(--admin-transition),
+        color var(--admin-transition),
+        box-shadow var(--admin-transition),
+        transform var(--admin-transition),
+        opacity var(--admin-transition);
+}
+
+.admin-body .primary-action:active,
+.admin-body .secondary-action:active,
+.admin-body .danger-action:active,
+.admin-body .quick-action-button:active,
+.admin-body .admin-nav-item:active {
+    transform: translateY(0);
+}
+
+.admin-body input:focus,
+.admin-body select:focus,
+.admin-body textarea:focus,
+.admin-body button:focus-visible,
+.admin-body a:focus-visible {
+    outline: 0;
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-focus);
 }
 
 .admin-shell {
@@ -27,6 +71,8 @@
 }
 
 .admin-brand {
+    display: inline-flex;
+    border-radius: var(--radius-sm);
     font-family: var(--font-heading);
     color: var(--color-primary-hover);
     font-size: 1.18rem;
@@ -40,9 +86,9 @@
 }
 
 .admin-nav-item {
-    min-height: 44px;
+    min-height: var(--admin-control-height);
     border: 1px solid transparent;
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     padding: 0 14px;
     color: var(--color-text-muted);
     background: transparent;
@@ -50,10 +96,11 @@
     text-align: left;
     cursor: pointer;
     transition:
-        background var(--transition-base),
-        border-color var(--transition-base),
-        color var(--transition-base),
-        box-shadow var(--transition-base);
+        background var(--admin-transition),
+        border-color var(--admin-transition),
+        color var(--admin-transition),
+        box-shadow var(--admin-transition),
+        transform var(--admin-transition);
 }
 
 .admin-nav-item:hover,
@@ -62,6 +109,14 @@
     border-color: rgba(203, 169, 106, 0.46);
     color: var(--color-primary-hover);
     background: var(--color-accent-soft);
+}
+
+.admin-nav-item:hover {
+    transform: translateX(2px);
+}
+
+.admin-nav-item.is-active {
+    box-shadow: inset 3px 0 0 var(--color-primary);
 }
 
 .admin-nav-item:focus-visible {
@@ -73,12 +128,14 @@
     display: grid;
     gap: 10px;
     margin-top: auto;
+    border-top: 1px solid var(--color-border);
+    padding-top: 16px;
 }
 
 .admin-sidebar-actions .secondary-action,
 .admin-sidebar-actions .primary-action {
     width: 100%;
-    min-height: 44px;
+    min-height: var(--admin-control-height);
 }
 
 .admin-content-shell {
@@ -120,7 +177,6 @@
 .admin-view,
 .admin-section,
 .dashboard-grid,
-.dashboard-column,
 .admin-panel {
     min-width: 0;
 }
@@ -129,6 +185,25 @@
 .admin-section {
     display: grid;
     gap: 18px;
+    animation: adminFadeUp 220ms ease both;
+}
+
+.admin-feedback-message {
+    margin: 0 0 6px;
+    border: 1px solid rgba(35, 106, 78, 0.22);
+    border-radius: var(--admin-card-radius);
+    padding: 13px 16px;
+    color: var(--color-primary-hover);
+    background: var(--color-success-soft);
+    box-shadow: 0 10px 24px rgba(39, 31, 21, 0.06);
+    font-weight: 800;
+    animation: adminFadeUp 220ms ease both;
+}
+
+.admin-feedback-message.error {
+    border-color: rgba(168, 74, 66, 0.28);
+    color: var(--color-danger);
+    background: var(--color-danger-soft);
 }
 
 .dashboard-overview-grid {
@@ -142,15 +217,24 @@
     gap: 10px;
     min-height: 142px;
     border: 1px solid rgba(201, 181, 150, 0.72);
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     padding: 20px;
     background: var(--color-card);
     box-shadow: var(--shadow-light);
+    transition:
+        border-color var(--admin-transition),
+        box-shadow var(--admin-transition),
+        transform var(--admin-transition);
+}
+
+.overview-card:hover {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--admin-card-shadow-hover);
+    transform: var(--admin-hover-lift);
 }
 
 .overview-card span,
-.reservation-meta,
-.settings-detail {
+.reservation-meta {
     color: var(--color-text-muted);
     font-size: var(--type-caption);
     font-weight: 800;
@@ -181,7 +265,9 @@
     display: grid;
     gap: 18px;
     border-color: rgba(201, 181, 150, 0.72);
-    padding: 24px;
+    border-radius: var(--admin-card-radius);
+    padding: var(--admin-card-padding);
+    box-shadow: var(--shadow-light);
 }
 
 .admin-panel-wide {
@@ -195,18 +281,16 @@
 
 .admin-list,
 .reservation-list,
-.quick-action-list,
-.settings-list {
+.quick-action-list {
     display: grid;
     gap: 10px;
 }
 
 .reservation-list-item,
-.admin-list-item,
-.settings-row {
+.admin-list-item {
     min-width: 0;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     padding: 14px;
     background: var(--color-field);
 }
@@ -219,14 +303,12 @@
 }
 
 .reservation-list-item strong,
-.admin-list-item strong,
-.settings-row strong {
+.admin-list-item strong {
     display: block;
     overflow-wrap: anywhere;
 }
 
-.reservation-list-item p,
-.settings-row p {
+.reservation-list-item p {
     margin: 4px 0 0;
     color: var(--color-text-muted);
     font-weight: 700;
@@ -249,7 +331,7 @@
 .settings-count-card {
     min-width: 0;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     padding: 16px;
     background: var(--color-field);
 }
@@ -317,9 +399,9 @@
 .reservation-controls-grid select,
 .reservation-card-actions select {
     width: 100%;
-    min-height: 44px;
+    min-height: var(--admin-control-height);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     padding: 0 12px;
     color: var(--color-text);
     background: var(--color-field);
@@ -342,19 +424,19 @@
     display: grid;
     gap: 14px;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     padding: 16px;
     background: var(--color-field);
     transition:
-        border-color var(--transition-base),
-        box-shadow var(--transition-base),
-        transform var(--transition-base);
+        border-color var(--admin-transition),
+        box-shadow var(--admin-transition),
+        transform var(--admin-transition);
 }
 
 .reservation-management-card:hover {
     border-color: var(--color-border-strong);
-    box-shadow: var(--shadow-light);
-    transform: translateY(-1px);
+    box-shadow: var(--admin-card-shadow-hover);
+    transform: var(--admin-hover-lift);
 }
 
 .reservation-card-main {
@@ -432,7 +514,7 @@
     gap: 10px;
     min-width: 0;
     border: 1px solid rgba(201, 181, 150, 0.62);
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     padding: 14px;
     background: var(--color-card);
 }
@@ -476,9 +558,9 @@
 .table-controls-grid select,
 .table-controls-grid input {
     width: 100%;
-    min-height: 44px;
+    min-height: var(--admin-control-height);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     padding: 0 12px;
     color: var(--color-text);
     background: var(--color-field);
@@ -525,18 +607,18 @@
     justify-content: space-between;
     gap: 12px;
     border: 1px solid transparent;
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     padding: 16px;
     transition:
-        border-color var(--transition-base),
-        box-shadow var(--transition-base),
-        transform var(--transition-base);
+        border-color var(--admin-transition),
+        box-shadow var(--admin-transition),
+        transform var(--admin-transition);
 }
 
 .admin-table-card:hover {
     border-color: var(--color-border-strong);
-    box-shadow: var(--shadow-light);
-    transform: translateY(-1px);
+    box-shadow: var(--admin-card-shadow);
+    transform: var(--admin-hover-lift);
 }
 
 .admin-table-card strong {
@@ -591,19 +673,25 @@
 .quick-action-button {
     min-height: 52px;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     padding: 0 16px;
     color: var(--color-primary-hover);
     background: var(--color-card);
     font-weight: 800;
     text-align: left;
     cursor: pointer;
+    transition:
+        border-color var(--admin-transition),
+        background-color var(--admin-transition),
+        box-shadow var(--admin-transition),
+        transform var(--admin-transition);
 }
 
 .quick-action-button:hover,
 .quick-action-button:focus-visible {
     border-color: var(--color-primary);
     background: var(--color-primary-soft);
+    transform: var(--admin-hover-lift);
 }
 
 .quick-action-button:focus-visible {
@@ -633,7 +721,7 @@
     width: 100%;
     min-height: 50px;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     padding: 0 14px;
     color: var(--color-text);
     background: var(--color-field);
@@ -671,7 +759,7 @@
     display: grid;
     gap: 14px;
     border: 1px solid rgba(201, 181, 150, 0.62);
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     padding: 16px;
     background: rgba(255, 252, 245, 0.58);
 }
@@ -695,16 +783,35 @@
 }
 
 .media-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
     align-items: stretch;
 }
 
+.media-form-grid > label {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.media-form-grid > label input {
+    margin-top: 38px;
+}
+
+#restaurantImageInput {
+    width: 100%;
+    min-height: 50px;
+    height: 50px;
+}
+
 .restaurant-image-preview {
-    min-height: 168px;
+    min-height: 220px;
     display: grid;
     place-items: center;
     overflow: hidden;
     border: 1px dashed var(--color-border-strong);
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     color: var(--color-text-muted);
     background: var(--color-field);
     font-weight: 800;
@@ -750,15 +857,15 @@
     align-items: center;
     gap: 14px;
     transition:
-        border-color var(--transition-base),
-        box-shadow var(--transition-base),
-        transform var(--transition-base);
+        border-color var(--admin-transition),
+        box-shadow var(--admin-transition),
+        transform var(--admin-transition);
 }
 
 .admin-list-item:hover {
     border-color: var(--color-border-strong);
-    box-shadow: var(--shadow-light);
-    transform: translateY(-1px);
+    box-shadow: var(--admin-card-shadow-hover);
+    transform: var(--admin-hover-lift);
 }
 
 .admin-list-item span {
@@ -813,14 +920,54 @@
     background: var(--color-danger);
 }
 
+.admin-body .primary-action,
+.admin-body .secondary-action,
+.admin-body .danger-action {
+    min-height: var(--admin-control-height);
+    border-radius: var(--admin-card-radius);
+}
+
+.admin-body .primary-action:hover,
+.admin-body .secondary-action:hover,
+.admin-body .danger-action:hover {
+    transform: var(--admin-hover-lift);
+}
+
+.admin-body .empty-state {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 8px;
+    border: 1px dashed rgba(161, 136, 96, 0.64);
+    border-radius: var(--admin-card-radius);
+    padding: clamp(24px, 5vw, 42px);
+    color: var(--color-text-muted);
+    text-align: center;
+    background: rgba(255, 252, 245, 0.7);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+}
+
+.admin-body .empty-state h3 {
+    margin: 0;
+    color: var(--color-primary-hover);
+    font-family: var(--font-heading);
+    font-size: clamp(1.35rem, 4vw, 1.8rem);
+}
+
+.admin-body .empty-state p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-weight: 700;
+}
+
 .admin-message {
     margin: 0;
     border: 1px solid rgba(168, 74, 66, 0.28);
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     padding: 12px 14px;
     color: var(--color-danger);
     background: var(--color-danger-soft);
     font-weight: 700;
+    animation: adminFadeUp 220ms ease both;
 }
 
 .admin-login-body {
@@ -837,10 +984,11 @@
     display: grid;
     gap: 22px;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--admin-card-radius);
     padding: clamp(24px, 5vw, 36px);
     background: var(--color-card);
     box-shadow: var(--shadow-medium);
+    animation: adminFadeUp 240ms ease both;
 }
 
 .admin-login-heading {
@@ -859,6 +1007,11 @@
     gap: 16px;
 }
 
+.admin-login-form input {
+    min-height: 50px;
+    border-radius: var(--admin-card-radius);
+}
+
 .admin-login-form .primary-action {
     width: 100%;
 }
@@ -873,6 +1026,12 @@
 .admin-secondary-link:hover,
 .admin-secondary-link:focus-visible {
     color: var(--color-primary-hover);
+}
+
+.admin-secondary-link:focus-visible {
+    outline: 0;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-focus);
 }
 
 @media (max-width: 1080px) {
@@ -909,15 +1068,15 @@
         max-height: calc(100vh - 88px);
         overflow-y: auto;
         border: 1px solid var(--color-border);
-        border-radius: var(--radius-md);
+        border-radius: var(--admin-card-radius);
         padding: 18px;
         box-shadow: var(--shadow-large);
         transform: translateY(-14px);
         opacity: 0;
         pointer-events: none;
         transition:
-            opacity var(--transition-base),
-            transform var(--transition-base);
+            opacity var(--admin-transition),
+            transform var(--admin-transition);
     }
 
     .admin-sidebar.is-open {
@@ -945,6 +1104,10 @@
         color: var(--color-primary-hover);
         font-family: var(--font-heading);
         font-weight: 700;
+    }
+
+    .admin-menu-button {
+        min-width: 92px;
     }
 
     .admin-main {
@@ -1026,5 +1189,28 @@
 
     .settings-tool-card .secondary-action {
         width: 100%;
+    }
+}
+
+@keyframes adminFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-body *,
+    .admin-body *::before,
+    .admin-body *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
     }
 }

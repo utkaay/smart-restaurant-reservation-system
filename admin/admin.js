@@ -180,6 +180,8 @@ let expandedReservationId = null;
 let adminSelectedRestaurantId = null;
 let adminSelectedTableDate = "";
 let adminSelectedTableTime = "";
+let adminActionMessage = "";
+let adminActionMessageType = "success";
 
 const normalizeEmail = (email = "") => String(email).trim().toLowerCase();
 
@@ -1655,6 +1657,15 @@ const renderAdminTableCard = (table) => {
 const renderTableCapacityGroups = () => {
     const priceTiers = getPriceTiers();
 
+    if (defaultTableLayout.length === 0) {
+        return `
+            <div class="empty-state">
+                <h3>No table data available.</h3>
+                <p>The shared default table layout will appear here when it is configured.</p>
+            </div>
+        `;
+    }
+
     return getTablesByCapacity().map(({ capacity, tables }) => `
         <section class="profile-panel admin-panel table-capacity-group">
             <div class="table-group-header">
@@ -1711,9 +1722,50 @@ const getSectionHTML = () => {
     return (renderers[activeAdminSection] || renderDashboardView)();
 };
 
+const setAdminActionMessage = (message, type = "success") => {
+    adminActionMessage = message;
+    adminActionMessageType = type;
+};
+
+const renderAdminActionMessage = () => {
+    if (!adminActionMessage) {
+        return "";
+    }
+
+    return `
+        <p class="admin-feedback-message ${adminActionMessageType}" id="adminActionMessage" aria-live="polite">
+            ${escapeHTML(adminActionMessage)}
+        </p>
+    `;
+};
+
+const updateAdminActionMessage = () => {
+    const messageElement = document.querySelector("#adminActionMessage");
+
+    if (messageElement) {
+        messageElement.textContent = adminActionMessage;
+        messageElement.className = `admin-feedback-message ${adminActionMessageType}`;
+        return;
+    }
+
+    const adminView = document.querySelector("#adminDashboard");
+
+    if (adminView && adminActionMessage) {
+        adminView.insertAdjacentHTML("afterbegin", renderAdminActionMessage());
+    }
+};
+
 const updateSectionNavigation = () => {
     document.querySelectorAll("[data-admin-section]").forEach((button) => {
-        button.classList.toggle("is-active", button.dataset.adminSection === activeAdminSection);
+        const isActive = button.dataset.adminSection === activeAdminSection;
+
+        button.classList.toggle("is-active", isActive);
+
+        if (isActive) {
+            button.setAttribute("aria-current", "page");
+        } else {
+            button.removeAttribute("aria-current");
+        }
     });
 };
 
@@ -1740,7 +1792,7 @@ const renderActiveAdminSection = () => {
 
     updateAdminHeader();
     updateSectionNavigation();
-    adminView.innerHTML = getSectionHTML();
+    adminView.innerHTML = `${renderAdminActionMessage()}${getSectionHTML()}`;
     attachManagementHandlers();
 
     adminView.querySelectorAll("[data-admin-section-target]").forEach((button) => {
@@ -1809,6 +1861,7 @@ const handleAddRestaurant = (event) => {
     }
 
     editingRestaurantId = null;
+    setAdminActionMessage("Restaurant saved.");
     renderActiveAdminSection();
 };
 
@@ -1867,11 +1920,18 @@ const updateRestaurant = (restaurantId, updatedData) => {
 
 const cancelRestaurantEdit = () => {
     editingRestaurantId = null;
+    setAdminActionMessage("Restaurant edit cancelled.");
     renderActiveAdminSection();
 };
 
 const handleDeleteRestaurant = (event) => {
     const restaurantId = event.currentTarget.dataset.deleteRestaurantId;
+    const restaurant = getRestaurants().find(({ id }) => String(id) === String(restaurantId));
+    const restaurantName = restaurant?.name || "this restaurant";
+
+    if (!window.confirm(`Delete ${restaurantName}? This removes it from the shared restaurant listings.`)) {
+        return;
+    }
 
     saveRestaurants(getRestaurants().filter(({ id }) => String(id) !== String(restaurantId)));
 
@@ -1879,6 +1939,7 @@ const handleDeleteRestaurant = (event) => {
         editingRestaurantId = null;
     }
 
+    setAdminActionMessage("Restaurant deleted.");
     renderActiveAdminSection();
 };
 
@@ -1891,6 +1952,8 @@ const handlePriceTierUpdate = (event) => {
 
     savePriceTiers(nextPriceTiers);
     event.target.value = nextPriceTiers[seats];
+    setAdminActionMessage(`${seats}-seat fee updated.`);
+    updateAdminActionMessage();
 };
 
 const handleReservationStatusChange = (event) => {
@@ -1908,25 +1971,28 @@ const handleReservationStatusChange = (event) => {
         };
     }));
 
+    setAdminActionMessage("Reservation status updated.");
     renderActiveAdminSection();
 };
 
 const resetRestaurantsData = () => {
-    if (!window.confirm("Reset restaurants to the default demo listings?")) {
+    if (!window.confirm("Reset restaurants to the default demo listings? Current custom restaurant listings will be replaced.")) {
         return;
     }
 
     editingRestaurantId = null;
     saveRestaurants(defaultRestaurants);
+    setAdminActionMessage("Restaurants reset to default demo listings.");
     renderActiveAdminSection();
 };
 
 const resetPriceTiersData = () => {
-    if (!window.confirm("Reset price tiers to the default table fees?")) {
+    if (!window.confirm("Reset price tiers to the default table fees? Current custom fees will be replaced.")) {
         return;
     }
 
     savePriceTiers(defaultPriceTiers);
+    setAdminActionMessage("Price tiers reset to defaults.");
     renderActiveAdminSection();
 };
 
