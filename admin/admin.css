@@ -394,6 +394,132 @@
     padding-top: 0;
 }
 
+.table-controls-grid {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.4fr) repeat(2, minmax(160px, 0.8fr));
+    gap: 14px;
+    align-items: end;
+}
+
+.table-controls-grid label {
+    display: grid;
+    gap: 8px;
+    color: var(--color-text);
+    font-size: 0.88rem;
+    font-weight: 800;
+}
+
+.table-controls-grid select,
+.table-controls-grid input {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 0 12px;
+    color: var(--color-text);
+    background: var(--color-field);
+    outline: 0;
+}
+
+.table-controls-grid select:focus,
+.table-controls-grid input:focus {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-focus);
+}
+
+.table-legend-panel {
+    padding: 16px 20px;
+}
+
+.table-legend-panel .table-status-legend {
+    margin: 0;
+}
+
+.table-legend-panel .table-status-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.table-group-header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.admin-table-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.admin-table-card {
+    display: flex;
+    min-height: 126px;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 16px;
+    transition:
+        border-color var(--transition-base),
+        box-shadow var(--transition-base),
+        transform var(--transition-base);
+}
+
+.admin-table-card:hover {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-light);
+    transform: translateY(-1px);
+}
+
+.admin-table-card strong {
+    display: block;
+    color: currentColor;
+    font-size: 1.35rem;
+}
+
+.admin-table-card span,
+.admin-table-card em {
+    display: block;
+    font-style: normal;
+    font-weight: 800;
+}
+
+.admin-table-card span {
+    color: currentColor;
+    opacity: 0.78;
+}
+
+.admin-table-card em {
+    width: fit-content;
+    border-radius: var(--radius-pill);
+    padding: 7px 10px;
+    background: rgba(255, 255, 255, 0.58);
+    font-size: var(--type-caption);
+    text-transform: uppercase;
+}
+
+.admin-table-card.status-available,
+.table-legend-panel .legend-dot.available {
+    color: var(--color-primary-hover);
+    background: var(--color-success-soft);
+}
+
+.admin-table-card.status-reserved,
+.table-legend-panel .legend-dot.reserved {
+    color: var(--color-warning);
+    background: var(--color-warning-soft);
+}
+
+.admin-table-card.status-disabled,
+.table-legend-panel .legend-dot.disabled {
+    color: var(--color-text-muted);
+    background: var(--color-border);
+}
+
 .quick-action-list {
     grid-template-columns: 1fr;
 }
@@ -699,7 +825,8 @@
     }
 
     .reservation-controls-grid,
-    .reservation-card-main {
+    .reservation-card-main,
+    .table-controls-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
@@ -776,7 +903,8 @@
     .reservation-list-item,
     .reservation-controls-grid,
     .reservation-card-main,
-    .reservation-details-panel {
+    .reservation-details-panel,
+    .table-controls-grid {
         grid-template-columns: 1fr;
     }
 
@@ -813,5 +941,14 @@
     .reservation-card-actions .secondary-action,
     .reservation-card-actions label {
         width: 100%;
+    }
+
+    .table-group-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-table-grid {
+        grid-template-columns: 1fr;
     }
 }

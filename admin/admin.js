@@ -164,6 +164,8 @@ const sustainabilityBadgeOptions = ["Eco Certified", "Locally Sourced", "Plastic
 const allergenBadgeOptions = ["Nuts", "Dairy", "Gluten", "Shellfish", "Eggs", "Soy"];
 const DEFAULT_OPENING_TIME = "11:00";
 const DEFAULT_CLOSING_TIME = "22:00";
+const BOOKING_TIME_ZONE = "Asia/Dubai";
+const TIME_SLOT_INTERVAL_MINUTES = 30;
 
 let editingRestaurantId = null;
 let activeAdminSection = "dashboard";
@@ -174,6 +176,9 @@ let adminReservationRestaurantFilter = "all";
 let adminReservationDateFilter = "";
 let adminReservationSort = "nearest";
 let expandedReservationId = null;
+let adminSelectedRestaurantId = null;
+let adminSelectedTableDate = "";
+let adminSelectedTableTime = "";
 
 const normalizeEmail = (email = "") => String(email).trim().toLowerCase();
 
@@ -318,6 +323,36 @@ const formatRestaurantHours = (openingTime, closingTime) => {
     return `${formatTimeForDisplay(openingTime)} - ${formatTimeForDisplay(closingTime)}`;
 };
 
+const formatTimeFromMinutes = (totalMinutes = 0) => {
+    const minutesInDay = 24 * 60;
+    const normalizedMinutes = ((totalMinutes % minutesInDay) + minutesInDay) % minutesInDay;
+    const hours = String(Math.floor(normalizedMinutes / 60)).padStart(2, "0");
+    const minutes = String(normalizedMinutes % 60).padStart(2, "0");
+
+    return `${hours}:${minutes}`;
+};
+
+const getUaeDateParts = (date = new Date()) => {
+    const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: BOOKING_TIME_ZONE,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23"
+    }).formatToParts(date);
+    const dateParts = {};
+
+    parts.forEach(({ type, value }) => {
+        if (type !== "literal") {
+            dateParts[type] = value;
+        }
+    });
+
+    return dateParts;
+};
+
 const normalizeRestaurantHours = (restaurant = {}) => {
     const parsedHours = getStructuredHoursFromDisplay(restaurant.hours);
     const openingTime = isValidRestaurantTime(restaurant.openingTime)
@@ -412,12 +447,8 @@ const formatUSD = (amount) => {
 };
 
 const getTodayDateValue = () => {
-    const today = new Date();
-    return [
-        today.getFullYear(),
-        String(today.getMonth() + 1).padStart(2, "0"),
-        String(today.getDate()).padStart(2, "0")
-    ].join("-");
+    const { year, month, day } = getUaeDateParts();
+    return `${year}-${month}-${day}`;
 };
 
 const getReservationTimestamp = (reservation = {}) => {
@@ -532,6 +563,157 @@ const getFilteredReservations = () => {
 
             return getReservationTimestamp(firstReservation) - getReservationTimestamp(secondReservation);
         });
+};
+
+const getTimeMinutes = (time = "") => {
+    const [hours = "0", minutes = "0"] = time.split(":");
+
+    return (Number(hours) * 60) + Number(minutes);
+};
+
+const getCurrentUaeTimeMinutes = () => {
+    const { hour, minute } = getUaeDateParts();
+
+    return (Number(hour) * 60) + Number(minute);
+};
+
+const getRestaurantById = (restaurantId) => {
+    return getRestaurants().find(({ id }) => String(id) === String(restaurantId)) || null;
+};
+
+const getRestaurantClosingMinutes = (restaurant = null) => {
+    if (!restaurant) {
+        return 0;
+    }
+
+    const openingMinutes = getTimeMinutes(restaurant.openingTime);
+    const closingMinutes = getTimeMinutes(restaurant.closingTime);
+
+    if (closingMinutes === 0 && openingMinutes > 0) {
+        return 24 * 60;
+    }
+
+    if (closingMinutes <= openingMinutes) {
+        return closingMinutes + (24 * 60);
+    }
+
+    return closingMinutes;
+};
+
+const getRestaurantTimeSlots = (restaurant = null) => {
+    if (!restaurant || !isValidRestaurantTime(restaurant.openingTime) || !isValidRestaurantTime(restaurant.closingTime)) {
+        return [];
+    }
+
+    const openingMinutes = getTimeMinutes(restaurant.openingTime);
+    const closingMinutes = getRestaurantClosingMinutes(restaurant);
+    const slots = [];
+
+    for (let minutes = openingMinutes; minutes < closingMinutes; minutes += TIME_SLOT_INTERVAL_MINUTES) {
+        slots.push(formatTimeFromMinutes(minutes));
+    }
+
+    return slots;
+};
+
+const isAdminTableDateToday = (date = adminSelectedTableDate) => {
+    return date === getTodayDateValue();
+};
+
+const isAdminTableDateInPast = (date = adminSelectedTableDate) => {
+    return Boolean(date) && date < getTodayDateValue();
+};
+
+const isAdminBookingTimeAvailable = (
+    time = adminSelectedTableTime,
+    date = adminSelectedTableDate,
+    restaurant = getRestaurantById(adminSelectedRestaurantId)
+) => {
+    if (!date || !time || !restaurant || isAdminTableDateInPast(date)) {
+        return false;
+    }
+
+    if (!getRestaurantTimeSlots(restaurant).includes(time)) {
+        return false;
+    }
+
+    if (!isAdminTableDateToday(date)) {
+        return true;
+    }
+
+    return getTimeMinutes(time) > getCurrentUaeTimeMinutes();
+};
+
+const getAvailableAdminTimeSlots = (
+    date = adminSelectedTableDate,
+    restaurant = getRestaurantById(adminSelectedRestaurantId)
+) => {
+    return getRestaurantTimeSlots(restaurant).filter((time) => {
+        return isAdminBookingTimeAvailable(time, date, restaurant);
+    });
+};
+
+const ensureAdminTableSelection = () => {
+    const restaurants = getRestaurants();
+
+    if (restaurants.length === 0) {
+        adminSelectedRestaurantId = null;
+        adminSelectedTableDate = "";
+        adminSelectedTableTime = "";
+        return;
+    }
+
+    if (!adminSelectedRestaurantId || !restaurants.some(({ id }) => String(id) === String(adminSelectedRestaurantId))) {
+        adminSelectedRestaurantId = restaurants[0].id;
+    }
+
+    if (!adminSelectedTableDate) {
+        adminSelectedTableDate = getTodayDateValue();
+    }
+
+    const restaurant = getRestaurantById(adminSelectedRestaurantId);
+    const availableSlots = getAvailableAdminTimeSlots(adminSelectedTableDate, restaurant);
+    const allSlots = getRestaurantTimeSlots(restaurant);
+
+    if (!adminSelectedTableTime || !allSlots.includes(adminSelectedTableTime)) {
+        adminSelectedTableTime = availableSlots[0] || allSlots[0] || "";
+    }
+};
+
+const getAdminTableStatus = ({ tableId }) => {
+    const restaurant = getRestaurantById(adminSelectedRestaurantId);
+
+    if (!adminSelectedRestaurantId || !adminSelectedTableDate || !adminSelectedTableTime || !isAdminBookingTimeAvailable(adminSelectedTableTime, adminSelectedTableDate, restaurant)) {
+        return "Disabled";
+    }
+
+    const isReserved = getReservations().some((reservation) => {
+        return reservation.status === "active"
+            && Number(reservation.restaurantId) === Number(adminSelectedRestaurantId)
+            && reservation.date === adminSelectedTableDate
+            && reservation.time === adminSelectedTableTime
+            && reservation.tableId === tableId;
+    });
+
+    return isReserved ? "Reserved" : "Available";
+};
+
+const getAdminTableCounts = () => {
+    const statuses = defaultTableLayout.map(getAdminTableStatus);
+
+    return {
+        total: defaultTableLayout.length,
+        available: statuses.filter((status) => status === "Available").length,
+        reserved: statuses.filter((status) => status === "Reserved").length,
+        seatCapacity: defaultTableLayout.reduce((total, { seats }) => total + seats, 0)
+    };
+};
+
+const getTablesByCapacity = () => {
+    return [2, 4, 6, 8].map((capacity) => ({
+        capacity,
+        tables: defaultTableLayout.filter(({ seats }) => Number(seats) === capacity)
+    }));
 };
 
 const createCheckboxChoices = (options, selectedValues, inputName) => {
@@ -778,6 +960,9 @@ const attachManagementHandlers = () => {
     const reservationRestaurantFilter = adminView.querySelector("#reservationRestaurantFilter");
     const reservationDateFilter = adminView.querySelector("#reservationDateFilter");
     const reservationSortSelect = adminView.querySelector("#reservationSortSelect");
+    const tableRestaurantSelect = adminView.querySelector("#tableRestaurantSelect");
+    const tableDateInput = adminView.querySelector("#tableDateInput");
+    const tableTimeSelect = adminView.querySelector("#tableTimeSelect");
 
     if (restaurantForm) {
         restaurantForm.addEventListener("submit", handleAddRestaurant);
@@ -849,6 +1034,31 @@ const attachManagementHandlers = () => {
     }
 
     attachReservationListHandlers();
+
+    if (tableRestaurantSelect) {
+        tableRestaurantSelect.addEventListener("change", (event) => {
+            adminSelectedRestaurantId = event.target.value;
+            adminSelectedTableTime = "";
+            ensureAdminTableSelection();
+            renderActiveAdminSection();
+        });
+    }
+
+    if (tableDateInput) {
+        tableDateInput.addEventListener("change", (event) => {
+            adminSelectedTableDate = event.target.value;
+            adminSelectedTableTime = "";
+            ensureAdminTableSelection();
+            renderActiveAdminSection();
+        });
+    }
+
+    if (tableTimeSelect) {
+        tableTimeSelect.addEventListener("change", (event) => {
+            adminSelectedTableTime = event.target.value;
+            renderActiveAdminSection();
+        });
+    }
 
     if (editingRestaurantId && restaurantForm) {
         const restaurant = getRestaurants().find(({ id }) => String(id) === String(editingRestaurantId));
@@ -952,8 +1162,8 @@ const getSectionMeta = (section = activeAdminSection) => {
             subtitle: "Review and manage customer bookings."
         },
         tables: {
-            title: "Tables",
-            subtitle: "Review table layout references and manage table fee tiers."
+            title: "Table Management",
+            subtitle: "Monitor table capacity and reservation availability."
         },
         settings: {
             title: "Settings",
@@ -1293,12 +1503,127 @@ const renderReservationsView = () => `
     </section>
 `;
 
-const renderTablesView = () => `
-    <section class="admin-section admin-view">
-        ${createPriceTiersPanel()}
-        ${createTableLayoutPanel()}
-    </section>
-`;
+const renderTableControls = () => {
+    const restaurants = getRestaurants();
+    const selectedRestaurant = getRestaurantById(adminSelectedRestaurantId);
+    const slots = getRestaurantTimeSlots(selectedRestaurant);
+
+    return `
+        <section class="profile-panel admin-panel table-controls-panel">
+            <div class="table-controls-grid">
+                <label>
+                    Restaurant
+                    <select id="tableRestaurantSelect" ${restaurants.length === 0 ? "disabled" : ""}>
+                        ${restaurants.map(({ id, name }) => `
+                            <option value="${escapeHTML(id)}" ${String(adminSelectedRestaurantId) === String(id) ? "selected" : ""}>
+                                ${escapeHTML(name)}
+                            </option>
+                        `).join("")}
+                    </select>
+                </label>
+                <label>
+                    Date
+                    <input type="date" id="tableDateInput" value="${escapeHTML(adminSelectedTableDate)}">
+                </label>
+                <label>
+                    Time
+                    <select id="tableTimeSelect" ${slots.length === 0 ? "disabled" : ""}>
+                        ${slots.length === 0 ? `<option value="">No slots configured</option>` : slots.map((time) => `
+                            <option value="${time}" ${adminSelectedTableTime === time ? "selected" : ""} ${isAdminBookingTimeAvailable(time, adminSelectedTableDate, selectedRestaurant) ? "" : "disabled"}>
+                                ${time}
+                            </option>
+                        `).join("")}
+                    </select>
+                </label>
+            </div>
+        </section>
+    `;
+};
+
+const renderTableSummaryCards = () => {
+    const counts = getAdminTableCounts();
+
+    return `
+        <section class="dashboard-overview-grid" aria-label="Table availability overview">
+            <article class="overview-card">
+                <span>Total Tables</span>
+                <strong>${counts.total}</strong>
+                <p>From default table layout</p>
+            </article>
+            <article class="overview-card">
+                <span>Available</span>
+                <strong>${counts.available}</strong>
+                <p>Open for selected slot</p>
+            </article>
+            <article class="overview-card">
+                <span>Reserved</span>
+                <strong>${counts.reserved}</strong>
+                <p>Active reservations only</p>
+            </article>
+            <article class="overview-card">
+                <span>Total Seat Capacity</span>
+                <strong>${counts.seatCapacity}</strong>
+                <p>Across all tables</p>
+            </article>
+        </section>
+    `;
+};
+
+const renderAdminTableCard = (table) => {
+    const status = getAdminTableStatus(table);
+    const shapeMarkup = table.shape
+        ? `<span>Shape ${escapeHTML(table.shape)}</span>`
+        : "";
+
+    return `
+        <article class="admin-table-card status-${status.toLowerCase()}">
+            <div>
+                <strong>${escapeHTML(table.tableId)}</strong>
+                <span>${table.seats} seats</span>
+                ${shapeMarkup}
+            </div>
+            <em>${status}</em>
+        </article>
+    `;
+};
+
+const renderTableCapacityGroups = () => {
+    const priceTiers = getPriceTiers();
+
+    return getTablesByCapacity().map(({ capacity, tables }) => `
+        <section class="profile-panel admin-panel table-capacity-group">
+            <div class="table-group-header">
+                <div class="form-heading">
+                    <p class="eyebrow">${capacity} seats</p>
+                    <h2>${tables.length} tables</h2>
+                </div>
+                <span class="pricing-badge">Price tier ${formatUSD(priceTiers[capacity] || 0)}</span>
+            </div>
+            <div class="admin-table-grid">
+                ${tables.map(renderAdminTableCard).join("")}
+            </div>
+        </section>
+    `).join("");
+};
+
+const renderTablesView = () => {
+    ensureAdminTableSelection();
+
+    return `
+        <section class="admin-section">
+            ${renderTableControls()}
+            ${renderTableSummaryCards()}
+            <section class="profile-panel admin-panel table-legend-panel">
+                <div class="table-status-legend">
+                    <span><span class="legend-dot available"></span> Available</span>
+                    <span><span class="legend-dot reserved"></span> Reserved</span>
+                    <span><span class="legend-dot disabled"></span> Disabled</span>
+                </div>
+            </section>
+            ${renderTableCapacityGroups()}
+        </section>
+    `;
+};
 
 const renderSettingsView = () => `
     <section class="admin-section">
