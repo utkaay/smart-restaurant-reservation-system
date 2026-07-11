@@ -167,6 +167,7 @@ const DEFAULT_OPENING_TIME = "11:00";
 const DEFAULT_CLOSING_TIME = "22:00";
 const BOOKING_TIME_ZONE = "Asia/Dubai";
 const TIME_SLOT_INTERVAL_MINUTES = 30;
+const MAX_RESTAURANT_IMAGE_UPLOAD_BYTES = 2 * 1024 * 1024;
 
 let editingRestaurantId = null;
 let activeAdminSection = "dashboard";
@@ -182,6 +183,7 @@ let adminSelectedTableDate = "";
 let adminSelectedTableTime = "";
 let adminActionMessage = "";
 let adminActionMessageType = "success";
+let pendingRestaurantImageDataUrl = "";
 
 const normalizeEmail = (email = "") => String(email).trim().toLowerCase();
 
@@ -873,10 +875,18 @@ const createRestaurantFormPanel = () => `
             <fieldset class="admin-form-section">
                 <legend>Media</legend>
                 <div class="admin-form-grid media-form-grid">
-                    <label>
-                        Image URL
-                        <input type="url" name="image" id="restaurantImageInput" required>
-                    </label>
+                    <div class="media-controls">
+                        <label>
+                            Image URL
+                            <input type="url" name="image" id="restaurantImageInput" autocomplete="off">
+                        </label>
+                        <div class="media-separator" aria-hidden="true"><span>OR</span></div>
+                        <label class="upload-image-control" for="restaurantImageUpload">
+                            <span>Upload Image</span>
+                            <input type="file" id="restaurantImageUpload" accept="image/*">
+                        </label>
+                        <p class="admin-inline-error" id="restaurantImageError" aria-live="polite" hidden></p>
+                    </div>
                     <div class="restaurant-image-preview" id="restaurantImagePreview" aria-live="polite">
                         <span>Image preview</span>
                     </div>
@@ -1018,6 +1028,7 @@ const attachManagementHandlers = () => {
     const resetPriceTiersButton = adminView.querySelector("#resetPriceTiersButton");
     const restaurantSearch = adminView.querySelector("#adminRestaurantSearch");
     const imageInput = adminView.querySelector("#restaurantImageInput");
+    const imageUploadInput = adminView.querySelector("#restaurantImageUpload");
     const reservationSearch = adminView.querySelector("#reservationSearchInput");
     const reservationStatusFilter = adminView.querySelector("#reservationStatusFilter");
     const reservationRestaurantFilter = adminView.querySelector("#reservationRestaurantFilter");
@@ -1061,8 +1072,16 @@ const attachManagementHandlers = () => {
     }
 
     if (imageInput) {
-        imageInput.addEventListener("input", () => updateRestaurantImagePreview(imageInput.value));
+        if (!editingRestaurantId) {
+            pendingRestaurantImageDataUrl = "";
+        }
+
+        imageInput.addEventListener("input", () => handleRestaurantImageUrlInput(imageInput));
         updateRestaurantImagePreview(imageInput.value);
+    }
+
+    if (imageUploadInput) {
+        imageUploadInput.addEventListener("change", handleRestaurantImageUpload);
     }
 
     if (reservationSearch) {
@@ -1188,6 +1207,22 @@ const isPreviewableImageURL = (imageUrl = "") => {
     }
 };
 
+const isPreviewableImageSource = (imageSource = "") => {
+    return isPreviewableImageURL(imageSource)
+        || String(imageSource).startsWith("data:image/");
+};
+
+const showRestaurantImageError = (message = "") => {
+    const errorElement = document.querySelector("#restaurantImageError");
+
+    if (!errorElement) {
+        return;
+    }
+
+    errorElement.textContent = message;
+    errorElement.hidden = !message;
+};
+
 const updateRestaurantImagePreview = (imageUrl = "") => {
     const preview = document.querySelector("#restaurantImagePreview");
 
@@ -1195,7 +1230,7 @@ const updateRestaurantImagePreview = (imageUrl = "") => {
         return;
     }
 
-    if (!isPreviewableImageURL(imageUrl)) {
+    if (!isPreviewableImageSource(imageUrl)) {
         preview.innerHTML = "<span>Image preview</span>";
         preview.classList.remove("has-image");
         return;
@@ -1212,6 +1247,82 @@ const updateRestaurantImagePreview = (imageUrl = "") => {
             preview.classList.remove("has-image");
         });
     }
+};
+
+const clearRestaurantImageUploadInput = () => {
+    const uploadInput = document.querySelector("#restaurantImageUpload");
+
+    if (uploadInput) {
+        uploadInput.value = "";
+    }
+};
+
+const getCurrentRestaurantImageSource = () => {
+    const imageInput = document.querySelector("#restaurantImageInput");
+    return pendingRestaurantImageDataUrl || (imageInput ? imageInput.value : "");
+};
+
+const handleRestaurantImageUrlInput = (imageInput) => {
+    pendingRestaurantImageDataUrl = "";
+    clearRestaurantImageUploadInput();
+    showRestaurantImageError("");
+    updateRestaurantImagePreview(imageInput.value);
+};
+
+const handleRestaurantImageUpload = (event) => {
+    const uploadInput = event.currentTarget;
+    const [file] = uploadInput.files || [];
+
+    showRestaurantImageError("");
+
+    if (!file) {
+        updateRestaurantImagePreview(getCurrentRestaurantImageSource());
+        return;
+    }
+
+    if (!file.type || !file.type.startsWith("image/")) {
+        uploadInput.value = "";
+        updateRestaurantImagePreview(getCurrentRestaurantImageSource());
+        showRestaurantImageError("Choose a valid image file.");
+        return;
+    }
+
+    if (file.size > MAX_RESTAURANT_IMAGE_UPLOAD_BYTES) {
+        uploadInput.value = "";
+        updateRestaurantImagePreview(getCurrentRestaurantImageSource());
+        showRestaurantImageError("Image uploads must be 3 MB or smaller. Compress large images before uploading.");
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.addEventListener("load", () => {
+        const dataUrl = String(reader.result || "");
+
+        if (!dataUrl.startsWith("data:image/")) {
+            uploadInput.value = "";
+            updateRestaurantImagePreview(getCurrentRestaurantImageSource());
+            showRestaurantImageError("Choose a valid image file.");
+            return;
+        }
+
+        const imageInput = document.querySelector("#restaurantImageInput");
+
+        if (imageInput) {
+            imageInput.value = "";
+        }
+
+        pendingRestaurantImageDataUrl = dataUrl;
+        updateRestaurantImagePreview(dataUrl);
+    });
+
+    reader.addEventListener("error", () => {
+        uploadInput.value = "";
+        updateRestaurantImagePreview(getCurrentRestaurantImageSource());
+        showRestaurantImageError("The image could not be read. Try a different file.");
+    });
+
+    reader.readAsDataURL(file);
 };
 
 const getSectionMeta = (section = activeAdminSection) => {
@@ -1823,6 +1934,7 @@ const getRestaurantDataFromForm = (formData) => {
     const closingTime = isValidRestaurantTime(getFormValue(formData, "closingTime"))
         ? getFormValue(formData, "closingTime")
         : DEFAULT_CLOSING_TIME;
+    const image = pendingRestaurantImageDataUrl || getFormValue(formData, "image");
 
     return {
         name: getFormValue(formData, "name"),
@@ -1840,7 +1952,7 @@ const getRestaurantDataFromForm = (formData) => {
             .split(",")
             .map((badge) => badge.trim())
             .filter(Boolean),
-        image: getFormValue(formData, "image")
+        image
     };
 };
 
@@ -1849,6 +1961,12 @@ const handleAddRestaurant = (event) => {
 
     const formData = new FormData(event.target);
     const restaurantData = getRestaurantDataFromForm(formData);
+
+    if (!isPreviewableImageSource(restaurantData.image)) {
+        showRestaurantImageError("Add an image URL or upload an image file.");
+        updateRestaurantImagePreview("");
+        return;
+    }
 
     if (editingRestaurantId) {
         updateRestaurant(editingRestaurantId, restaurantData);
@@ -1861,6 +1979,7 @@ const handleAddRestaurant = (event) => {
     }
 
     editingRestaurantId = null;
+    pendingRestaurantImageDataUrl = "";
     setAdminActionMessage("Restaurant saved.");
     renderActiveAdminSection();
 };
@@ -1887,8 +2006,13 @@ const fillRestaurantForm = (restaurant) => {
     form.querySelectorAll('input[name="allergenBadges"]').forEach((input) => {
         input.checked = (restaurant.allergenBadges || []).includes(input.value);
     });
-    form.elements.image.value = restaurant.image || "";
-    updateRestaurantImagePreview(restaurant.image || "");
+
+    const restaurantImage = restaurant.image || "";
+    pendingRestaurantImageDataUrl = restaurantImage.startsWith("data:image/") ? restaurantImage : "";
+    form.elements.image.value = pendingRestaurantImageDataUrl ? "" : restaurantImage;
+    clearRestaurantImageUploadInput();
+    showRestaurantImageError("");
+    updateRestaurantImagePreview(restaurantImage);
     form.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
@@ -1920,6 +2044,7 @@ const updateRestaurant = (restaurantId, updatedData) => {
 
 const cancelRestaurantEdit = () => {
     editingRestaurantId = null;
+    pendingRestaurantImageDataUrl = "";
     setAdminActionMessage("Restaurant edit cancelled.");
     renderActiveAdminSection();
 };
@@ -1937,6 +2062,7 @@ const handleDeleteRestaurant = (event) => {
 
     if (String(editingRestaurantId) === String(restaurantId)) {
         editingRestaurantId = null;
+        pendingRestaurantImageDataUrl = "";
     }
 
     setAdminActionMessage("Restaurant deleted.");
