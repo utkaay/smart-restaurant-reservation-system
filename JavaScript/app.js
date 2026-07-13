@@ -158,7 +158,7 @@ const defaultTableLayout = [
     { tableId: "D1", seats: 8 },
     { tableId: "D2", seats: 8 }
 ];
-const MAX_ACTIVE_RESERVATIONS = 30;
+const MAX_ACTIVE_RESERVATIONS = 3;
 const BOOKING_TIME_ZONE = "Asia/Dubai";
 const TIME_SLOT_INTERVAL_MINUTES = 30;
 const DEFAULT_OPENING_TIME = "11:00";
@@ -266,6 +266,26 @@ const normalizeRestaurantHours = (restaurant = {}) => {
     };
 };
 
+const normalizeRestaurantTableLayout = (tableLayout) => {
+    const hasSavedLayout = Array.isArray(tableLayout);
+    const sourceLayout = hasSavedLayout ? tableLayout : defaultTableLayout;
+    const seenTableIds = new Set();
+
+    return sourceLayout.reduce((layout, table = {}) => {
+        const tableId = String(table.tableId || "").trim();
+        const seats = Math.floor(Number(table.seats));
+        const normalizedTableId = tableId.toLowerCase();
+
+        if (!tableId || !Number.isFinite(seats) || seats < 1 || seenTableIds.has(normalizedTableId)) {
+            return layout;
+        }
+
+        seenTableIds.add(normalizedTableId);
+        layout.push({ tableId, seats });
+        return layout;
+    }, []);
+};
+
 const getRestaurants = () => {
     const savedRestaurants = getFromStorage(storageKeys.restaurants);
     const restaurants = Array.isArray(savedRestaurants)
@@ -276,12 +296,16 @@ const getRestaurants = () => {
         ...normalizeRestaurantHours(restaurant),
         distanceCategory: restaurant.distanceCategory || "Medium",
         sustainabilityBadges: restaurant.sustainabilityBadges || [],
-        allergenBadges: restaurant.allergenBadges || []
+        allergenBadges: restaurant.allergenBadges || [],
+        tableLayout: normalizeRestaurantTableLayout(restaurant.tableLayout)
     }));
 };
 
 const saveRestaurants = (restaurants) => {
-    saveToStorage(storageKeys.restaurants, restaurants.map(normalizeRestaurantHours));
+    saveToStorage(storageKeys.restaurants, restaurants.map((restaurant) => ({
+        ...normalizeRestaurantHours(restaurant),
+        tableLayout: normalizeRestaurantTableLayout(restaurant.tableLayout)
+    })));
 };
 
 const getPriceTiers = () => {
@@ -1259,6 +1283,14 @@ const getSelectedRestaurant = () => {
     return getRestaurants().find(({ id }) => Number(id) === Number(bookingState.restaurantId));
 };
 
+const getRestaurantTableLayout = (restaurant = getSelectedRestaurant()) => {
+    if (!restaurant) {
+        return [];
+    }
+
+    return normalizeRestaurantTableLayout(restaurant?.tableLayout);
+};
+
 const getTableBaseFee = (seats = 0) => {
     const tableFees = getPriceTiers();
 
@@ -1433,7 +1465,7 @@ const renderPricingSummary = (selectedTable) => {
 };
 
 const getSelectedBookingTable = () => {
-    return defaultTableLayout.find(({ tableId }) => tableId === bookingState.tableId);
+    return getRestaurantTableLayout().find(({ tableId }) => tableId === bookingState.tableId);
 };
 
 const getMaxInvitedGuests = (selectedTable = getSelectedBookingTable()) => {
@@ -2011,6 +2043,7 @@ const getTableStatus = ({ tableId }) => {
 
 const getReservedTableCountForSlot = () => {
     const { restaurantId, date, time } = bookingState;
+    const tableIds = new Set(getRestaurantTableLayout().map(({ tableId }) => tableId));
 
     if (!restaurantId || !date || !time || !isBookingTimeAvailable(time)) {
         return 0;
@@ -2021,29 +2054,39 @@ const getReservedTableCountForSlot = () => {
             && Number(reservation.restaurantId) === Number(restaurantId)
             && reservation.date === date
             && reservation.time === time;
+    }).filter(({ tableId }) => {
+        return tableIds.has(tableId);
     }).length;
 };
 
 const isSlotFull = () => {
+    const tableLayout = getRestaurantTableLayout();
+
     if (!isBookingTimeAvailable()) {
         return false;
     }
 
-    return getReservedTableCountForSlot() >= defaultTableLayout.length;
+    return tableLayout.length > 0 && getReservedTableCountForSlot() >= tableLayout.length;
 };
 
 const getSlotAvailabilityStatus = () => {
+    const tableLayout = getRestaurantTableLayout();
+
     if (!isBookingTimeAvailable()) {
         return "Select an available time";
     }
 
+    if (tableLayout.length === 0) {
+        return "No tables configured";
+    }
+
     const reservedTableCount = getReservedTableCountForSlot();
 
-    if (reservedTableCount >= defaultTableLayout.length) {
+    if (reservedTableCount >= tableLayout.length) {
         return "Full / Waitlist open";
     }
 
-    if (reservedTableCount >= Math.ceil(defaultTableLayout.length * 0.6)) {
+    if (reservedTableCount >= Math.ceil(tableLayout.length * 0.6)) {
         return "Limited availability";
     }
 
@@ -2097,6 +2140,7 @@ const renderWaitlistStatus = () => {
     const availabilityStatus = getSlotAvailabilityStatus();
     const slotFull = isSlotFull();
     const alreadyJoined = hasGuestJoinedWaitlist(profile);
+    const tableLayout = getRestaurantTableLayout();
 
     return `
         <div class="waitlist-status-panel">
@@ -2106,7 +2150,9 @@ const renderWaitlistStatus = () => {
             </div>
             <p class="summary-muted">
                 ${hasAvailableTime
-                    ? (slotFull ? "All tables are reserved for this date and time." : `${defaultTableLayout.length - getReservedTableCountForSlot()} tables remain for this slot.`)
+                    ? (tableLayout.length === 0
+                        ? "No tables are configured for this restaurant."
+                        : (slotFull ? "All tables are reserved for this date and time." : `${tableLayout.length - getReservedTableCountForSlot()} tables remain for this slot.`))
                     : "Choose a future slot within this restaurant's operating hours."}
             </p>
             ${hasAvailableTime && slotFull ? `
@@ -2119,7 +2165,18 @@ const renderWaitlistStatus = () => {
 };
 
 const renderTableMap = () => {
-    return defaultTableLayout.map((table) => {
+    const tableLayout = getRestaurantTableLayout();
+
+    if (tableLayout.length === 0) {
+        return `
+            <div class="empty-state">
+                <h3>No tables configured</h3>
+                <p>This restaurant is not accepting table bookings yet.</p>
+            </div>
+        `;
+    }
+
+    return tableLayout.map((table) => {
         const { tableId, seats } = table;
         const status = getTableStatus(table);
         const isDisabled = status === "Reserved" || status === "Disabled";
@@ -2304,7 +2361,7 @@ const renderBookingView = () => {
     const updateRenderedBookingTotals = () => {
         const pricingSummary = bookingView.querySelector("#pricingSummary");
         const splitBillSummary = bookingView.querySelector("#splitBillSummary");
-        const currentSelectedTable = defaultTableLayout.find(({ tableId }) => tableId === bookingState.tableId);
+        const currentSelectedTable = getSelectedBookingTable();
 
         if (!currentSelectedTable) {
             return;
@@ -2394,7 +2451,7 @@ const renderBookingView = () => {
 
 const handleTableSelect = (event) => {
     const tableId = event.currentTarget.dataset.tableId;
-    const table = defaultTableLayout.find((item) => item.tableId === tableId);
+    const table = getRestaurantTableLayout().find((item) => item.tableId === tableId);
 
     if (!table || getTableStatus(table) !== "Available") {
         return;
@@ -2409,7 +2466,7 @@ const handleTableSelect = (event) => {
 const confirmTestBooking = () => {
     const profile = getCurrentUserProfile();
     const restaurant = getSelectedRestaurant();
-    const table = defaultTableLayout.find(({ tableId }) => tableId === bookingState.tableId);
+    const table = getRestaurantTableLayout(restaurant).find(({ tableId }) => tableId === bookingState.tableId);
 
     if (!profile) {
         redirectToLoginForBooking();

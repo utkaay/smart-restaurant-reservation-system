@@ -379,6 +379,26 @@ const normalizeRestaurantHours = (restaurant = {}) => {
     };
 };
 
+const normalizeRestaurantTableLayout = (tableLayout) => {
+    const hasSavedLayout = Array.isArray(tableLayout);
+    const sourceLayout = hasSavedLayout ? tableLayout : defaultTableLayout;
+    const seenTableIds = new Set();
+
+    return sourceLayout.reduce((layout, table = {}) => {
+        const tableId = String(table.tableId || "").trim();
+        const seats = Math.floor(Number(table.seats));
+        const normalizedTableId = tableId.toLowerCase();
+
+        if (!tableId || !Number.isFinite(seats) || seats < 1 || seenTableIds.has(normalizedTableId)) {
+            return layout;
+        }
+
+        seenTableIds.add(normalizedTableId);
+        layout.push({ tableId, seats });
+        return layout;
+    }, []);
+};
+
 const getRestaurants = () => {
     const savedRestaurants = getFromStorage(storageKeys.restaurants);
     const restaurants = Array.isArray(savedRestaurants)
@@ -389,12 +409,16 @@ const getRestaurants = () => {
         ...normalizeRestaurantHours(restaurant),
         distanceCategory: restaurant.distanceCategory || "Medium",
         sustainabilityBadges: restaurant.sustainabilityBadges || [],
-        allergenBadges: restaurant.allergenBadges || []
+        allergenBadges: restaurant.allergenBadges || [],
+        tableLayout: normalizeRestaurantTableLayout(restaurant.tableLayout)
     }));
 };
 
 const saveRestaurants = (restaurants) => {
-    saveToStorage(storageKeys.restaurants, restaurants.map(normalizeRestaurantHours));
+    saveToStorage(storageKeys.restaurants, restaurants.map((restaurant) => ({
+        ...normalizeRestaurantHours(restaurant),
+        tableLayout: normalizeRestaurantTableLayout(restaurant.tableLayout)
+    })));
 };
 
 const getPriceTiers = () => {
@@ -591,6 +615,16 @@ const getRestaurantById = (restaurantId) => {
     return getRestaurants().find(({ id }) => String(id) === String(restaurantId)) || null;
 };
 
+const getRestaurantTableLayout = (restaurant = getRestaurantById(adminSelectedRestaurantId)) => {
+    if (!restaurant) {
+        return [];
+    }
+
+    return normalizeRestaurantTableLayout(restaurant?.tableLayout);
+};
+
+const getAdminSelectedTableLayout = () => getRestaurantTableLayout();
+
 const getRestaurantClosingMinutes = (restaurant = null) => {
     if (!restaurant) {
         return 0;
@@ -709,20 +743,25 @@ const getAdminTableStatus = ({ tableId }) => {
 };
 
 const getAdminTableCounts = () => {
-    const statuses = defaultTableLayout.map(getAdminTableStatus);
+    const tableLayout = getAdminSelectedTableLayout();
+    const statuses = tableLayout.map(getAdminTableStatus);
 
     return {
-        total: defaultTableLayout.length,
+        total: tableLayout.length,
         available: statuses.filter((status) => status === "Available").length,
         reserved: statuses.filter((status) => status === "Reserved").length,
-        seatCapacity: defaultTableLayout.reduce((total, { seats }) => total + seats, 0)
+        seatCapacity: tableLayout.reduce((total, { seats }) => total + seats, 0)
     };
 };
 
 const getTablesByCapacity = () => {
-    return [2, 4, 6, 8].map((capacity) => ({
+    const tableLayout = getAdminSelectedTableLayout();
+    const capacities = [...new Set(tableLayout.map(({ seats }) => Number(seats)).filter(Number.isFinite))]
+        .sort((firstCapacity, secondCapacity) => firstCapacity - secondCapacity);
+
+    return capacities.map((capacity) => ({
         capacity,
-        tables: defaultTableLayout.filter(({ seats }) => Number(seats) === capacity)
+        tables: tableLayout.filter(({ seats }) => Number(seats) === capacity)
     }));
 };
 
@@ -788,6 +827,54 @@ const renderAdminTableLayout = () => {
     return defaultTableLayout.map(({ tableId, seats }) => `
         <span class="summary-chip">${escapeHTML(tableId)} &middot; ${seats} seats</span>
     `).join("");
+};
+
+const renderTableLayoutEditor = () => {
+    const selectedRestaurant = getRestaurantById(adminSelectedRestaurantId);
+    const tableLayout = getAdminSelectedTableLayout();
+
+    return `
+        <section class="profile-panel admin-panel table-layout-editor">
+            <div class="form-heading">
+                <p class="eyebrow">Table layout</p>
+                <h2>${selectedRestaurant ? escapeHTML(selectedRestaurant.name) : "No restaurant selected"}</h2>
+                <p>Add, remove, and monitor the saved table layout for this restaurant.</p>
+            </div>
+
+            <form class="admin-form table-layout-form" id="addTableForm" novalidate>
+                <div class="table-layout-form-grid">
+                    <label>
+                        Table ID
+                        <input type="text" name="tableId" placeholder="A1" autocomplete="off" ${selectedRestaurant ? "" : "disabled"}>
+                    </label>
+                    <label>
+                        Seating Capacity
+                        <input type="number" name="seats" min="1" step="1" placeholder="4" ${selectedRestaurant ? "" : "disabled"}>
+                    </label>
+                    <button class="primary-action" type="submit" ${selectedRestaurant ? "" : "disabled"}>Add Table</button>
+                </div>
+            </form>
+
+            ${tableLayout.length === 0 ? `
+                <div class="empty-state">
+                    <h3>No tables configured.</h3>
+                    <p>Add a table before customers can book this restaurant.</p>
+                </div>
+            ` : `
+                <div class="table-layout-list" aria-label="Editable table layout">
+                    ${tableLayout.map(({ tableId, seats }) => `
+                        <article class="table-layout-row">
+                            <div>
+                                <strong>${escapeHTML(tableId)}</strong>
+                                <span>${seats} seats</span>
+                            </div>
+                            <button class="danger-action" type="button" data-delete-table-id="${escapeHTML(tableId)}">Delete</button>
+                        </article>
+                    `).join("")}
+                </div>
+            `}
+        </section>
+    `;
 };
 
 const createRestaurantFormPanel = () => `
@@ -928,9 +1015,9 @@ const createPriceTiersPanel = () => {
 const createSettingsTableLayoutPanel = () => `
     <section class="profile-panel admin-panel settings-card">
         <div class="form-heading">
-            <p class="eyebrow">Default table layout</p>
-            <h2>Reusable table map</h2>
-            <p>Read-only reference for the shared default table layout used by booking and table monitoring.</p>
+            <p class="eyebrow">Fallback table layout</p>
+            <h2>New restaurant starting map</h2>
+            <p>Read-only fallback used when an older restaurant record does not have a saved table layout yet.</p>
         </div>
         <div class="admin-table-layout">
             ${renderAdminTableLayout()}
@@ -1037,6 +1124,7 @@ const attachManagementHandlers = () => {
     const tableRestaurantSelect = adminView.querySelector("#tableRestaurantSelect");
     const tableDateInput = adminView.querySelector("#tableDateInput");
     const tableTimeSelect = adminView.querySelector("#tableTimeSelect");
+    const addTableForm = adminView.querySelector("#addTableForm");
 
     if (restaurantForm) {
         restaurantForm.addEventListener("submit", handleAddRestaurant);
@@ -1050,6 +1138,9 @@ const attachManagementHandlers = () => {
     });
     adminView.querySelectorAll("[data-price-tier-seats]").forEach((input) => {
         input.addEventListener("change", handlePriceTierUpdate);
+    });
+    adminView.querySelectorAll("[data-delete-table-id]").forEach((button) => {
+        button.addEventListener("click", handleDeleteTable);
     });
 
     if (cancelEditButton) {
@@ -1144,6 +1235,10 @@ const attachManagementHandlers = () => {
             adminSelectedTableTime = event.target.value;
             renderActiveAdminSection();
         });
+    }
+
+    if (addTableForm) {
+        addTableForm.addEventListener("submit", handleAddTable);
     }
 
     if (editingRestaurantId && restaurantForm) {
@@ -1726,7 +1821,7 @@ const renderTableSummaryCards = () => {
             <article class="overview-card">
                 <span>Total Tables</span>
                 <strong>${counts.total}</strong>
-                <p>From default table layout</p>
+                <p>Saved for selected restaurant</p>
             </article>
             <article class="overview-card">
                 <span>Available</span>
@@ -1767,12 +1862,13 @@ const renderAdminTableCard = (table) => {
 
 const renderTableCapacityGroups = () => {
     const priceTiers = getPriceTiers();
+    const tableLayout = getAdminSelectedTableLayout();
 
-    if (defaultTableLayout.length === 0) {
+    if (tableLayout.length === 0) {
         return `
             <div class="empty-state">
                 <h3>No table data available.</h3>
-                <p>The shared default table layout will appear here when it is configured.</p>
+                <p>Add tables to this restaurant to monitor availability.</p>
             </div>
         `;
     }
@@ -1799,6 +1895,7 @@ const renderTablesView = () => {
     return `
         <section class="admin-section">
             ${renderTableControls()}
+            ${renderTableLayoutEditor()}
             ${renderTableSummaryCards()}
             <section class="profile-panel admin-panel table-legend-panel">
                 <div class="table-status-legend">
@@ -2040,6 +2137,80 @@ const updateRestaurant = (restaurantId, updatedData) => {
             menu: restaurant.menu || []
         };
     }));
+};
+
+const updateRestaurantTableLayout = (restaurantId, tableLayout) => {
+    saveRestaurants(getRestaurants().map((restaurant) => {
+        if (String(restaurant.id) !== String(restaurantId)) {
+            return restaurant;
+        }
+
+        return {
+            ...restaurant,
+            tableLayout: normalizeRestaurantTableLayout(tableLayout)
+        };
+    }));
+};
+
+const handleAddTable = (event) => {
+    event.preventDefault();
+
+    const restaurant = getRestaurantById(adminSelectedRestaurantId);
+
+    if (!restaurant) {
+        setAdminActionMessage("Select a restaurant before adding a table.", "error");
+        renderActiveAdminSection();
+        return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    const tableId = getFormValue(formData, "tableId");
+    const seats = Math.floor(Number(formData.get("seats")));
+    const tableLayout = getRestaurantTableLayout(restaurant);
+    const hasDuplicateTableId = tableLayout.some((table) => {
+        return table.tableId.toLowerCase() === tableId.toLowerCase();
+    });
+
+    if (!tableId) {
+        setAdminActionMessage("Enter a table ID before adding a table.", "error");
+        renderActiveAdminSection();
+        return;
+    }
+
+    if (hasDuplicateTableId) {
+        setAdminActionMessage(`Table ID ${tableId} already exists for this restaurant.`, "error");
+        renderActiveAdminSection();
+        return;
+    }
+
+    if (!Number.isFinite(seats) || seats < 1) {
+        setAdminActionMessage("Enter a seating capacity of at least 1.", "error");
+        renderActiveAdminSection();
+        return;
+    }
+
+    updateRestaurantTableLayout(restaurant.id, [
+        ...tableLayout,
+        { tableId, seats }
+    ]);
+    setAdminActionMessage(`Table ${tableId} added.`);
+    renderActiveAdminSection();
+};
+
+const handleDeleteTable = (event) => {
+    const tableId = event.currentTarget.dataset.deleteTableId;
+    const restaurant = getRestaurantById(adminSelectedRestaurantId);
+
+    if (!restaurant || !tableId) {
+        return;
+    }
+
+    updateRestaurantTableLayout(
+        restaurant.id,
+        getRestaurantTableLayout(restaurant).filter((table) => table.tableId !== tableId)
+    );
+    setAdminActionMessage(`Table ${tableId} deleted.`);
+    renderActiveAdminSection();
 };
 
 const cancelRestaurantEdit = () => {
