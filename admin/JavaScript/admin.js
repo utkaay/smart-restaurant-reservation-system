@@ -147,19 +147,34 @@ const defaultPriceTiers = {
     6: 20,
     8: 30
 };
+const TABLE_EXPERIENCE_NAMES = ["Regular", "Premium", "VIP"];
+const DEFAULT_TABLE_EXPERIENCE_BY_ID = {
+    A1: "Regular",
+    A2: "Premium",
+    A3: "Regular",
+    A4: "VIP",
+    B1: "Premium",
+    B2: "Regular",
+    B3: "Premium",
+    B4: "Regular",
+    C1: "Regular",
+    C2: "Premium",
+    D1: "VIP",
+    D2: "Premium"
+};
 const defaultTableLayout = [
-    { tableId: "A1", seats: 2 },
-    { tableId: "A2", seats: 2 },
-    { tableId: "A3", seats: 2 },
-    { tableId: "A4", seats: 2 },
-    { tableId: "B1", seats: 4 },
-    { tableId: "B2", seats: 4 },
-    { tableId: "B3", seats: 4 },
-    { tableId: "B4", seats: 4 },
-    { tableId: "C1", seats: 6 },
-    { tableId: "C2", seats: 6 },
-    { tableId: "D1", seats: 8 },
-    { tableId: "D2", seats: 8 }
+    { tableId: "A1", seats: 2, experience: "Regular" },
+    { tableId: "A2", seats: 2, experience: "Premium" },
+    { tableId: "A3", seats: 2, experience: "Regular" },
+    { tableId: "A4", seats: 2, experience: "VIP" },
+    { tableId: "B1", seats: 4, experience: "Premium" },
+    { tableId: "B2", seats: 4, experience: "Regular" },
+    { tableId: "B3", seats: 4, experience: "Premium" },
+    { tableId: "B4", seats: 4, experience: "Regular" },
+    { tableId: "C1", seats: 6, experience: "Regular" },
+    { tableId: "C2", seats: 6, experience: "Premium" },
+    { tableId: "D1", seats: 8, experience: "VIP" },
+    { tableId: "D2", seats: 8, experience: "Premium" }
 ];
 const sustainabilityBadgeOptions = ["Eco Certified", "Locally Sourced", "Plastic Free", "Organic"];
 const allergenBadgeOptions = ["Nuts", "Dairy", "Gluten", "Shellfish", "Eggs", "Soy"];
@@ -379,6 +394,14 @@ const normalizeRestaurantHours = (restaurant = {}) => {
     };
 };
 
+const normalizeTableExperience = (experience, tableId = "") => {
+    if (TABLE_EXPERIENCE_NAMES.includes(experience)) {
+        return experience;
+    }
+
+    return DEFAULT_TABLE_EXPERIENCE_BY_ID[String(tableId).trim().toUpperCase()] || "Regular";
+};
+
 const normalizeRestaurantTableLayout = (tableLayout) => {
     const hasSavedLayout = Array.isArray(tableLayout);
     const sourceLayout = hasSavedLayout ? tableLayout : defaultTableLayout;
@@ -387,6 +410,7 @@ const normalizeRestaurantTableLayout = (tableLayout) => {
     return sourceLayout.reduce((layout, table = {}) => {
         const tableId = String(table.tableId || "").trim();
         const seats = Math.floor(Number(table.seats));
+        const experience = normalizeTableExperience(table.experience, tableId);
         const normalizedTableId = tableId.toLowerCase();
 
         if (!tableId || !Number.isFinite(seats) || seats < 1 || seenTableIds.has(normalizedTableId)) {
@@ -394,7 +418,7 @@ const normalizeRestaurantTableLayout = (tableLayout) => {
         }
 
         seenTableIds.add(normalizedTableId);
-        layout.push({ tableId, seats });
+        layout.push({ tableId, seats, experience });
         return layout;
     }, []);
 };
@@ -824,8 +848,8 @@ const renderAdminRestaurantList = () => {
 };
 
 const renderAdminTableLayout = () => {
-    return defaultTableLayout.map(({ tableId, seats }) => `
-        <span class="summary-chip">${escapeHTML(tableId)} &middot; ${seats} seats</span>
+    return defaultTableLayout.map(({ tableId, seats, experience }) => `
+        <span class="summary-chip">${escapeHTML(tableId)} &middot; ${seats} seats &middot; ${escapeHTML(experience)}</span>
     `).join("");
 };
 
@@ -851,6 +875,12 @@ const renderTableLayoutEditor = () => {
                         Seating Capacity
                         <input type="number" name="seats" min="1" step="1" placeholder="4" ${selectedRestaurant ? "" : "disabled"}>
                     </label>
+                    <label>
+                        Experience
+                        <select name="experience" ${selectedRestaurant ? "" : "disabled"}>
+                            ${TABLE_EXPERIENCE_NAMES.map((experience) => `<option value="${experience}">${experience}</option>`).join("")}
+                        </select>
+                    </label>
                     <button class="primary-action" type="submit" ${selectedRestaurant ? "" : "disabled"}>Add Table</button>
                 </div>
             </form>
@@ -862,11 +892,11 @@ const renderTableLayoutEditor = () => {
                 </div>
             ` : `
                 <div class="table-layout-list" aria-label="Editable table layout">
-                    ${tableLayout.map(({ tableId, seats }) => `
+                    ${tableLayout.map(({ tableId, seats, experience }) => `
                         <article class="table-layout-row">
                             <div>
                                 <strong>${escapeHTML(tableId)}</strong>
-                                <span>${seats} seats</span>
+                                <span>${seats} seats &middot; ${escapeHTML(experience)}</span>
                             </div>
                             <button class="danger-action" type="button" data-delete-table-id="${escapeHTML(tableId)}">Delete</button>
                         </article>
@@ -1646,9 +1676,10 @@ const renderReservationDetails = (reservation = {}) => {
                 <h3>Pricing breakdown</h3>
                 <div class="reservation-detail-list">
                     <div><span>Table fee</span><strong>${formatUSD(pricing.tableFee || 0)}</strong></div>
-                    <div><span>Time adjustment</span><strong>${formatUSD(pricing.timeAdjustment || 0)}</strong></div>
-                    <div><span>Coupon discount</span><strong>${formatUSD(pricing.couponDiscount || 0)}</strong></div>
-                    <div><span>Member discount</span><strong>${formatUSD(pricing.memberDiscount || 0)}</strong></div>
+                    <div><span>${escapeHTML(normalizeTableExperience(reservation.tableExperience))} experience</span><strong>${formatUSD(Number(reservation.experienceFee) || 0)}</strong></div>
+                    <div><span>Time adjustment</span><strong>${formatUSD(pricing.timeAdjustment?.amount ?? pricing.timeAdjustment ?? 0)}</strong></div>
+                    <div><span>Coupon discount</span><strong>${formatUSD(pricing.couponDiscount?.amount ?? pricing.couponDiscount ?? 0)}</strong></div>
+                    <div><span>Member discount</span><strong>${formatUSD(pricing.memberDiscount?.amount ?? pricing.memberDiscount ?? 0)}</strong></div>
                     <div><span>Final total</span><strong>${formatUSD(pricing.finalTotal || 0)}</strong></div>
                 </div>
             </section>
@@ -1690,6 +1721,7 @@ const renderReservationList = () => {
                     <div>
                         <span>Table</span>
                         <strong>${escapeHTML(reservation.tableId || "Not set")}</strong>
+                        <span>${escapeHTML(normalizeTableExperience(reservation.tableExperience))} &middot; ${formatUSD(Number(reservation.experienceFee) || 0)}</span>
                     </div>
                     <div>
                         <span>Accepted attendees</span>
@@ -1853,6 +1885,7 @@ const renderAdminTableCard = (table) => {
             <div>
                 <strong>${escapeHTML(table.tableId)}</strong>
                 <span>${table.seats} seats</span>
+                <span>${escapeHTML(normalizeTableExperience(table.experience))}</span>
                 ${shapeMarkup}
             </div>
             <em>${status}</em>
@@ -2166,6 +2199,7 @@ const handleAddTable = (event) => {
     const formData = new FormData(event.currentTarget);
     const tableId = getFormValue(formData, "tableId");
     const seats = Math.floor(Number(formData.get("seats")));
+    const experience = normalizeTableExperience(getFormValue(formData, "experience"));
     const tableLayout = getRestaurantTableLayout(restaurant);
     const hasDuplicateTableId = tableLayout.some((table) => {
         return table.tableId.toLowerCase() === tableId.toLowerCase();
@@ -2191,7 +2225,7 @@ const handleAddTable = (event) => {
 
     updateRestaurantTableLayout(restaurant.id, [
         ...tableLayout,
-        { tableId, seats }
+        { tableId, seats, experience }
     ]);
     setAdminActionMessage(`Table ${tableId} added.`);
     renderActiveAdminSection();

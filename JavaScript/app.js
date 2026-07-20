@@ -1,3 +1,15 @@
+let bookingTableSelector3DModule = null;
+let bookingTableSelector3DInitToken = 0;
+const bookingTableSelector3DModulePromise = import("./booking-table-selector-3d.js")
+    .then((module) => {
+        bookingTableSelector3DModule = module;
+        return module;
+    })
+    .catch((error) => {
+        console.warn("Interactive 3D floor module unavailable; table cards will be shown.", error);
+        return null;
+    });
+
 const defaultRestaurants = [
     {
         id: 1,
@@ -144,19 +156,50 @@ const defaultPriceTiers = {
     6: 20,
     8: 30
 };
+const TABLE_EXPERIENCES = {
+    Regular: {
+        fee: 0,
+        subtitle: "Classic seating · Included",
+        benefits: "Classic restaurant seating"
+    },
+    Premium: {
+        fee: 15,
+        subtitle: "Preferred placement · +$15",
+        benefits: "Enhanced location · Priority assistance"
+    },
+    VIP: {
+        fee: 35,
+        subtitle: "Exclusive service · +$35",
+        benefits: "Priority seating · Welcome service"
+    }
+};
+const DEFAULT_TABLE_EXPERIENCE_BY_ID = {
+    A1: "Regular",
+    A2: "Premium",
+    A3: "Regular",
+    A4: "VIP",
+    B1: "Premium",
+    B2: "Regular",
+    B3: "Premium",
+    B4: "Regular",
+    C1: "Regular",
+    C2: "Premium",
+    D1: "VIP",
+    D2: "Premium"
+};
 const defaultTableLayout = [
-    { tableId: "A1", seats: 2 },
-    { tableId: "A2", seats: 2 },
-    { tableId: "A3", seats: 2 },
-    { tableId: "A4", seats: 2 },
-    { tableId: "B1", seats: 4 },
-    { tableId: "B2", seats: 4 },
-    { tableId: "B3", seats: 4 },
-    { tableId: "B4", seats: 4 },
-    { tableId: "C1", seats: 6 },
-    { tableId: "C2", seats: 6 },
-    { tableId: "D1", seats: 8 },
-    { tableId: "D2", seats: 8 }
+    { tableId: "A1", seats: 2, experience: "Regular" },
+    { tableId: "A2", seats: 2, experience: "Premium" },
+    { tableId: "A3", seats: 2, experience: "Regular" },
+    { tableId: "A4", seats: 2, experience: "VIP" },
+    { tableId: "B1", seats: 4, experience: "Premium" },
+    { tableId: "B2", seats: 4, experience: "Regular" },
+    { tableId: "B3", seats: 4, experience: "Premium" },
+    { tableId: "B4", seats: 4, experience: "Regular" },
+    { tableId: "C1", seats: 6, experience: "Regular" },
+    { tableId: "C2", seats: 6, experience: "Premium" },
+    { tableId: "D1", seats: 8, experience: "VIP" },
+    { tableId: "D2", seats: 8, experience: "Premium" }
 ];
 const MAX_ACTIVE_RESERVATIONS = 3;
 const BOOKING_TIME_ZONE = "Asia/Dubai";
@@ -266,6 +309,14 @@ const normalizeRestaurantHours = (restaurant = {}) => {
     };
 };
 
+const normalizeTableExperience = (experience, tableId = "") => {
+    if (Object.hasOwn(TABLE_EXPERIENCES, experience)) {
+        return experience;
+    }
+
+    return DEFAULT_TABLE_EXPERIENCE_BY_ID[String(tableId).trim().toUpperCase()] || "Regular";
+};
+
 const normalizeRestaurantTableLayout = (tableLayout) => {
     const hasSavedLayout = Array.isArray(tableLayout);
     const sourceLayout = hasSavedLayout ? tableLayout : defaultTableLayout;
@@ -274,6 +325,7 @@ const normalizeRestaurantTableLayout = (tableLayout) => {
     return sourceLayout.reduce((layout, table = {}) => {
         const tableId = String(table.tableId || "").trim();
         const seats = Math.floor(Number(table.seats));
+        const experience = normalizeTableExperience(table.experience, tableId);
         const normalizedTableId = tableId.toLowerCase();
 
         if (!tableId || !Number.isFinite(seats) || seats < 1 || seenTableIds.has(normalizedTableId)) {
@@ -281,7 +333,7 @@ const normalizeRestaurantTableLayout = (tableLayout) => {
         }
 
         seenTableIds.add(normalizedTableId);
-        layout.push({ tableId, seats });
+        layout.push({ tableId, seats, experience });
         return layout;
     }, []);
 };
@@ -333,6 +385,7 @@ let bookingState = {
     date: "",
     time: "11:00",
     tableId: "",
+    experienceFilter: "Regular",
     couponCode: "",
     memberTier: "Standard",
     invitedGuests: [],
@@ -1297,6 +1350,10 @@ const getTableBaseFee = (seats = 0) => {
     return tableFees[seats] || 0;
 };
 
+const getTableExperience = (table = {}) => normalizeTableExperience(table.experience);
+
+const getExperienceFee = (table = {}) => TABLE_EXPERIENCES[getTableExperience(table)].fee;
+
 const getTimePricingAdjustment = (tableFee, time) => {
     if (peakHours.includes(time)) {
         return {
@@ -1360,8 +1417,11 @@ const getMemberDiscount = (subtotal, memberTier = "Standard") => {
 
 const calculateReservationPrice = ({ table, time, couponCode, memberTier }) => {
     const tableFee = getTableBaseFee(table?.seats);
-    const timeAdjustment = getTimePricingAdjustment(tableFee, time);
-    const adjustedSubtotal = Math.max(0, roundCurrency(tableFee + timeAdjustment.amount));
+    const tableExperience = getTableExperience(table);
+    const experienceFee = getExperienceFee(table);
+    const subtotalBeforeTime = roundCurrency(tableFee + experienceFee);
+    const timeAdjustment = getTimePricingAdjustment(subtotalBeforeTime, time);
+    const adjustedSubtotal = Math.max(0, roundCurrency(subtotalBeforeTime + timeAdjustment.amount));
     const couponDiscount = getCouponDiscount(adjustedSubtotal, couponCode);
     const afterCouponSubtotal = Math.max(0, roundCurrency(adjustedSubtotal - couponDiscount.amount));
     const memberDiscount = getMemberDiscount(afterCouponSubtotal, memberTier);
@@ -1370,6 +1430,8 @@ const calculateReservationPrice = ({ table, time, couponCode, memberTier }) => {
     return {
         currency: "USD",
         tableFee,
+        tableExperience,
+        experienceFee,
         timeAdjustment,
         couponDiscount,
         memberDiscount,
@@ -1378,13 +1440,17 @@ const calculateReservationPrice = ({ table, time, couponCode, memberTier }) => {
 };
 
 const renderPricingSummaryRows = (pricing) => {
-    const { tableFee, timeAdjustment, couponDiscount, memberDiscount, finalTotal } = pricing;
+    const { tableFee, tableExperience, experienceFee, timeAdjustment, couponDiscount, memberDiscount, finalTotal } = pricing;
     const timeAdjustmentClass = timeAdjustment.amount < 0 ? "discount" : "charge";
 
     return `
         <div>
             <span>Table fee</span>
             <strong>${formatUSD(tableFee)}</strong>
+        </div>
+        <div>
+            <span>${escapeHTML(normalizeTableExperience(tableExperience))} experience</span>
+            <strong>${formatUSD(experienceFee || 0)}</strong>
         </div>
         <div>
             <span>Time adjustment (${timeAdjustment.label})</span>
@@ -1921,6 +1987,10 @@ const renderCheckInCard = (reservation) => {
                         <span>Table</span>
                         <div><span class="summary-chip">${escapeHTML(reservation.tableId)}</span></div>
                     </div>
+                    <div class="summary-group">
+                        <span>Table experience</span>
+                        <div><span class="summary-chip">${escapeHTML(normalizeTableExperience(reservation.tableExperience))} &middot; ${formatUSD(Number(reservation.experienceFee) || 0)}</span></div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1968,6 +2038,7 @@ const startBooking = (restaurantId) => {
         date,
         time: getDefaultBookingTime(date, restaurant),
         tableId: "",
+        experienceFilter: "Regular",
         couponCode: "",
         memberTier: "Standard",
         invitedGuests: [],
@@ -2177,9 +2248,10 @@ const renderTableMap = () => {
     }
 
     return tableLayout.map((table) => {
-        const { tableId, seats } = table;
+        const { tableId, seats, experience } = table;
         const status = getTableStatus(table);
-        const isDisabled = status === "Reserved" || status === "Disabled";
+        const matchesExperience = experience === bookingState.experienceFilter;
+        const isDisabled = status === "Reserved" || status === "Disabled" || !matchesExperience;
 
         return `
             <button
@@ -2187,18 +2259,113 @@ const renderTableMap = () => {
                 type="button"
                 data-table-id="${tableId}"
                 ${isDisabled ? "disabled" : ""}
+                aria-label="Table ${escapeHTML(tableId)}, ${escapeHTML(experience)}, ${seats} seats, ${status}${matchesExperience ? "" : `, choose ${escapeHTML(experience)} experience to select` }"
             >
                 <strong>${tableId}</strong>
                 <span>${seats} seats</span>
-                <em>${status}</em>
+                <em>${experience} &middot; ${status}</em>
             </button>
         `;
     }).join("");
 };
 
+const renderTableExperienceControls = () => `
+    <div class="table-experience-heading">Table experience</div>
+    <div class="table-experience-controls" role="radiogroup" aria-label="Table experience">
+        ${Object.entries(TABLE_EXPERIENCES).map(([experience, details]) => `
+            <button
+                class="table-experience-control ${bookingState.experienceFilter === experience ? "is-active" : ""}"
+                type="button"
+                role="radio"
+                aria-checked="${bookingState.experienceFilter === experience}"
+                data-experience-filter="${experience}"
+            >
+                <span class="table-experience-icon" aria-hidden="true">${experience === "Regular" ? "♧" : experience === "Premium" ? "♕" : "◇"}</span>
+                <span>
+                    <strong>${experience}</strong>
+                    <small>${details.subtitle}</small>
+                </span>
+                <span class="table-experience-check" aria-hidden="true">✓</span>
+            </button>
+        `).join("")}
+    </div>
+`;
+
+const renderTableInformationStrip = (selectedTable) => {
+    const experience = selectedTable
+        ? getTableExperience(selectedTable)
+        : normalizeTableExperience(bookingState.experienceFilter);
+    const details = TABLE_EXPERIENCES[experience];
+    const message = selectedTable
+        ? `Selected table ${selectedTable.tableId} · ${experience} · ${selectedTable.seats} seats · ${details.fee ? `+$${details.fee}` : "Included"}`
+        : `Choose a ${experience} table · ${details.subtitle}`;
+
+    return `
+        <div class="table-information-strip" id="tableInformationStrip" aria-live="polite">
+            <span class="table-information-main"><span class="table-information-icon" aria-hidden="true">i</span>${escapeHTML(message)}</span>
+            <span class="table-information-benefits">${escapeHTML(details.benefits)}</span>
+        </div>
+    `;
+};
+
+const revealBookingTableFallback = (bookingView) => {
+    const fallback = bookingView?.querySelector("#bookingTableFallback");
+    const stage = bookingView?.querySelector("#bookingTable3DStage");
+    if (fallback) {
+        fallback.classList.add("is-fallback-visible");
+        fallback.setAttribute("aria-label", "Table selector");
+    }
+    if (stage) {
+        stage.hidden = true;
+    }
+};
+
+const destroyBookingTableSelector = () => {
+    bookingTableSelector3DInitToken += 1;
+    bookingTableSelector3DModule?.destroyBookingTableSelector3D();
+};
+
+const initializeBookingTableSelector = (bookingView) => {
+    const container = bookingView.querySelector("#bookingTable3D");
+    const returnButton = bookingView.querySelector("#returnToFloorButton");
+    const token = ++bookingTableSelector3DInitToken;
+
+    if (!container) {
+        return;
+    }
+
+    bookingTableSelector3DModulePromise.then((module) => {
+        if (token !== bookingTableSelector3DInitToken || !container.isConnected) {
+            return;
+        }
+
+        if (!module || !module.isBookingTableSelector3DSupported()) {
+            revealBookingTableFallback(bookingView);
+            return;
+        }
+
+        const initialized = module.initBookingTableSelector3D({
+            container,
+            returnButton,
+            tables: getRestaurantTableLayout(),
+            experienceFilter: bookingState.experienceFilter,
+            selectedTableId: bookingState.tableId,
+            getTableStatus,
+            onTableSelect: handleTableSelect,
+            onFailure: () => revealBookingTableFallback(bookingView)
+        });
+
+        if (!initialized) {
+            revealBookingTableFallback(bookingView);
+        }
+    });
+};
+
 const renderBookingView = () => {
     const bookingView = document.querySelector("#bookingView");
     const profile = getCurrentUserProfile();
+
+    destroyBookingTableSelector();
 
     if (!profile) {
         if (bookingView) {
@@ -2221,6 +2388,7 @@ const renderBookingView = () => {
     }
 
     const { name, cuisine, rating, priceLevel, image } = restaurant;
+    bookingState.experienceFilter = normalizeTableExperience(bookingState.experienceFilter);
     const selectedTable = getSelectedBookingTable();
     const isOverTableCapacity = Boolean(selectedTable) && !doesBookingFitTable(selectedTable);
     const isSelectedTimeAvailable = isBookingTimeAvailable();
@@ -2280,13 +2448,22 @@ const renderBookingView = () => {
                 <h3>Choose one available table</h3>
             </div>
             ${renderWaitlistStatus()}
+            ${renderTableExperienceControls()}
             <div class="table-status-legend">
                 <span class="legend-dot available"></span> Available
                 <span class="legend-dot selected"></span> Selected
                 <span class="legend-dot reserved"></span> Reserved
                 <span class="legend-dot disabled"></span> Disabled
             </div>
-            <div class="table-map">
+            <div class="booking-3d-stage" id="bookingTable3DStage">
+                <div class="booking-3d-toolbar">
+                    <button class="booking-floor-return" type="button" id="returnToFloorButton"><span aria-hidden="true">←</span> Return to Floor</button>
+                    <span class="booking-3d-pill"><span aria-hidden="true">◇</span> Interactive 3D floor</span>
+                </div>
+                <div class="booking-table-3d" id="bookingTable3D"></div>
+                ${renderTableInformationStrip(selectedTable)}
+            </div>
+            <div class="table-map table-map-accessible" id="bookingTableFallback" aria-label="Mirrored accessible table selector">
                 ${renderTableMap()}
             </div>
         </section>
@@ -2349,6 +2526,21 @@ const renderBookingView = () => {
             }
 
             bookingState = { ...bookingState, time: button.dataset.time, tableId: "", confirmedReservation: null };
+            bookingMessage = "";
+            invitedGuestMessage = "";
+            renderBookingView();
+        });
+    });
+
+    bookingView.querySelectorAll("[data-experience-filter]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const experienceFilter = normalizeTableExperience(button.dataset.experienceFilter);
+            const currentTable = getSelectedBookingTable();
+            bookingState = {
+                ...bookingState,
+                experienceFilter,
+                tableId: currentTable && getTableExperience(currentTable) !== experienceFilter ? "" : bookingState.tableId
+            };
             bookingMessage = "";
             invitedGuestMessage = "";
             renderBookingView();
@@ -2444,16 +2636,20 @@ const renderBookingView = () => {
 
     bookingView.querySelector("#confirmTestBookingButton").addEventListener("click", confirmTestBooking);
 
+    initializeBookingTableSelector(bookingView);
+
     if (bookingState.confirmedReservation) {
         requestAnimationFrame(() => renderRealQRCode(bookingState.confirmedReservation));
     }
 };
 
-const handleTableSelect = (event) => {
-    const tableId = event.currentTarget.dataset.tableId;
+const handleTableSelect = (eventOrTableId) => {
+    const tableId = typeof eventOrTableId === "string"
+        ? eventOrTableId
+        : eventOrTableId.currentTarget.dataset.tableId;
     const table = getRestaurantTableLayout().find((item) => item.tableId === tableId);
 
-    if (!table || getTableStatus(table) !== "Available") {
+    if (!table || getTableExperience(table) !== bookingState.experienceFilter || getTableStatus(table) !== "Available") {
         return;
     }
 
@@ -2519,6 +2715,8 @@ const confirmTestBooking = () => {
         restaurantName: restaurant.name,
         tableId: table.tableId,
         seats: table.seats,
+        tableExperience: getTableExperience(table),
+        experienceFee: pricing.experienceFee,
         date: bookingState.date,
         time: bookingState.time,
         pricing,
@@ -3165,6 +3363,10 @@ const updateAuthNavigation = () => {
 };
 
 const showPage = (visiblePage) => {
+    if (visiblePage?.id !== "bookingPage") {
+        destroyBookingTableSelector();
+    }
+
     document.querySelectorAll(".page-view").forEach((page) => {
         const isVisible = page === visiblePage;
         page.hidden = !isVisible;
@@ -3395,7 +3597,9 @@ const renderRealQRCode = (reservation) => {
         restaurantName: reservation.restaurantName,
         date: reservation.date,
         time: reservation.time,
-        tableId: reservation.tableId
+        tableId: reservation.tableId,
+        tableExperience: normalizeTableExperience(reservation.tableExperience),
+        experienceFee: Number(reservation.experienceFee) || 0
     });
 
     window.QRCode.toCanvas(qrCanvas, qrData, {
