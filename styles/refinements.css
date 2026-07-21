@@ -1,0 +1,483 @@
+/* Presentation polish: shared rhythm, controls, and dense workflow surfaces */
+main {
+    overflow: clip;
+}
+
+button:active,
+.button:active,
+.primary-action:active,
+.secondary-action:active,
+.danger-action:active,
+.search-bar button:active,
+.book-button:active,
+.filter-pill:active,
+.time-slot:active,
+.table-tile:active {
+    transform: translateY(0);
+}
+
+select {
+    appearance: none;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--color-primary) 50%),
+        linear-gradient(135deg, var(--color-primary) 50%, transparent 50%);
+    background-position:
+        calc(100% - 18px) 50%,
+        calc(100% - 12px) 50%;
+    background-size: 6px 6px;
+    background-repeat: no-repeat;
+    padding-right: 38px;
+}
+
+label,
+legend,
+.booking-control-label {
+    letter-spacing: 0;
+}
+
+.primary-action,
+.secondary-action,
+.danger-action,
+.search-bar button,
+.book-button,
+.filter-pill,
+.time-slot,
+.choice-chip span {
+    user-select: none;
+}
+
+.profile-panel,
+.account-card,
+.dashboard-card,
+.restaurant-card,
+.smart-recommendation-card,
+.waitlist-status-panel,
+.pricing-summary,
+.admin-list-item,
+.invited-guest-card,
+.split-bill-row,
+.pre-order-item {
+    background: var(--color-card);
+}
+
+.profile-panel,
+.account-card,
+.dashboard-card,
+.smart-recommendation-card,
+.restaurant-card {
+    border-color: rgba(201, 181, 150, 0.68);
+}
+
+.profile-panel h2,
+.profile-panel h3,
+.dashboard-card h3,
+.booking-view h2,
+.booking-view h3,
+.admin-view h2,
+.admin-view h3,
+.smart-concierge-view h2,
+.smart-concierge-view h3 {
+    margin-top: 0;
+}
+
+.profile-message,
+.booking-warning,
+.empty-state,
+.contact-success,
+.qr-code-error {
+    animation: messageReveal var(--transition-slow) ease-out both;
+}
+
+.profile-message {
+    border: 1px solid rgba(203, 169, 106, 0.42);
+    border-radius: var(--radius-md);
+    box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+.field-error,
+.auth-field-error {
+    min-height: 1.15em;
+}
+
+.hero {
+    gap: 48px;
+    padding: 50px 0 66px;
+}
+
+.hero-content {
+    animation: contentRise var(--transition-slow) ease-out both;
+}
+
+.hero h1 {
+    text-wrap: balance;
+}
+
+.hero-copy {
+    color: #565E55;
+}
+
+.search-bar {
+    border-color: rgba(201, 181, 150, 0.78);
+    box-shadow: 0 22px 58px rgba(39, 31, 21, 0.13);
+    transition:
+        border-color var(--transition-base),
+        box-shadow var(--transition-base),
+        transform var(--transition-base);
+}
+
+.search-bar:focus-within {
+    border-color: var(--color-primary);
+    box-shadow:
+        var(--shadow-focus),
+        0 26px 64px rgba(39, 31, 21, 0.15);
+    transform: translateY(-1px);
+}
+
+.search-bar input:focus {
+    box-shadow: none;
+}
+
+.filter-pill {
+    font-weight: 800;
+    transition:
+        background var(--transition-base),
+        border-color var(--transition-base),
+        color var(--transition-base),
+        box-shadow var(--transition-base),
+        transform var(--transition-base);
+}
+
+.filter-pill:hover {
+    box-shadow: var(--shadow-light);
+    transform: translateY(-1px);
+}
+
+.hero-photo {
+    border: 1px solid rgba(201, 181, 150, 0.54);
+    transform: translateZ(0);
+}
+
+.hero-card {
+    box-shadow: 0 22px 58px rgba(8, 56, 32, 0.28);
+}
+
+.restaurants-section {
+    position: relative;
+    border-top: 1px solid rgba(201, 181, 150, 0.44);
+}
+
+.section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--space-lg);
+}
+
+.restaurant-grid {
+    grid-template-columns: repeat(3, minmax(260px, 1fr));
+}
+
+.restaurant-card {
+    min-width: 0;
+    min-height: 514px;
+}
+
+.card-image {
+    aspect-ratio: 1.42 / 1;
+    min-height: auto;
+}
+
+.card-body {
+    gap: 12px;
+}
+
+.restaurant-card .card-meta {
+    margin-bottom: 2px;
+}
+
+.restaurant-card .rating,
+.restaurant-card .price,
+.restaurant-card .cuisine,
+.restaurant-card .badge,
+.badge,
+.summary-chip,
+.reservation-status,
+.restaurant-tag,
+.pricing-badge {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.restaurant-card h3 {
+    display: -webkit-box;
+    overflow: hidden;
+    min-height: calc(var(--type-h3) * 1.15 * 2);
+    -webkit-box-orient: vertical;
+     line-clamp: 2;
+    -webkit-line-clamp: 2;
+    text-wrap: balance;
+}
+
+.restaurant-card .meta-row {
+    margin-top: 0;
+}
+
+.restaurant-card .badges {
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.book-button {
+    margin-top: var(--space-md);
+}
+
+.empty-state {
+    min-height: 220px;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 8px;
+    border-color: rgba(201, 181, 150, 0.9);
+    background: rgba(255, 253, 248, 0.78);
+}
+
+.profile-page {
+    border-top: 1px solid rgba(201, 181, 150, 0.44);
+}
+
+.profile-page-heading h1 {
+    text-wrap: balance;
+}
+
+.profile-page-heading .secondary-action {
+    flex: 0 0 auto;
+}
+
+.auth-card,
+.profile-panel,
+.account-card {
+    backdrop-filter: blur(10px);
+}
+
+.form-heading {
+    display: grid;
+    gap: 6px;
+}
+
+.guest-form,
+.contact-form,
+.admin-form,
+.pricing-controls,
+.invited-guest-form,
+.smart-filter-grid {
+    min-width: 0;
+}
+
+.guest-form input,
+.contact-form input,
+.contact-form textarea,
+.admin-form input,
+.admin-form select,
+.smart-filter-grid select,
+.pricing-controls input,
+.pricing-controls select,
+.booking-date-field input,
+.invited-guest-form input,
+.invited-guest-card select,
+.pre-order-item input {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.choice-chip span {
+    min-width: 0;
+    line-height: 1.2;
+}
+
+.choice-chip input:focus-visible + span {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-focus);
+}
+
+.dashboard-card,
+.admin-list-item,
+.waitlist-status-panel,
+.invited-guest-card,
+.split-bill-row,
+.pre-order-item,
+.split-bill-breakdown div {
+    transition:
+        border-color var(--transition-base),
+        box-shadow var(--transition-base),
+        transform var(--transition-base);
+}
+
+.dashboard-card:hover,
+.admin-list-item:hover,
+.waitlist-status-panel:hover,
+.split-bill-breakdown div:hover {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-light);
+}
+
+.admin-list-item {
+    align-items: flex-start;
+}
+
+.admin-list-item > div:first-child {
+    min-width: 0;
+}
+
+.admin-list-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.smart-recommendation-card {
+    transition:
+        transform var(--transition-base),
+        box-shadow var(--transition-base),
+        border-color var(--transition-base);
+}
+
+.smart-recommendation-card:hover {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-3px);
+}
+
+.smart-card-image {
+    overflow: hidden;
+}
+
+.smart-card-image::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    background-position: center;
+    background-size: cover;
+    transition: transform var(--transition-slow);
+}
+
+.smart-recommendation-card:hover .smart-card-image::before {
+    transform: scale(1.045);
+}
+
+.smart-card-image span {
+    z-index: 1;
+}
+
+.booking-view {
+    align-items: start;
+}
+
+.booking-view > .profile-panel {
+    overflow: hidden;
+}
+
+.booking-restaurant-panel {
+    box-shadow: var(--shadow-medium);
+}
+
+.booking-summary-content h2 {
+    margin: 0;
+    text-wrap: balance;
+}
+
+.booking-restaurant-meta {
+    align-items: center;
+}
+
+.booking-controls-panel,
+.booking-table-panel,
+.booking-confirm-panel,
+.pricing-panel,
+.invited-guests-panel,
+.split-bill-panel,
+.pre-order-panel,
+.check-in-panel {
+    position: relative;
+}
+
+.pricing-summary div,
+.pre-order-total,
+.split-bill-total,
+.split-bill-row {
+    min-width: 0;
+}
+
+.pricing-summary div {
+    flex-wrap: wrap;
+}
+
+.pricing-summary strong,
+.split-bill-breakdown strong,
+.pre-order-total strong,
+.split-bill-total strong {
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.time-slot,
+.table-tile {
+    min-width: 0;
+}
+
+.time-slot:focus-visible,
+.table-tile:focus-visible,
+.filter-pill:focus-visible {
+    outline: 0;
+    box-shadow: var(--shadow-focus);
+}
+
+.table-tile {
+    min-height: 118px;
+    overflow: hidden;
+}
+
+.table-tile.selected {
+    box-shadow: 0 0 0 3px rgba(15, 81, 50, 0.15);
+}
+
+.table-status-legend {
+    line-height: 1.35;
+}
+
+.qr-code {
+    border: 1px solid var(--color-border);
+    aspect-ratio: 1;
+}
+
+.qr-code canvas {
+    image-rendering: pixelated;
+}
+
+.footer {
+    border-top: 1px solid rgba(201, 181, 150, 0.44);
+}
+
+@keyframes contentRise {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes messageReveal {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+

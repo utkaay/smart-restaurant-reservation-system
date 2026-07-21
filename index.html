@@ -5,21 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jack&rsquo;s Smart Reservation System</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/home.css">
+    <link rel="stylesheet" href="styles/account.css">
+    <link rel="stylesheet" href="styles/concierge.css">
+    <link rel="stylesheet" href="styles/contact.css">
+    <link rel="stylesheet" href="styles/booking.css">
+    <link rel="stylesheet" href="styles/booking-3d.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="styles/restaurants.css">
+    <link rel="stylesheet" href="styles/refinements.css">
+    <link rel="stylesheet" href="styles/responsive.css">
 </head>
-<body>
+<body data-customer-page="home">
     <header class="site-header">
         <nav class="nav">
-            <a class="logo" href="#home" id="homeLink">Jack&rsquo;s Smart Reservation System</a>
+            <a class="logo" href="index.html" id="homeLink">Jack&rsquo;s Smart Reservation System</a>
             <div class="nav-groups">
                 <div class="nav-links main-nav" aria-label="Main navigation">
-                    <a href="#restaurants">Restaurants</a>
-                    <a href="#concierge" id="smartConciergeLink">Smart Concierge</a>
-                    <a href="#contact">Contact</a>
+                    <a href="#restaurants" id="restaurantsNavLink">Restaurants</a>
+                    <a href="pages/concierge.html" id="smartConciergeLink">Smart Concierge</a>
+                    <a href="pages/contact.html">Contact</a>
                 </div>
                 <div class="nav-links auth-nav" aria-label="Account navigation">
-                    <a href="#login" id="authNavLink">
-                    </a>
+                    <a href="pages/login.html" id="authNavLink" aria-label="Account"></a>
                     <button class="nav-action is-hidden" type="button" id="logoutButton" hidden>Logout</button>
                 </div>
             </div>
@@ -27,190 +36,81 @@
     </header>
 
     <main>
+        <!-- Restaurant discovery -->
         <div class="page-view" id="discoveryPage">
-       <section class="home-hero" id="home">
-    <video
-        class="home-hero-video"
-        autoplay
-        muted
-        loop
-        playsinline
-        aria-hidden="true"
-    >
-        <source src="assets/videos/restaurant-background.mp4" type="video/mp4"> </video>
+            <section class="home-hero" id="home">
+                <video
+                    class="home-hero-video"
+                    autoplay
+                    muted
+                    loop
+                    playsinline
+                    aria-hidden="true"
+                >
+                    <source src="assets/videos/restaurant-background.mp4" type="video/mp4">
+                </video>
 
-    <div class="home-hero-overlay" aria-hidden="true"></div>
+                <div class="home-hero-overlay" aria-hidden="true"></div>
 
-    <div class="home-hero-content">
-        <p class="eyebrow home-hero-eyebrow">
-            Discover, compare, reserve
-        </p>
+                <div class="home-hero-content">
+                    <p class="eyebrow home-hero-eyebrow">Discover, compare, reserve</p>
+                    <h1>Book the right table for every craving.</h1>
+                    <p class="home-hero-copy">
+                        Search restaurants by cuisine, name, location, or dining style.
+                    </p>
 
-        <h1>Book the right table for every craving.</h1>
+                    <form class="search-bar home-hero-search" id="searchForm" role="search">
+                        <label class="sr-only" for="searchInput">Search restaurants</label>
+                        <input
+                            id="searchInput"
+                            type="search"
+                            placeholder="Cuisine, restaurant, location, or badge"
+                            autocomplete="off"
+                        >
+                        <button type="submit">Search</button>
+                    </form>
 
-        <p class="home-hero-copy">
-            Search restaurants by cuisine, name, location, or dining style.
-        </p>
+                    <div
+                        class="filter-pills home-hero-filters"
+                        id="filterPills"
+                        aria-label="Restaurant categories"
+                    ></div>
+                </div>
+            </section>
 
-        <form
-            class="search-bar home-hero-search"
-            id="searchForm"
-            role="search"
-        >
-            <label class="sr-only" for="searchInput">
-                Search restaurants
-            </label>
-
-            <input
-                id="searchInput"
-                type="search"
-                placeholder="Cuisine, restaurant, location, or badge"
-                autocomplete="off"
-            >
-
-            <button type="submit">Search</button>
-        </form>
-
-        <div
-            class="filter-pills home-hero-filters"
-            id="filterPills"
-            aria-label="Restaurant categories"
-        ></div>
-    </div>
-</section>
-
-        <section class="restaurants-section" id="restaurants">
-            <div class="section-heading">
-                <h2>Explore restaurants</h2>
-                <p>Discover restaurants by cuisine, location, and dining style.</p>
-            </div>
-            <div class="restaurant-grid" id="restaurantGrid" aria-live="polite"></div>
-        </section>
+            <section class="restaurants-section" id="restaurants">
+                <div class="section-heading">
+                    <h2>Explore restaurants</h2>
+                    <p>Discover restaurants by cuisine, location, and dining style.</p>
+                </div>
+                <div class="restaurant-grid" id="restaurantGrid" aria-live="polite"></div>
+            </section>
         </div>
 
-        <section class="profile-page page-view is-hidden" id="guest" hidden>
-            <div class="profile-page-inner">
-                <div class="profile-page-heading">
-                    <div>
-                        <p class="eyebrow">Guest profile</p>
-                        <h1>Manage your dining account.</h1>
-                    </div>
-                    <button class="secondary-action" type="button" id="backToDiscoveryButton">Back to restaurants</button>
-                </div>
-
-                <div class="profile-dashboard" id="guestSection" aria-live="polite"></div>
-            </div>
-        </section>
-
-        <section class="profile-page page-view is-hidden" id="login" hidden>
-            <div class="profile-page-inner">
-                <div class="profile-page-heading">
-                    <div>
-                        <p class="eyebrow">Guest access</p>
-                    </div>
-                    <button class="secondary-action" type="button" id="backFromLoginButton">Back to restaurants</button>
-                </div>
-
-                <div class="profile-dashboard auth-dashboard" id="authSection" aria-live="polite"></div>
-            </div>
-        </section>
-
-        <section class="profile-page page-view is-hidden" id="bookingPage" hidden>
-            <div class="profile-page-inner">
-                <div class="profile-page-heading">
-                    <div>
-                        <p class="eyebrow">Guided reservation</p>
-                        <h1>Build your booking.</h1>
-                    </div>
-                    <button class="secondary-action" type="button" id="backFromBookingButton">Back to restaurants</button>
-                </div>
-
-                <div class="booking-view" id="bookingView" aria-live="polite"></div>
-            </div>
-        </section>
-
-        <section class="profile-page page-view is-hidden" id="concierge" hidden>
-            <div class="profile-page-inner">
-                <div class="profile-page-heading">
-                    <div>
-                        <p class="eyebrow">Smart Concierge</p>
-                        <h1>Find your best match.</h1>
-                    </div>
-                    <button class="secondary-action" type="button" id="backFromConciergeButton">Back to restaurants</button>
-                </div>
-
-                <div class="smart-concierge-view" id="smartConciergeView" aria-live="polite"></div>
-            </div>
-        </section>
-
-        <section class="profile-page page-view is-hidden" id="contact" hidden>
-            <div class="profile-page-inner">
-                <div class="profile-page-heading contact-page-heading">
-                    <div class="contact-introduction">
-                        <h1>Need help?</h1>
-                        <p>We&rsquo;re here to answer questions about reservations, bookings, and your dining experience.</p>
-                    </div>
-                </div>
-
-                <div class="contact-layout">
-                    <section class="profile-panel contact-panel">
-                        <form class="contact-form" id="contactForm" novalidate>
-                            <p class="profile-message contact-success" id="contactSuccess" hidden aria-live="polite"></p>
-
-                            <label>
-                                Name
-                                <input type="text" name="name" autocomplete="name" required>
-                                <span class="field-error" data-contact-error="name"></span>
-                            </label>
-
-                            <label>
-                                Email
-                                <input type="email" name="email" autocomplete="email" required>
-                                <span class="field-error" data-contact-error="email"></span>
-                            </label>
-
-                            <label>
-                                Subject
-                                <input type="text" name="subject" required>
-                                <span class="field-error" data-contact-error="subject"></span>
-                            </label>
-
-                            <label>
-                                Message
-                                <textarea name="message" rows="6" required></textarea>
-                                <span class="field-error" data-contact-error="message"></span>
-                            </label>
-
-                            <button class="primary-action" type="submit">Send Message</button>
-                        </form>
-                    </section>
-
-                    <aside class="profile-panel contact-info-panel" aria-label="Contact information">
-                        <div>
-                            <p class="eyebrow">Support Email</p>
-                            <strong>jsarafah@students.haigazian.edu.lb</strong>
-                        </div>
-                        <div>
-                            <p class="eyebrow">Phone</p>
-                            <strong>+971 54 563 2108</strong>
-                            <br/>
-                            <strong>+961 81 283 646</strong>    
-                        </div>
-                        <div>
-                            <p class="eyebrow">Office Hours</p>
-                            <strong>9:00 AM &ndash; 6:00 PM (UTC+04:00)</strong>
-                        </div>
-                    </aside>
-                </div>
-            </div>
-        </section>
     </main>
 
     <footer class="footer">
         <p>&copy; 2026 Jack&rsquo;s Smart Reservation System. SE Bootcamp Project 1</p>
     </footer>
-   
-    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-    <script src="JavaScript/script.js"></script>
+    <!-- Factory data: constants only -->
+    <script src="data/factories/restaurant-factory.js"></script>
+    <script src="data/factories/booking-factory.js"></script>
+    <script src="data/factories/user-factory.js"></script>
+    <script src="data/factories/local-storage-factory.js"></script>
+
+    <!-- Shared helper and the single seeder call site -->
+    <script src="scripts/pages/helper.js"></script>
+    <script src="data/seeders/seeders.js"></script>
+
+    <!-- Customer features -->
+    <script src="scripts/pages/config.js"></script>
+    <script src="scripts/pages/core.js"></script>
+    <script src="scripts/pages/discovery.js"></script>
+    <script src="scripts/pages/account.js"></script>
+    <script src="scripts/pages/booking-schedule.js"></script>
+    <script src="scripts/pages/booking-guests.js"></script>
+    <script src="scripts/pages/booking-selection.js"></script>
+    <script src="scripts/pages/auth.js"></script>
+    <script src="scripts/pages/app.js"></script>
 </body>
 </html>

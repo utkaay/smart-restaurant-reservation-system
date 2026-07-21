@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | Jack&rsquo;s Smart Reservation System</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="../styles/base.css">
+    <link rel="stylesheet" href="../styles/home.css">
+    <link rel="stylesheet" href="../styles/account.css">
+    <link rel="stylesheet" href="../styles/concierge.css">
+    <link rel="stylesheet" href="../styles/contact.css">
+    <link rel="stylesheet" href="../styles/booking.css">
+    <link rel="stylesheet" href="../styles/booking-3d.css">
+    <link rel="stylesheet" href="../styles/animations.css">
+    <link rel="stylesheet" href="../styles/restaurants.css">
+    <link rel="stylesheet" href="../styles/refinements.css">
+    <link rel="stylesheet" href="../styles/responsive.css">
+</head>
+<body data-customer-page="signup">
+    <header class="site-header">
+        <nav class="nav">
+            <a class="logo" href="../index.html" id="homeLink">Jack&rsquo;s Smart Reservation System</a>
+            <div class="nav-groups">
+                <div class="nav-links main-nav" aria-label="Main navigation">
+                    <a href="../index.html#restaurants">Restaurants</a>
+                    <a href="concierge.html" id="smartConciergeLink">Smart Concierge</a>
+                    <a href="contact.html">Contact</a>
+                </div>
+                <div class="nav-links auth-nav" aria-label="Account navigation">
+                    <a href="login.html" id="authNavLink" aria-label="Account"></a>
+                    <button class="nav-action is-hidden" type="button" id="logoutButton" hidden>Logout</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="profile-page page-view" id="signup">
+            <div class="profile-page-inner">
+                <div class="profile-page-heading">
+                    <div>
+                        <p class="eyebrow">Create account</p>
+                    </div>
+                    <button class="secondary-action" type="button" id="backFromLoginButton">Back to restaurants</button>
+                </div>
+
+                <div class="profile-dashboard auth-dashboard" id="authSection" aria-live="polite"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2026 Jack&rsquo;s Smart Reservation System. SE Bootcamp Project 1</p>
+    </footer>
+
+    <!-- Factory data: constants only -->
+    <script src="../data/factories/restaurant-factory.js"></script>
+    <script src="../data/factories/booking-factory.js"></script>
+    <script src="../data/factories/user-factory.js"></script>
+    <script src="../data/factories/local-storage-factory.js"></script>
+
+    <!-- Shared helper and the single seeder call site -->
+    <script src="../scripts/pages/helper.js"></script>
+    <script src="../data/seeders/seeders.js"></script>
+
+    <!-- Customer features -->
+    <script src="../scripts/pages/config.js"></script>
+    <script src="../scripts/pages/core.js"></script>
+    <script src="../scripts/pages/discovery.js"></script>
+    <script src="../scripts/pages/account.js"></script>
+    <script src="../scripts/pages/booking-schedule.js"></script>
+    <script src="../scripts/pages/booking-guests.js"></script>
+    <script src="../scripts/pages/booking-selection.js"></script>
+    <script src="../scripts/pages/auth.js"></script>
+    <script src="../scripts/pages/app.js"></script>
+</body>
+</html>
