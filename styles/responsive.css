@@ -1,0 +1,461 @@
+@media (max-width: 940px) {
+    .nav,
+    .hero,
+    .section-heading,
+    .profile-page-inner,
+    .restaurant-grid {
+        width: min(100% - 28px, 760px);
+    }
+
+    .hero {
+        grid-template-columns: 1fr;
+        min-height: auto;
+        gap: 28px;
+        padding-top: 30px;
+    }
+
+    .nav {
+        flex-wrap: wrap;
+    }
+
+    .nav-groups {
+        flex: 1 1 auto;
+        gap: 18px;
+    }
+
+    .hero-visual,
+    .hero-photo {
+        min-height: 360px;
+    }
+
+    .restaurant-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .profile-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-info-panel {
+        position: static;
+    }
+
+    .account-card {
+        position: static;
+    }
+
+    .smart-recommendation-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .table-map {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .booking-restaurant-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-summary-image {
+        min-height: 300px;
+    }
+
+    .booking-slot-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .split-bill-breakdown {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .restaurants-section {
+        padding: 56px 0;
+    }
+
+    .profile-page {
+        padding: 40px 0 56px;
+    }
+
+    .admin-list-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .pre-order-item {
+        grid-template-columns: minmax(0, 1fr) minmax(80px, auto) minmax(86px, 110px) auto;
+    }
+}
+
+@media (max-width: 640px) {
+    html {
+        scroll-padding-top: 0;
+    }
+
+    :root {
+        --type-h1: 2.55rem;
+        --type-h2: 2.05rem;
+        --type-h3: 1.35rem;
+    }
+
+    .site-header {
+        position: static;
+    }
+
+    .nav {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+        padding: 18px 0;
+    }
+
+    .nav-groups {
+        width: 100%;
+        margin-left: 0;
+        gap: 18px;
+        align-items: flex-start;
+        flex-direction: column;
+        justify-content: flex-start;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .nav-links,
+    .filter-pills {
+        width: 100%;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 4px;
+    }
+
+    .nav-links {
+        gap: 16px;
+        font-size: 0.9rem;
+    }
+
+    .nav-groups .nav-links {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .auth-nav {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+        padding-left: 0;
+    }
+
+    .hero {
+        width: min(100% - 24px, 420px);
+        padding: 28px 0 42px;
+    }
+
+    h1 {
+        font-size: var(--type-h1);
+        line-height: 1;
+    }
+
+    .hero-copy {
+        font-size: 1rem;
+    }
+
+    .search-bar {
+        grid-template-columns: 1fr;
+        max-width: none;
+    }
+
+    .search-bar button,
+    .book-button,
+    .primary-action,
+    .secondary-action,
+    .danger-action {
+        width: 100%;
+    }
+
+    .hero-card {
+        right: 12px;
+        left: 12px;
+        max-width: none;
+        padding: 16px;
+    }
+
+    .hero-card strong {
+        font-size: 1.45rem;
+    }
+
+    .profile-page-inner,
+    .restaurant-grid {
+        width: min(100% - 24px, 420px);
+    }
+
+    .restaurant-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-heading {
+        width: min(100% - 24px, 420px);
+    }
+
+    .profile-page-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .profile-dashboard,
+    .dashboard-card-grid,
+    .table-map {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-summary-image {
+        min-height: 240px;
+    }
+
+    .booking-summary-content {
+        padding: 24px;
+    }
+
+    .restaurant-card {
+        min-height: auto;
+    }
+
+    .restaurant-card h3 {
+        min-height: auto;
+    }
+
+    .booking-restaurant-meta,
+    .booking-restaurant-panel .badges,
+    .table-status-legend,
+    .time-slot-grid {
+        gap: 8px;
+    }
+
+    .account-card,
+    .profile-panel {
+        padding: 24px;
+    }
+
+    .booking-restaurant-panel {
+        padding: 0;
+    }
+
+    .dashboard-card {
+        min-height: auto;
+    }
+
+    .form-grid,
+    .admin-form,
+    .price-tier-grid,
+    .smart-filter-grid,
+    .pricing-controls,
+    .split-bill-breakdown,
+    .check-in-card,
+    .invited-guest-form,
+    .invited-guest-card,
+    .pre-order-item,
+    .choice-grid,
+    .choice-grid.compact {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-list-item {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-list-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .admin-list-actions .secondary-action,
+    .admin-list-actions .danger-action {
+        flex: 1 1 140px;
+    }
+
+    .booking-confirm-panel .primary-action {
+        width: 100%;
+    }
+
+    .split-bill-row,
+    .split-bill-total,
+    .pre-order-total,
+    .pricing-summary div {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .check-in-card {
+        justify-items: center;
+        text-align: center;
+    }
+
+    .qr-code {
+        width: min(220px, 100%);
+        height: auto;
+    }
+
+    .qr-code canvas {
+        width: min(180px, 100%) !important;
+        height: auto !important;
+    }
+
+    .table-tile {
+        min-height: 96px;
+    }
+
+}
+
+@media (max-width: 420px) {
+    :root {
+        --type-h1: 2.28rem;
+        --type-h2: 1.9rem;
+    }
+
+    .logo {
+        max-width: 100%;
+        font-size: 1.08rem;
+    }
+
+    .hero,
+    .profile-page-inner,
+    .restaurant-grid,
+    .section-heading {
+        width: min(100% - 20px, 380px);
+    }
+
+    .hero-visual,
+    .hero-photo {
+        min-height: 310px;
+    }
+
+    .hero-card {
+        position: static;
+        margin-top: -86px;
+        color: var(--color-text);
+        background: rgba(255, 253, 248, 0.92);
+        border-color: var(--color-border);
+    }
+
+    .panel-label {
+        color: var(--color-accent);
+    }
+
+    .card-body,
+    .account-card,
+    .profile-panel,
+    .auth-card {
+        padding: 20px;
+    }
+
+    .filter-pill,
+    .time-slot,
+    .restaurant-card .rating,
+    .restaurant-card .price,
+    .restaurant-card .cuisine,
+    .badge,
+    .summary-chip {
+        font-size: 0.76rem;
+    }
+}
+
+@media (max-width: 760px) {
+    .table-experience-controls {
+        gap: 7px;
+    }
+
+    .table-experience-control {
+        min-height: 72px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 5px;
+        padding: 9px 8px;
+    }
+
+    .table-experience-icon {
+        display: none;
+    }
+
+    .table-experience-control strong {
+        font-size: 0.82rem;
+    }
+
+    .table-experience-control small {
+        font-size: 0.61rem;
+        white-space: normal;
+    }
+
+    .booking-table-3d {
+        height: 440px;
+        min-height: 440px;
+    }
+
+    .booking-table-3d-label {
+        gap: 2px;
+        font-size: 0.58rem;
+    }
+
+    .booking-table-tier-badge {
+        padding: 2px 3px;
+        font-size: 0.48rem;
+    }
+
+    .booking-table-3d-label.is-selected::after,
+    .booking-table-3d-label.is-reserved .booking-table-tier-badge::after {
+        display: none;
+    }
+
+    .table-information-strip {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+        padding: 10px 12px;
+        font-size: 0.74rem;
+    }
+
+    .table-information-benefits {
+        padding-left: 30px;
+        text-align: left;
+    }
+
+    .table-information-seat-state {
+        align-items: flex-start;
+        padding-left: 30px;
+        text-align: left;
+    }
+
+    .seat-fallback-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .seat-fallback-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 430px) {
+    .booking-floor-return {
+        min-height: 32px;
+        padding: 0 9px;
+        font-size: 0.65rem;
+    }
+
+    .booking-table-3d {
+        height: 420px;
+        min-height: 420px;
+    }
+
+    .booking-table-3d-tooltip {
+        font-size: 0.64rem;
+        white-space: normal;
+    }
+}

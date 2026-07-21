@@ -1,0 +1,547 @@
+
+.table-layout-form-grid {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) minmax(140px, 0.7fr) minmax(150px, 0.75fr) auto;
+    gap: 12px;
+    align-items: end;
+}
+
+.table-layout-list {
+    display: grid;
+    gap: 10px;
+}
+
+.table-layout-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--admin-card-radius);
+    padding: 12px 14px;
+    background: var(--color-card);
+}
+
+.table-layout-row div {
+    display: grid;
+    gap: 3px;
+}
+
+.table-layout-row strong {
+    color: var(--color-text);
+    font-size: 1rem;
+}
+
+.table-layout-row span {
+    color: var(--color-text-muted);
+    font-size: var(--type-caption);
+    font-weight: 800;
+}
+
+.admin-table-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.admin-table-card {
+    display: flex;
+    min-height: 126px;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid transparent;
+    border-radius: var(--admin-card-radius);
+    padding: 16px;
+    transition:
+        border-color var(--admin-transition),
+        box-shadow var(--admin-transition),
+        transform var(--admin-transition);
+}
+
+.admin-table-card:hover {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--admin-card-shadow);
+    transform: var(--admin-hover-lift);
+}
+
+.admin-table-card strong {
+    display: block;
+    color: currentColor;
+    font-size: 1.35rem;
+}
+
+.admin-table-card span,
+.admin-table-card em {
+    display: block;
+    font-style: normal;
+    font-weight: 800;
+}
+
+.admin-table-card span {
+    color: currentColor;
+    opacity: 0.78;
+}
+
+.admin-table-card em {
+    width: fit-content;
+    border-radius: var(--radius-pill);
+    padding: 7px 10px;
+    background: rgba(255, 255, 255, 0.58);
+    font-size: var(--type-caption);
+    text-transform: uppercase;
+}
+
+.admin-table-card.status-available,
+.table-legend-panel .legend-dot.available {
+    color: var(--color-primary-hover);
+    background: var(--color-success-soft);
+}
+
+.admin-table-card.status-reserved,
+.table-legend-panel .legend-dot.reserved {
+    color: var(--color-warning);
+    background: var(--color-warning-soft);
+}
+
+.admin-table-card.status-disabled,
+.table-legend-panel .legend-dot.disabled {
+    color: var(--color-text-muted);
+    background: var(--color-border);
+}
+
+.quick-action-list {
+    grid-template-columns: 1fr;
+}
+
+.quick-action-button {
+    min-height: 52px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--admin-card-radius);
+    padding: 0 16px;
+    color: var(--color-primary-hover);
+    background: var(--color-card);
+    font-weight: 800;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color var(--admin-transition),
+        background-color var(--admin-transition),
+        box-shadow var(--admin-transition),
+        transform var(--admin-transition);
+}
+
+.quick-action-button:hover,
+.quick-action-button:focus-visible {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+    transform: var(--admin-hover-lift);
+}
+
+.quick-action-button:focus-visible {
+    outline: 0;
+    box-shadow: var(--shadow-focus);
+}
+
+.admin-form {
+    display: grid;
+    gap: 16px;
+}
+
+.admin-form label,
+.admin-form fieldset,
+.price-tier-grid label,
+.admin-login-form label {
+    display: grid;
+    gap: 8px;
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.admin-form input,
+.admin-form select,
+.admin-search-field input {
+    width: 100%;
+    min-height: 50px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--admin-card-radius);
+    padding: 0 14px;
+    color: var(--color-text);
+    background: var(--color-field);
+    outline: 0;
+}
+
+.admin-form input:focus,
+.admin-form select:focus,
+.admin-search-field input:focus {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-focus);
+}
+
+.admin-form fieldset {
+    min-width: 0;
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.admin-form legend {
+    margin-bottom: 10px;
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-weight: 900;
+}
+
+.admin-form-actions {
+    display: flex;
+    align-items: end;
+    gap: 10px;
+}
+
+.admin-form .admin-form-section {
+    display: grid;
+    gap: 14px;
+    border: 1px solid rgba(201, 181, 150, 0.62);
+    border-radius: var(--admin-card-radius);
+    padding: 16px;
+    background: rgba(255, 252, 245, 0.58);
+}
+
+.admin-form .admin-form-section > legend {
+    padding: 0 6px;
+    color: var(--color-primary-hover);
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+}
+
+.admin-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-checkbox-group {
+    display: grid;
+    gap: 10px;
+}
+
+.media-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: stretch;
+}
+
+.media-controls {
+    display: grid;
+    align-content: start;
+    gap: 14px;
+}
+
+#restaurantImageInput {
+    width: 100%;
+    min-height: 50px;
+    height: 50px;
+}
+
+.media-separator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--color-text-muted);
+    font-size: var(--type-caption);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+}
+
+.media-separator::before,
+.media-separator::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: var(--color-border);
+}
+
+.upload-image-control {
+    display: grid;
+    gap: 8px;
+}
+
+.upload-image-control > span {
+    width: fit-content;
+    border: 1px solid rgba(203, 169, 106, 0.62);
+    border-radius: var(--admin-card-radius);
+    padding: 10px 14px;
+    color: var(--color-primary-hover);
+    background: var(--color-accent-soft);
+    font-weight: 900;
+}
+
+.upload-image-control input[type="file"] {
+    width: 100%;
+    min-height: 46px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--admin-card-radius);
+    padding: 9px;
+    color: var(--color-text-muted);
+    background: var(--color-field);
+    cursor: pointer;
+}
+
+.upload-image-control input[type="file"]::file-selector-button {
+    min-height: 30px;
+    margin-right: 10px;
+    border: 1px solid rgba(203, 169, 106, 0.62);
+    border-radius: var(--radius-sm);
+    padding: 0 12px;
+    color: var(--color-primary-hover);
+    background: var(--color-card);
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.upload-image-control input[type="file"]:hover,
+.upload-image-control input[type="file"]:focus {
+    border-color: var(--color-primary);
+}
+
+.admin-inline-error {
+    margin: 0;
+    border: 1px solid rgba(168, 74, 66, 0.26);
+    border-radius: var(--admin-card-radius);
+    padding: 10px 12px;
+    color: var(--color-danger);
+    background: var(--color-danger-soft);
+    font-weight: 800;
+}
+
+.restaurant-image-preview {
+    min-height: 220px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--admin-card-radius);
+    color: var(--color-text-muted);
+    background: var(--color-field);
+    font-weight: 800;
+}
+
+.restaurant-image-preview img {
+    width: 100%;
+    height: 100%;
+    min-height: 168px;
+    object-fit: cover;
+}
+
+.restaurant-list-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
+    gap: 18px;
+    align-items: end;
+}
+
+.admin-search-field {
+    display: grid;
+    gap: 8px;
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.price-tier-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-table-layout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.admin-list-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 14px;
+    transition:
+        border-color var(--admin-transition),
+        box-shadow var(--admin-transition),
+        transform var(--admin-transition);
+}
+
+.admin-list-item:hover {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--admin-card-shadow-hover);
+    transform: var(--admin-hover-lift);
+}
+
+.admin-list-item span {
+    display: block;
+    overflow-wrap: anywhere;
+    color: var(--color-text-muted);
+    font-size: 0.92rem;
+    font-weight: 800;
+}
+
+.restaurant-management-main {
+    min-width: 0;
+}
+
+.restaurant-management-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.restaurant-management-meta span {
+    width: fit-content;
+    border-radius: var(--radius-pill);
+    padding: 7px 10px;
+    color: var(--color-primary-hover);
+    background: var(--color-accent-soft);
+    font-size: var(--type-caption);
+    line-height: 1;
+}
+
+.admin-list-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.admin-list-actions .secondary-action,
+.admin-list-actions .danger-action {
+    min-height: 40px;
+}
+
+.restaurant-management-card .danger-action {
+    border: 1px solid rgba(168, 74, 66, 0.26);
+    color: var(--color-danger);
+    background: var(--color-danger-soft);
+}
+
+.restaurant-management-card .danger-action:hover {
+    color: var(--color-white);
+    background: var(--color-danger);
+}
+
+.admin-body .primary-action,
+.admin-body .secondary-action,
+.admin-body .danger-action {
+    min-height: var(--admin-control-height);
+    border-radius: var(--admin-card-radius);
+}
+
+.admin-body .primary-action:hover,
+.admin-body .secondary-action:hover,
+.admin-body .danger-action:hover {
+    transform: var(--admin-hover-lift);
+}
+
+.admin-body .empty-state {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 8px;
+    border: 1px dashed rgba(161, 136, 96, 0.64);
+    border-radius: var(--admin-card-radius);
+    padding: clamp(24px, 5vw, 42px);
+    color: var(--color-text-muted);
+    text-align: center;
+    background: rgba(255, 252, 245, 0.7);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+}
+
+.admin-body .empty-state h3 {
+    margin: 0;
+    color: var(--color-primary-hover);
+    font-family: var(--font-heading);
+    font-size: clamp(1.35rem, 4vw, 1.8rem);
+}
+
+.admin-body .empty-state p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-weight: 700;
+}
+
+.admin-message {
+    margin: 0;
+    border: 1px solid rgba(168, 74, 66, 0.28);
+    border-radius: var(--admin-card-radius);
+    padding: 12px 14px;
+    color: var(--color-danger);
+    background: var(--color-danger-soft);
+    font-weight: 700;
+    animation: adminFadeUp 220ms ease both;
+}
+
+.admin-login-body {
+    display: grid;
+    place-items: center;
+    padding: 28px 16px;
+}
+
+.admin-login-shell {
+    width: min(100%, 520px);
+}
+
+.admin-login-card {
+    display: grid;
+    gap: 22px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--admin-card-radius);
+    padding: clamp(24px, 5vw, 36px);
+    background: var(--color-card);
+    box-shadow: var(--shadow-medium);
+    animation: adminFadeUp 240ms ease both;
+}
+
+.admin-login-heading {
+    display: grid;
+    gap: 8px;
+    text-align: center;
+}
+
+.admin-login-heading h1 {
+    margin: 0;
+    font-size: clamp(2rem, 8vw, 3.1rem);
+}
+
+.admin-login-form {
+    display: grid;
+    gap: 16px;
+}
+
+.admin-login-form input {
+    min-height: 50px;
+    border-radius: var(--admin-card-radius);
+}
+
+.admin-login-form .primary-action {
+    width: 100%;
+}
+
+.admin-secondary-link {
+    width: fit-content;
+    margin-inline: auto;
+    color: var(--color-primary);
+    font-weight: 800;
+}
+
+.admin-secondary-link:hover,
+.admin-secondary-link:focus-visible {
+    color: var(--color-primary-hover);
+}
+
+.admin-secondary-link:focus-visible {
+    outline: 0;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-focus);
+}
+

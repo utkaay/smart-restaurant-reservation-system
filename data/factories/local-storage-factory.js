@@ -1,0 +1,10 @@
+const DEFAULT_CONTACT_MESSAGES = [];
+
+const LOCAL_STORAGE_FACTORY = {
+    restaurants: DEFAULT_RESTAURANTS,
+    priceTiers: DEFAULT_PRICE_TIERS,
+    reservations: DEFAULT_RESERVATIONS,
+    waitlist: DEFAULT_WAITLIST,
+    users: DEFAULT_USERS,
+    contactMessages: DEFAULT_CONTACT_MESSAGES
+};
