@@ -200,24 +200,28 @@ let adminActionMessage = "";
 let adminActionMessageType = "success";
 let pendingRestaurantImageDataUrl = "";
 
-const normalizeEmail = (email = "") => String(email).trim().toLowerCase();
+function normalizeEmail(email = "") {
+    return String(email).trim().toLowerCase();
+}
 
-const getRoleForEmail = (email = "") => {
+function getRoleForEmail(email = "") {
     return normalizeEmail(email) === ADMIN_EMAIL
         ? USER_ROLES.admin
         : USER_ROLES.guest;
-};
+}
 
-const withUserRole = (user) => ({
-    ...user,
-    role: getRoleForEmail(user.email)
-});
+function withUserRole(user) {
+    return ({
+        ...user,
+        role: getRoleForEmail(user.email)
+    });
+}
 
-const saveToStorage = (key, value) => {
+function saveToStorage(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
-};
+}
 
-const getFromStorage = (key) => {
+function getFromStorage(key) {
     const savedValue = localStorage.getItem(key);
 
     try {
@@ -225,32 +229,38 @@ const getFromStorage = (key) => {
     } catch {
         return null;
     }
-};
+}
 
-const removeFromStorage = (key) => {
+function removeFromStorage(key) {
     localStorage.removeItem(key);
-};
+}
 
-const getUsers = () => {
+function getUsers() {
     const users = getFromStorage(storageKeys.users);
     return Array.isArray(users) ? users.map(withUserRole) : [];
-};
+}
 
-const getStoredRecordCount = (key) => {
+function getStoredRecordCount(key) {
     const records = getFromStorage(key);
     return Array.isArray(records) ? records.length : 0;
-};
+}
 
-const findUserByEmail = (email) => {
+function findUserByEmail(email) {
     const normalizedEmail = normalizeEmail(email);
-    return getUsers().find((user) => normalizeEmail(user.email) === normalizedEmail) || null;
-};
+    return getUsers().find(function(user) {
+        return normalizeEmail(user.email) === normalizedEmail;
+    }) || null;
+}
 
-const getAdminUser = () => findUserByEmail(ADMIN_EMAIL);
+function getAdminUser() {
+    return findUserByEmail(ADMIN_EMAIL);
+}
 
-const getAdminSession = () => getFromStorage(storageKeys.adminSession);
+function getAdminSession() {
+    return getFromStorage(storageKeys.adminSession);
+}
 
-const hasValidAdminSession = () => {
+function hasValidAdminSession() {
     const session = getAdminSession();
     const adminUser = getAdminUser();
 
@@ -261,53 +271,147 @@ const hasValidAdminSession = () => {
         && normalizeEmail(session.email) === ADMIN_EMAIL
         && getRoleForEmail(adminUser.email) === USER_ROLES.admin
     );
-};
+}
 
-const saveAdminSession = (adminUser) => {
+function saveAdminSession(adminUser) {
     saveToStorage(storageKeys.adminSession, {
         userId: adminUser.id,
         email: adminUser.email,
         role: USER_ROLES.admin,
         createdAt: new Date().toISOString()
     });
-};
+}
 
-const clearAdminSession = () => {
+function clearAdminSession() {
     removeFromStorage(storageKeys.adminSession);
-};
+}
 
-const escapeHTML = (text = "") => {
-    return String(text).replace(/[&<>"']/g, (character) => {
-        const replacements = {
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            "\"": "&quot;",
-            "'": "&#039;"
-        };
+function containsOnlyDigits(value) {
+    const text = String(value);
 
-        return replacements[character];
-    });
-};
+    if (!text) {
+        return false;
+    }
 
-const getFormValue = (formData, key) => String(formData.get(key) || "").trim();
+    for (const character of text) {
+        if (character < "0" || character > "9") {
+            return false;
+        }
+    }
 
-const isValidEmail = (email = "") => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    return true;
+}
 
-const isValidRestaurantTime = (time = "") => /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
+function containsWhitespace(value) {
+    for (const character of String(value)) {
+        if (character.trim() === "") {
+            return true;
+        }
+    }
 
-const parseDisplayTimeTo24Hour = (displayTime = "") => {
-    const match = String(displayTime).trim().match(/^(\d{1,2})(?::([0-5]\d))?\s*(AM|PM)$/i);
+    return false;
+}
 
-    if (!match) {
+function escapeHTML(text = "") {
+    const replacements = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#039;"
+    };
+    let escapedText = "";
+
+    for (const character of String(text)) {
+        escapedText += replacements[character] || character;
+    }
+
+    return escapedText;
+}
+
+function getFormValue(formData, key) {
+    return String(formData.get(key) || "").trim();
+}
+
+function isValidEmail(email = "") {
+    const emailText = String(email);
+    const atPosition = emailText.indexOf("@");
+
+    if (atPosition <= 0 || atPosition !== emailText.lastIndexOf("@")) {
+        return false;
+    }
+
+    const accountName = emailText.slice(0, atPosition);
+    const domainName = emailText.slice(atPosition + 1);
+    const dotPosition = domainName.indexOf(".");
+    const hasCompleteDomain = dotPosition > 0 && dotPosition < domainName.length - 1;
+
+    return hasCompleteDomain
+        && !containsWhitespace(accountName)
+        && !containsWhitespace(domainName);
+}
+
+function isValidRestaurantTime(time = "") {
+    const timeParts = String(time).split(":");
+
+    if (timeParts.length !== 2) {
+        return false;
+    }
+
+    const [hoursText, minutesText] = timeParts;
+
+    if (
+        hoursText.length !== 2
+        || minutesText.length !== 2
+        || !containsOnlyDigits(hoursText)
+        || !containsOnlyDigits(minutesText)
+    ) {
+        return false;
+    }
+
+    const hours = Number(hoursText);
+    const minutes = Number(minutesText);
+    return hours <= 23 && minutes <= 59;
+}
+
+function parseDisplayTimeTo24Hour(displayTime = "") {
+    const normalizedTime = String(displayTime).trim().toUpperCase();
+    let period = "";
+
+    if (normalizedTime.endsWith("AM")) {
+        period = "AM";
+    } else if (normalizedTime.endsWith("PM")) {
+        period = "PM";
+    }
+
+    if (!period) {
         return "";
     }
 
-    const period = match[3].toUpperCase();
-    let hours = Number(match[1]);
-    const minutes = match[2] || "00";
+    const clockText = normalizedTime.slice(0, -2).trim();
+    const clockParts = clockText.split(":");
 
-    if (hours < 1 || hours > 12) {
+    if (clockParts.length > 2) {
+        return "";
+    }
+
+    const hoursText = clockParts[0];
+    const minutesText = clockParts.length === 2 ? clockParts[1] : "00";
+
+    if (
+        hoursText.length < 1
+        || hoursText.length > 2
+        || minutesText.length !== 2
+        || !containsOnlyDigits(hoursText)
+        || !containsOnlyDigits(minutesText)
+    ) {
+        return "";
+    }
+
+    let hours = Number(hoursText);
+    const minutes = Number(minutesText);
+
+    if (hours < 1 || hours > 12 || minutes > 59) {
         return "";
     }
 
@@ -317,11 +421,13 @@ const parseDisplayTimeTo24Hour = (displayTime = "") => {
         hours = hours === 12 ? 12 : hours + 12;
     }
 
-    return `${String(hours).padStart(2, "0")}:${minutes}`;
-};
+    return `${String(hours).padStart(2, "0")}:${minutesText}`;
+}
 
-const getStructuredHoursFromDisplay = (hours = "") => {
-    const [openingDisplay, closingDisplay] = String(hours).split(/\s*-\s*/);
+function getStructuredHoursFromDisplay(hours = "") {
+    const hourParts = String(hours).split("-");
+    const openingDisplay = hourParts[0]?.trim();
+    const closingDisplay = hourParts[1]?.trim();
     const openingTime = parseDisplayTimeTo24Hour(openingDisplay);
     const closingTime = parseDisplayTimeTo24Hour(closingDisplay);
 
@@ -330,9 +436,9 @@ const getStructuredHoursFromDisplay = (hours = "") => {
     }
 
     return { openingTime, closingTime };
-};
+}
 
-const formatTimeForDisplay = (time = "") => {
+function formatTimeForDisplay(time = "") {
     if (!isValidRestaurantTime(time)) {
         return "";
     }
@@ -342,22 +448,22 @@ const formatTimeForDisplay = (time = "") => {
     const displayHour = hourValue % 12 || 12;
 
     return `${displayHour}:${String(minuteValue).padStart(2, "0")} ${period}`;
-};
+}
 
-const formatRestaurantHours = (openingTime, closingTime) => {
+function formatRestaurantHours(openingTime, closingTime) {
     return `${formatTimeForDisplay(openingTime)} - ${formatTimeForDisplay(closingTime)}`;
-};
+}
 
-const formatTimeFromMinutes = (totalMinutes = 0) => {
+function formatTimeFromMinutes(totalMinutes = 0) {
     const minutesInDay = 24 * 60;
     const normalizedMinutes = ((totalMinutes % minutesInDay) + minutesInDay) % minutesInDay;
     const hours = String(Math.floor(normalizedMinutes / 60)).padStart(2, "0");
     const minutes = String(normalizedMinutes % 60).padStart(2, "0");
 
     return `${hours}:${minutes}`;
-};
+}
 
-const getUaeDateParts = (date = new Date()) => {
+function getUaeDateParts(date = new Date()) {
     const parts = new Intl.DateTimeFormat("en-US", {
         timeZone: BOOKING_TIME_ZONE,
         year: "numeric",
@@ -369,16 +475,16 @@ const getUaeDateParts = (date = new Date()) => {
     }).formatToParts(date);
     const dateParts = {};
 
-    parts.forEach(({ type, value }) => {
+    parts.forEach(function({ type, value }) {
         if (type !== "literal") {
             dateParts[type] = value;
         }
     });
 
     return dateParts;
-};
+}
 
-const normalizeRestaurantHours = (restaurant = {}) => {
+function normalizeRestaurantHours(restaurant = {}) {
     const parsedHours = getStructuredHoursFromDisplay(restaurant.hours);
     const openingTime = isValidRestaurantTime(restaurant.openingTime)
         ? restaurant.openingTime
@@ -392,22 +498,22 @@ const normalizeRestaurantHours = (restaurant = {}) => {
         openingTime,
         closingTime
     };
-};
+}
 
-const normalizeTableExperience = (experience, tableId = "") => {
+function normalizeTableExperience(experience, tableId = "") {
     if (TABLE_EXPERIENCE_NAMES.includes(experience)) {
         return experience;
     }
 
     return DEFAULT_TABLE_EXPERIENCE_BY_ID[String(tableId).trim().toUpperCase()] || "Regular";
-};
+}
 
-const normalizeRestaurantTableLayout = (tableLayout) => {
+function normalizeRestaurantTableLayout(tableLayout) {
     const hasSavedLayout = Array.isArray(tableLayout);
     const sourceLayout = hasSavedLayout ? tableLayout : defaultTableLayout;
     const seenTableIds = new Set();
 
-    return sourceLayout.reduce((layout, table = {}) => {
+    return sourceLayout.reduce(function(layout, table = {}) {
         const tableId = String(table.tableId || "").trim();
         const seats = Math.floor(Number(table.seats));
         const experience = normalizeTableExperience(table.experience, tableId);
@@ -421,95 +527,113 @@ const normalizeRestaurantTableLayout = (tableLayout) => {
         layout.push({ tableId, seats, experience });
         return layout;
     }, []);
-};
+}
 
-const getRestaurants = () => {
+function getRestaurants() {
     const savedRestaurants = getFromStorage(storageKeys.restaurants);
     const restaurants = Array.isArray(savedRestaurants)
         ? savedRestaurants
         : defaultRestaurants;
 
-    return restaurants.map((restaurant) => ({
-        ...normalizeRestaurantHours(restaurant),
-        distanceCategory: restaurant.distanceCategory || "Medium",
-        sustainabilityBadges: restaurant.sustainabilityBadges || [],
-        allergenBadges: restaurant.allergenBadges || [],
-        tableLayout: normalizeRestaurantTableLayout(restaurant.tableLayout)
+    return restaurants.map(function(restaurant) {
+        return ({
+            ...normalizeRestaurantHours(restaurant),
+            distanceCategory: restaurant.distanceCategory || "Medium",
+            sustainabilityBadges: restaurant.sustainabilityBadges || [],
+            allergenBadges: restaurant.allergenBadges || [],
+            tableLayout: normalizeRestaurantTableLayout(restaurant.tableLayout)
+        });
+    });
+}
+
+function saveRestaurants(restaurants) {
+    saveToStorage(storageKeys.restaurants, restaurants.map(function(restaurant) {
+        return ({
+            ...normalizeRestaurantHours(restaurant),
+            tableLayout: normalizeRestaurantTableLayout(restaurant.tableLayout)
+        });
     }));
-};
+}
 
-const saveRestaurants = (restaurants) => {
-    saveToStorage(storageKeys.restaurants, restaurants.map((restaurant) => ({
-        ...normalizeRestaurantHours(restaurant),
-        tableLayout: normalizeRestaurantTableLayout(restaurant.tableLayout)
-    })));
-};
-
-const getPriceTiers = () => {
+function getPriceTiers() {
     const savedPriceTiers = getFromStorage(storageKeys.priceTiers) || {};
 
     return {
         ...defaultPriceTiers,
         ...savedPriceTiers
     };
-};
+}
 
-const savePriceTiers = (priceTiers) => {
+function savePriceTiers(priceTiers) {
     saveToStorage(storageKeys.priceTiers, priceTiers);
-};
+}
 
-const getReservations = () => {
+function getReservations() {
     const reservations = getFromStorage(storageKeys.reservations);
     return Array.isArray(reservations) ? reservations : [];
-};
+}
 
-const saveReservations = (reservations) => {
+function saveReservations(reservations) {
     saveToStorage(storageKeys.reservations, reservations);
-};
+}
 
-const getWaitlist = () => {
+function getWaitlist() {
     const waitlist = getFromStorage(storageKeys.waitlist);
     return Array.isArray(waitlist) ? waitlist : [];
-};
+}
 
-const getActiveReservations = () => {
-    return getReservations().filter(({ status }) => status === "active");
-};
+function getActiveReservations() {
+    return getReservations().filter(function({ status }) {
+        return status === "active";
+    });
+}
 
-const getWaitingEntries = () => {
-    return getWaitlist().filter(({ status }) => status === "waiting");
-};
+function getWaitingEntries() {
+    return getWaitlist().filter(function({ status }) {
+        return status === "waiting";
+    });
+}
 
-const getAverageRestaurantRating = () => {
+function getAverageRestaurantRating() {
     const ratings = getRestaurants()
-        .map(({ rating }) => Number(rating))
-        .filter((rating) => Number.isFinite(rating));
+        .map(function({ rating }) {
+        return Number(rating);
+    })
+        .filter(function(rating) {
+        return Number.isFinite(rating);
+    });
 
     if (ratings.length === 0) {
         return "0.0";
     }
 
-    const total = ratings.reduce((sum, rating) => sum + rating, 0);
+    const total = ratings.reduce(function(sum, rating) {
+        return sum + rating;
+    }, 0);
     return (total / ratings.length).toFixed(1);
-};
+}
 
-const formatReservationDateTime = (reservation = {}) => {
+function formatReservationDateTime(reservation = {}) {
     return [reservation.date, reservation.time].filter(Boolean).join(" at ") || "Time not set";
-};
+}
 
-const formatUSD = (amount) => {
+function formatReservationSeatIds(reservation = {}) {
+    return (Array.isArray(reservation.selectedSeatIds) && reservation.selectedSeatIds.length > 0 ? reservation.selectedSeatIds.join(", ") : "Assigned at arrival");
+}
+
+function formatUSD(amount) {
     return new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD"
     }).format(Number(amount) || 0);
-};
+}
 
-const getTodayDateValue = () => {
+function getTodayDateValue() {
     const { year, month, day } = getUaeDateParts();
     return `${year}-${month}-${day}`;
-};
+}
 
-const getReservationTimestamp = (reservation = {}) => {
+function getReservationTimestamp(reservation = {}) {
     if (reservation.date && reservation.time) {
         const timestamp = new Date(`${reservation.date}T${reservation.time}`).getTime();
 
@@ -519,9 +643,9 @@ const getReservationTimestamp = (reservation = {}) => {
     }
 
     return Number.MAX_SAFE_INTEGER;
-};
+}
 
-const getReservationCreatedTimestamp = (reservation = {}) => {
+function getReservationCreatedTimestamp(reservation = {}) {
     if (reservation.createdAt) {
         const timestamp = new Date(reservation.createdAt).getTime();
 
@@ -530,64 +654,85 @@ const getReservationCreatedTimestamp = (reservation = {}) => {
         }
     }
 
-    const idTimestamp = String(reservation.reservationId || "").match(/(\d{10,})/);
-    return idTimestamp ? Number(idTimestamp[1]) : 0;
-};
+    const reservationId = String(reservation.reservationId || "");
+    let digitSequence = "";
 
-const getReservationTotalAmount = (reservation = {}) => {
+    for (const character of reservationId) {
+        if (containsOnlyDigits(character)) {
+            digitSequence += character;
+        } else if (digitSequence.length >= 10) {
+            return Number(digitSequence);
+        } else {
+            digitSequence = "";
+        }
+    }
+
+    return digitSequence.length >= 10 ? Number(digitSequence) : 0;
+}
+
+function getReservationTotalAmount(reservation = {}) {
     return Number(reservation.splitBill?.totalAmount)
         || Number(reservation.pricing?.finalTotal)
         || 0;
-};
+}
 
-const getAcceptedAttendeeCount = (reservation = {}) => {
+function getAcceptedAttendeeCount(reservation = {}) {
     const acceptedGuests = Array.isArray(reservation.guests)
-        ? reservation.guests.filter(({ rsvpStatus }) => rsvpStatus === "accepted").length
+        ? reservation.guests.filter(function({ rsvpStatus }) {
+        return rsvpStatus === "accepted";
+    }).length
         : 0;
 
     return 1 + acceptedGuests;
-};
+}
 
-const getReservationStatus = (reservation = {}) => reservation.status || "unknown";
+function getReservationStatus(reservation = {}) {
+    return reservation.status || "unknown";
+}
 
-const getKnownReservationStatuses = () => {
+function getKnownReservationStatuses() {
     const statuses = getReservations()
         .map(getReservationStatus)
         .filter(Boolean);
 
     return [...new Set(["active", "confirmed", "completed", "cancelled", ...statuses])];
-};
+}
 
-const getReservationRestaurantOptions = () => {
+function getReservationRestaurantOptions() {
     return [...new Set(getReservations()
-        .map(({ restaurantName }) => restaurantName)
+        .map(function({ restaurantName }) {
+        return restaurantName;
+    })
         .filter(Boolean))]
-        .sort((firstName, secondName) => firstName.localeCompare(secondName));
-};
+        .sort(function(firstName, secondName) {
+        return firstName.localeCompare(secondName);
+    });
+}
 
-const getReservationSummary = () => {
+function getReservationSummary() {
     const reservations = getReservations();
     const today = getTodayDateValue();
 
     return {
         total: reservations.length,
-        active: reservations.filter(({ status }) => status === "active").length,
-        upcomingToday: reservations.filter((reservation) => (
-            reservation.date === today
-            && ["active", "confirmed"].includes(reservation.status)
-            && getReservationTimestamp(reservation) >= Date.now()
-        )).length,
-        completedOrCancelled: reservations.filter(({ status }) => (
-            ["completed", "cancelled"].includes(status)
-        )).length
+        active: reservations.filter(function({ status }) {
+            return status === "active";
+        }).length,
+        upcomingToday: reservations.filter(function(reservation) {
+            return (reservation.date === today
+            && ["active", "confirmed"].includes(reservation.status) && getReservationTimestamp(reservation) >= Date.now());
+        }).length,
+        completedOrCancelled: reservations.filter(function({ status }) {
+            return (["completed", "cancelled"].includes(status));
+        }).length
     };
-};
+}
 
-const getFilteredReservations = () => {
+function getFilteredReservations() {
     const cleanSearchTerm = adminReservationSearchTerm.trim().toLowerCase();
 
     return getReservations()
-        .filter((reservation) => {
+        .filter(function(reservation) {
             const searchableText = [
                 reservation.guestName,
                 reservation.guestEmail,
@@ -597,19 +742,19 @@ const getFilteredReservations = () => {
 
             return searchableText.includes(cleanSearchTerm);
         })
-        .filter((reservation) => {
+        .filter(function(reservation) {
             return adminReservationStatusFilter === "all"
                 || getReservationStatus(reservation) === adminReservationStatusFilter;
         })
-        .filter((reservation) => {
+        .filter(function(reservation) {
             return adminReservationRestaurantFilter === "all"
                 || reservation.restaurantName === adminReservationRestaurantFilter;
         })
-        .filter((reservation) => {
+        .filter(function(reservation) {
             return !adminReservationDateFilter
                 || reservation.date === adminReservationDateFilter;
         })
-        .sort((firstReservation, secondReservation) => {
+        .sort(function(firstReservation, secondReservation) {
             if (adminReservationSort === "newest") {
                 return getReservationCreatedTimestamp(secondReservation) - getReservationCreatedTimestamp(firstReservation);
             }
@@ -621,35 +766,39 @@ const getFilteredReservations = () => {
 
             return getReservationTimestamp(firstReservation) - getReservationTimestamp(secondReservation);
         });
-};
+}
 
-const getTimeMinutes = (time = "") => {
+function getTimeMinutes(time = "") {
     const [hours = "0", minutes = "0"] = time.split(":");
 
     return (Number(hours) * 60) + Number(minutes);
-};
+}
 
-const getCurrentUaeTimeMinutes = () => {
+function getCurrentUaeTimeMinutes() {
     const { hour, minute } = getUaeDateParts();
 
     return (Number(hour) * 60) + Number(minute);
-};
+}
 
-const getRestaurantById = (restaurantId) => {
-    return getRestaurants().find(({ id }) => String(id) === String(restaurantId)) || null;
-};
+function getRestaurantById(restaurantId) {
+    return getRestaurants().find(function({ id }) {
+        return String(id) === String(restaurantId);
+    }) || null;
+}
 
-const getRestaurantTableLayout = (restaurant = getRestaurantById(adminSelectedRestaurantId)) => {
+function getRestaurantTableLayout(restaurant = getRestaurantById(adminSelectedRestaurantId)) {
     if (!restaurant) {
         return [];
     }
 
     return normalizeRestaurantTableLayout(restaurant?.tableLayout);
-};
+}
 
-const getAdminSelectedTableLayout = () => getRestaurantTableLayout();
+function getAdminSelectedTableLayout() {
+    return getRestaurantTableLayout();
+}
 
-const getRestaurantClosingMinutes = (restaurant = null) => {
+function getRestaurantClosingMinutes(restaurant = null) {
     if (!restaurant) {
         return 0;
     }
@@ -666,9 +815,9 @@ const getRestaurantClosingMinutes = (restaurant = null) => {
     }
 
     return closingMinutes;
-};
+}
 
-const getRestaurantTimeSlots = (restaurant = null) => {
+function getRestaurantTimeSlots(restaurant = null) {
     if (!restaurant || !isValidRestaurantTime(restaurant.openingTime) || !isValidRestaurantTime(restaurant.closingTime)) {
         return [];
     }
@@ -682,21 +831,21 @@ const getRestaurantTimeSlots = (restaurant = null) => {
     }
 
     return slots;
-};
+}
 
-const isAdminTableDateToday = (date = adminSelectedTableDate) => {
+function isAdminTableDateToday(date = adminSelectedTableDate) {
     return date === getTodayDateValue();
-};
+}
 
-const isAdminTableDateInPast = (date = adminSelectedTableDate) => {
+function isAdminTableDateInPast(date = adminSelectedTableDate) {
     return Boolean(date) && date < getTodayDateValue();
-};
+}
 
-const isAdminBookingTimeAvailable = (
+function isAdminBookingTimeAvailable(
     time = adminSelectedTableTime,
     date = adminSelectedTableDate,
     restaurant = getRestaurantById(adminSelectedRestaurantId)
-) => {
+) {
     if (!date || !time || !restaurant || isAdminTableDateInPast(date)) {
         return false;
     }
@@ -710,18 +859,18 @@ const isAdminBookingTimeAvailable = (
     }
 
     return getTimeMinutes(time) > getCurrentUaeTimeMinutes();
-};
+}
 
-const getAvailableAdminTimeSlots = (
+function getAvailableAdminTimeSlots(
     date = adminSelectedTableDate,
     restaurant = getRestaurantById(adminSelectedRestaurantId)
-) => {
-    return getRestaurantTimeSlots(restaurant).filter((time) => {
+) {
+    return getRestaurantTimeSlots(restaurant).filter(function(time) {
         return isAdminBookingTimeAvailable(time, date, restaurant);
     });
-};
+}
 
-const ensureAdminTableSelection = () => {
+function ensureAdminTableSelection() {
     const restaurants = getRestaurants();
 
     if (restaurants.length === 0) {
@@ -731,7 +880,9 @@ const ensureAdminTableSelection = () => {
         return;
     }
 
-    if (!adminSelectedRestaurantId || !restaurants.some(({ id }) => String(id) === String(adminSelectedRestaurantId))) {
+    if (!adminSelectedRestaurantId || !restaurants.some(function({ id }) {
+        return String(id) === String(adminSelectedRestaurantId);
+    })) {
         adminSelectedRestaurantId = restaurants[0].id;
     }
 
@@ -746,16 +897,16 @@ const ensureAdminTableSelection = () => {
     if (!adminSelectedTableTime || !allSlots.includes(adminSelectedTableTime)) {
         adminSelectedTableTime = availableSlots[0] || allSlots[0] || "";
     }
-};
+}
 
-const getAdminTableStatus = ({ tableId }) => {
+function getAdminTableStatus({ tableId }) {
     const restaurant = getRestaurantById(adminSelectedRestaurantId);
 
     if (!adminSelectedRestaurantId || !adminSelectedTableDate || !adminSelectedTableTime || !isAdminBookingTimeAvailable(adminSelectedTableTime, adminSelectedTableDate, restaurant)) {
         return "Disabled";
     }
 
-    const isReserved = getReservations().some((reservation) => {
+    const isReserved = getReservations().some(function(reservation) {
         return reservation.status === "active"
             && Number(reservation.restaurantId) === Number(adminSelectedRestaurantId)
             && reservation.date === adminSelectedTableDate
@@ -764,49 +915,66 @@ const getAdminTableStatus = ({ tableId }) => {
     });
 
     return isReserved ? "Reserved" : "Available";
-};
+}
 
-const getAdminTableCounts = () => {
+function getAdminTableCounts() {
     const tableLayout = getAdminSelectedTableLayout();
     const statuses = tableLayout.map(getAdminTableStatus);
 
     return {
         total: tableLayout.length,
-        available: statuses.filter((status) => status === "Available").length,
-        reserved: statuses.filter((status) => status === "Reserved").length,
-        seatCapacity: tableLayout.reduce((total, { seats }) => total + seats, 0)
+        available: statuses.filter(function(status) {
+            return status === "Available";
+        }).length,
+        reserved: statuses.filter(function(status) {
+            return status === "Reserved";
+        }).length,
+        seatCapacity: tableLayout.reduce(function(total, { seats }) {
+            return total + seats;
+        }, 0)
     };
-};
+}
 
-const getTablesByCapacity = () => {
+function getTablesByCapacity() {
     const tableLayout = getAdminSelectedTableLayout();
-    const capacities = [...new Set(tableLayout.map(({ seats }) => Number(seats)).filter(Number.isFinite))]
-        .sort((firstCapacity, secondCapacity) => firstCapacity - secondCapacity);
+    const capacities = [...new Set(tableLayout.map(function({ seats }) {
+        return Number(seats);
+    }).filter(Number.isFinite))]
+        .sort(function(firstCapacity, secondCapacity) {
+        return firstCapacity - secondCapacity;
+    });
 
-    return capacities.map((capacity) => ({
-        capacity,
-        tables: tableLayout.filter(({ seats }) => Number(seats) === capacity)
-    }));
-};
+    return capacities.map(function(capacity) {
+        return ({
+            capacity,
 
-const createCheckboxChoices = (options, selectedValues, inputName) => {
-    return options.map((option) => `
-        <label class="choice-chip">
-            <input
-                type="checkbox"
-                name="${inputName}"
-                value="${escapeHTML(option)}"
-                ${selectedValues.includes(option) ? "checked" : ""}
-            >
-            <span>${escapeHTML(option)}</span>
-        </label>
-    `).join("");
-};
+            tables: tableLayout.filter(function({ seats }) {
+                return Number(seats) === capacity;
+            })
+        });
+    });
+}
 
-const renderAdminRestaurantList = () => {
+function createCheckboxChoices(options, selectedValues, inputName) {
+    return options.map(function(option) {
+        return `
+            <label class="choice-chip">
+                <input
+                    type="checkbox"
+                    name="${inputName}"
+                    value="${escapeHTML(option)}"
+                    ${selectedValues.includes(option) ? "checked" : ""}
+                >
+                <span>${escapeHTML(option)}</span>
+            </label>
+        `;
+    }).join("");
+}
+
+function renderAdminRestaurantList() {
     const allRestaurants = getRestaurants();
     const cleanSearchTerm = adminRestaurantSearchTerm.trim().toLowerCase();
-    const restaurants = allRestaurants.filter(({ name = "", cuisine = "", location = "" }) => {
+    const restaurants = allRestaurants.filter(function({ name = "", cuisine = "", location = "" }) {
         const searchableText = `${name} ${cuisine} ${location}`.toLowerCase();
         return searchableText.includes(cleanSearchTerm);
     });
@@ -829,31 +997,35 @@ const renderAdminRestaurantList = () => {
         `;
     }
 
-    return restaurants.map(({ id, name, cuisine, location, rating, priceLevel }) => `
-        <article class="admin-list-item restaurant-management-card">
-            <div class="restaurant-management-main">
-                <strong>${escapeHTML(name)}</strong>
-                <span>${escapeHTML(cuisine)} in ${escapeHTML(location)}</span>
-            </div>
-            <div class="restaurant-management-meta">
-                <span>Rating ${escapeHTML(rating)}</span>
-                <span>${escapeHTML(priceLevel)}</span>
-            </div>
-            <div class="admin-list-actions">
-                <button class="secondary-action" type="button" data-edit-restaurant-id="${id}">Edit</button>
-                <button class="danger-action" type="button" data-delete-restaurant-id="${id}">Delete</button>
-            </div>
-        </article>
-    `).join("");
-};
+    return restaurants.map(function({ id, name, cuisine, location, rating, priceLevel }) {
+        return `
+            <article class="admin-list-item restaurant-management-card">
+                <div class="restaurant-management-main">
+                    <strong>${escapeHTML(name)}</strong>
+                    <span>${escapeHTML(cuisine)} in ${escapeHTML(location)}</span>
+                </div>
+                <div class="restaurant-management-meta">
+                    <span>Rating ${escapeHTML(rating)}</span>
+                    <span>${escapeHTML(priceLevel)}</span>
+                </div>
+                <div class="admin-list-actions">
+                    <button class="secondary-action" type="button" data-edit-restaurant-id="${id}">Edit</button>
+                    <button class="danger-action" type="button" data-delete-restaurant-id="${id}">Delete</button>
+                </div>
+            </article>
+        `;
+    }).join("");
+}
 
-const renderAdminTableLayout = () => {
-    return defaultTableLayout.map(({ tableId, seats, experience }) => `
-        <span class="summary-chip">${escapeHTML(tableId)} &middot; ${seats} seats &middot; ${escapeHTML(experience)}</span>
-    `).join("");
-};
+function renderAdminTableLayout() {
+    return defaultTableLayout.map(function({ tableId, seats, experience }) {
+        return `
+            <span class="summary-chip">${escapeHTML(tableId)} &middot; ${seats} seats &middot; ${escapeHTML(experience)}</span>
+        `;
+    }).join("");
+}
 
-const renderTableLayoutEditor = () => {
+function renderTableLayoutEditor() {
     const selectedRestaurant = getRestaurantById(adminSelectedRestaurantId);
     const tableLayout = getAdminSelectedTableLayout();
 
@@ -878,7 +1050,9 @@ const renderTableLayoutEditor = () => {
                     <label>
                         Experience
                         <select name="experience" ${selectedRestaurant ? "" : "disabled"}>
-                            ${TABLE_EXPERIENCE_NAMES.map((experience) => `<option value="${experience}">${experience}</option>`).join("")}
+                            ${TABLE_EXPERIENCE_NAMES.map(function(experience) {
+        return `<option value="${experience}">${experience}</option>`;
+    }).join("")}
                         </select>
                     </label>
                     <button class="primary-action" type="submit" ${selectedRestaurant ? "" : "disabled"}>Add Table</button>
@@ -892,135 +1066,143 @@ const renderTableLayoutEditor = () => {
                 </div>
             ` : `
                 <div class="table-layout-list" aria-label="Editable table layout">
-                    ${tableLayout.map(({ tableId, seats, experience }) => `
-                        <article class="table-layout-row">
-                            <div>
-                                <strong>${escapeHTML(tableId)}</strong>
-                                <span>${seats} seats &middot; ${escapeHTML(experience)}</span>
-                            </div>
-                            <button class="danger-action" type="button" data-delete-table-id="${escapeHTML(tableId)}">Delete</button>
-                        </article>
-                    `).join("")}
+                    ${tableLayout.map(function({ tableId, seats, experience }) {
+        return `
+                            <article class="table-layout-row">
+                                <div>
+                                    <strong>${escapeHTML(tableId)}</strong>
+                                    <span>${seats} seats &middot; ${escapeHTML(experience)}</span>
+                                </div>
+                                <button class="danger-action" type="button" data-delete-table-id="${escapeHTML(tableId)}">Delete</button>
+                            </article>
+                        `;
+    }).join("")}
                 </div>
             `}
         </section>
     `;
-};
+}
 
-const createRestaurantFormPanel = () => `
-    <section class="profile-panel admin-panel" id="restaurantManagerPanel">
-        <div class="form-heading">
-            <p class="eyebrow">Restaurant manager</p>
-            <h3>${editingRestaurantId ? "Edit restaurant" : "Add a restaurant"}</h3>
-        </div>
-
-        <form class="admin-form" id="addRestaurantForm">
-            <fieldset class="admin-form-section">
-                <legend>Basic Information</legend>
-                <div class="admin-form-grid">
-                    <label>
-                        Restaurant Name
-                        <input type="text" name="name" required>
-                    </label>
-                    <label>
-                        Cuisine
-                        <input type="text" name="cuisine" required>
-                    </label>
-                    <label>
-                        Location
-                        <input type="text" name="location" required>
-                    </label>
-                    <label>
-                        Opening Time
-                        <input type="time" name="openingTime" required>
-                    </label>
-                    <label>
-                        Closing Time
-                        <input type="time" name="closingTime" required>
-                    </label>
-                </div>
-            </fieldset>
-
-            <fieldset class="admin-form-section">
-                <legend>Restaurant Details</legend>
-                <div class="admin-form-grid">
-                    <label>
-                        Rating
-                        <input type="number" name="rating" min="0" max="5" step="0.1" required>
-                    </label>
-                    <label>
-                        Price Level
-                        <select name="priceLevel" required>
-                            ${["$", "$$", "$$$", "$$$$"].map((priceLevel) => `
-                                <option value="${priceLevel}">${priceLevel}</option>
-                            `).join("")}
-                        </select>
-                    </label>
-                    <label>
-                        Distance Category
-                        <select name="distanceCategory" required>
-                            ${["Nearby", "Medium", "Far"].map((distanceCategory) => `
-                                <option value="${distanceCategory}">${distanceCategory}</option>
-                            `).join("")}
-                        </select>
-                    </label>
-                    <label>
-                        Standard Badges
-                        <input type="text" name="badges" placeholder="Patio, Seafood, Date night">
-                    </label>
-                </div>
-            </fieldset>
-
-            <fieldset class="admin-form-section">
-                <legend>Sustainability and Allergens</legend>
-                <div class="admin-form-grid">
-                    <fieldset class="admin-checkbox-group">
-                        <legend>Sustainability Badges</legend>
-                        <div class="choice-grid compact">
-                            ${createCheckboxChoices(sustainabilityBadgeOptions, [], "sustainabilityBadges")}
-                        </div>
-                    </fieldset>
-                    <fieldset class="admin-checkbox-group">
-                        <legend>Allergen Badges</legend>
-                        <div class="choice-grid compact">
-                            ${createCheckboxChoices(allergenBadgeOptions, [], "allergenBadges")}
-                        </div>
-                    </fieldset>
-                </div>
-            </fieldset>
-
-            <fieldset class="admin-form-section">
-                <legend>Media</legend>
-                <div class="admin-form-grid media-form-grid">
-                    <div class="media-controls">
-                        <label>
-                            Image URL
-                            <input type="url" name="image" id="restaurantImageInput" autocomplete="off">
-                        </label>
-                        <div class="media-separator" aria-hidden="true"><span>OR</span></div>
-                        <label class="upload-image-control" for="restaurantImageUpload">
-                            <span>Upload Image</span>
-                            <input type="file" id="restaurantImageUpload" accept="image/*">
-                        </label>
-                        <p class="admin-inline-error" id="restaurantImageError" aria-live="polite" hidden></p>
-                    </div>
-                    <div class="restaurant-image-preview" id="restaurantImagePreview" aria-live="polite">
-                        <span>Image preview</span>
-                    </div>
-                </div>
-            </fieldset>
-
-            <div class="admin-form-actions">
-                <button class="primary-action" type="submit" id="restaurantSubmitButton">
-                    ${editingRestaurantId ? "Update Restaurant" : "Add Restaurant"}
-                </button>
-                <button class="secondary-action" type="button" id="cancelEditRestaurantButton" ${editingRestaurantId ? "" : "hidden"}>Cancel Edit</button>
+function createRestaurantFormPanel() {
+    return `
+        <section class="profile-panel admin-panel" id="restaurantManagerPanel">
+            <div class="form-heading">
+                <p class="eyebrow">Restaurant manager</p>
+                <h3>${editingRestaurantId ? "Edit restaurant" : "Add a restaurant"}</h3>
             </div>
-        </form>
-    </section>
-`;
 
-const createPriceTiersPanel = () => {
+            <form class="admin-form" id="addRestaurantForm">
+                <fieldset class="admin-form-section">
+                    <legend>Basic Information</legend>
+                    <div class="admin-form-grid">
+                        <label>
+                            Restaurant Name
+                            <input type="text" name="name" required>
+                        </label>
+                        <label>
+                            Cuisine
+                            <input type="text" name="cuisine" required>
+                        </label>
+                        <label>
+                            Location
+                            <input type="text" name="location" required>
+                        </label>
+                        <label>
+                            Opening Time
+                            <input type="time" name="openingTime" required>
+                        </label>
+                        <label>
+                            Closing Time
+                            <input type="time" name="closingTime" required>
+                        </label>
+                    </div>
+                </fieldset>
+
+                <fieldset class="admin-form-section">
+                    <legend>Restaurant Details</legend>
+                    <div class="admin-form-grid">
+                        <label>
+                            Rating
+                            <input type="number" name="rating" min="0" max="5" step="0.1" required>
+                        </label>
+                        <label>
+                            Price Level
+                            <select name="priceLevel" required>
+                                ${["$", "$$", "$$$", "$$$$"].map(function(priceLevel) {
+        return `
+                                        <option value="${priceLevel}">${priceLevel}</option>
+                                    `;
+    }).join("")}
+                            </select>
+                        </label>
+                        <label>
+                            Distance Category
+                            <select name="distanceCategory" required>
+                                ${["Nearby", "Medium", "Far"].map(function(distanceCategory) {
+        return `
+                                        <option value="${distanceCategory}">${distanceCategory}</option>
+                                    `;
+    }).join("")}
+                            </select>
+                        </label>
+                        <label>
+                            Standard Badges
+                            <input type="text" name="badges" placeholder="Patio, Seafood, Date night">
+                        </label>
+                    </div>
+                </fieldset>
+
+                <fieldset class="admin-form-section">
+                    <legend>Sustainability and Allergens</legend>
+                    <div class="admin-form-grid">
+                        <fieldset class="admin-checkbox-group">
+                            <legend>Sustainability Badges</legend>
+                            <div class="choice-grid compact">
+                                ${createCheckboxChoices(sustainabilityBadgeOptions, [], "sustainabilityBadges")}
+                            </div>
+                        </fieldset>
+                        <fieldset class="admin-checkbox-group">
+                            <legend>Allergen Badges</legend>
+                            <div class="choice-grid compact">
+                                ${createCheckboxChoices(allergenBadgeOptions, [], "allergenBadges")}
+                            </div>
+                        </fieldset>
+                    </div>
+                </fieldset>
+
+                <fieldset class="admin-form-section">
+                    <legend>Media</legend>
+                    <div class="admin-form-grid media-form-grid">
+                        <div class="media-controls">
+                            <label>
+                                Image URL
+                                <input type="url" name="image" id="restaurantImageInput" autocomplete="off">
+                            </label>
+                            <div class="media-separator" aria-hidden="true"><span>OR</span></div>
+                            <label class="upload-image-control" for="restaurantImageUpload">
+                                <span>Upload Image</span>
+                                <input type="file" id="restaurantImageUpload" accept="image/*">
+                            </label>
+                            <p class="admin-inline-error" id="restaurantImageError" aria-live="polite" hidden></p>
+                        </div>
+                        <div class="restaurant-image-preview" id="restaurantImagePreview" aria-live="polite">
+                            <span>Image preview</span>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="admin-form-actions">
+                    <button class="primary-action" type="submit" id="restaurantSubmitButton">
+                        ${editingRestaurantId ? "Update Restaurant" : "Add Restaurant"}
+                    </button>
+                    <button class="secondary-action" type="button" id="cancelEditRestaurantButton" ${editingRestaurantId ? "" : "hidden"}>Cancel Edit</button>
+                </div>
+            </form>
+        </section>
+    `;
+}
+
+function createPriceTiersPanel() {
     const priceTiers = getPriceTiers();
 
     return `
@@ -1031,31 +1213,35 @@ const createPriceTiersPanel = () => {
                 <p>Changes are saved to the existing price tier configuration used by customer booking pricing.</p>
             </div>
             <div class="price-tier-grid">
-                ${Object.keys(defaultPriceTiers).map((seats) => `
-                    <label>
-                        ${seats}-seat fee
-                        <input type="number" min="0" step="1" value="${priceTiers[seats]}" data-price-tier-seats="${seats}">
-                    </label>
-                `).join("")}
+                ${Object.keys(defaultPriceTiers).map(function(seats) {
+        return `
+                        <label>
+                            ${seats}-seat fee
+                            <input type="number" min="0" step="1" value="${priceTiers[seats]}" data-price-tier-seats="${seats}">
+                        </label>
+                    `;
+    }).join("")}
             </div>
         </section>
     `;
-};
+}
 
-const createSettingsTableLayoutPanel = () => `
-    <section class="profile-panel admin-panel settings-card">
-        <div class="form-heading">
-            <p class="eyebrow">Fallback table layout</p>
-            <h2>New restaurant starting map</h2>
-            <p>Read-only fallback used when an older restaurant record does not have a saved table layout yet.</p>
-        </div>
-        <div class="admin-table-layout">
-            ${renderAdminTableLayout()}
-        </div>
-    </section>
-`;
+function createSettingsTableLayoutPanel() {
+    return `
+        <section class="profile-panel admin-panel settings-card">
+            <div class="form-heading">
+                <p class="eyebrow">Fallback table layout</p>
+                <h2>New restaurant starting map</h2>
+                <p>Read-only fallback used when an older restaurant record does not have a saved table layout yet.</p>
+            </div>
+            <div class="admin-table-layout">
+                ${renderAdminTableLayout()}
+            </div>
+        </section>
+    `;
+}
 
-const renderDataOverview = () => {
+function renderDataOverview() {
     const overviewItems = [
         ["users", storageKeys.users],
         ["restaurants", storageKeys.restaurants],
@@ -1072,67 +1258,73 @@ const renderDataOverview = () => {
                 <p>Read-only counts for existing application records. User credentials are not displayed.</p>
             </div>
             <div class="settings-count-grid">
-                ${overviewItems.map(([label, key]) => `
-                    <article class="settings-count-card">
-                        <span>${escapeHTML(label)}</span>
-                        <strong>${getStoredRecordCount(key)}</strong>
-                    </article>
-                `).join("")}
+                ${overviewItems.map(function([label, key]) {
+        return `
+                        <article class="settings-count-card">
+                            <span>${escapeHTML(label)}</span>
+                            <strong>${getStoredRecordCount(key)}</strong>
+                        </article>
+                    `;
+    }).join("")}
             </div>
         </section>
     `;
-};
+}
 
-const renderDataToolsPanel = () => `
-    <section class="profile-panel admin-panel settings-card">
-        <div class="form-heading">
-            <p class="eyebrow">Data tools</p>
-            <h2>Demo resets</h2>
-        </div>
-        <div class="settings-tools-grid">
-            <article class="settings-tool-card">
-                <div>
-                    <h3>Reset Restaurants</h3>
-                    <p>Restores the default restaurant listings. Existing price tiers are preserved.</p>
-                </div>
-                <button class="secondary-action" type="button" id="resetRestaurantsButton">Reset Restaurants</button>
-            </article>
-            <article class="settings-tool-card">
-                <div>
-                    <h3>Reset Price Tiers</h3>
-                    <p>Restores the default 2-seat, 4-seat, 6-seat, and 8-seat table fees.</p>
-                </div>
-                <button class="secondary-action" type="button" id="resetPriceTiersButton">Reset Price Tiers</button>
-            </article>
-        </div>
-    </section>
-`;
-
-const createSavedRestaurantsPanel = () => `
-    <section class="profile-panel admin-panel admin-panel-wide">
-        <div class="restaurant-list-header">
+function renderDataToolsPanel() {
+    return `
+        <section class="profile-panel admin-panel settings-card">
             <div class="form-heading">
-                <p class="eyebrow">Saved restaurants</p>
-                <h3>${getRestaurants().length} restaurants</h3>
+                <p class="eyebrow">Data tools</p>
+                <h2>Demo resets</h2>
             </div>
-            <label class="admin-search-field">
-                <span>Search saved restaurants</span>
-                <input
-                    type="search"
-                    id="adminRestaurantSearch"
-                    value="${escapeHTML(adminRestaurantSearchTerm)}"
-                    placeholder="Search by name, cuisine, or location"
-                    autocomplete="off"
-                >
-            </label>
-        </div>
-        <div class="admin-list" id="adminRestaurantList">
-            ${renderAdminRestaurantList()}
-        </div>
-    </section>
-`;
+            <div class="settings-tools-grid">
+                <article class="settings-tool-card">
+                    <div>
+                        <h3>Reset Restaurants</h3>
+                        <p>Restores the default restaurant listings. Existing price tiers are preserved.</p>
+                    </div>
+                    <button class="secondary-action" type="button" id="resetRestaurantsButton">Reset Restaurants</button>
+                </article>
+                <article class="settings-tool-card">
+                    <div>
+                        <h3>Reset Price Tiers</h3>
+                        <p>Restores the default 2-seat, 4-seat, 6-seat, and 8-seat table fees.</p>
+                    </div>
+                    <button class="secondary-action" type="button" id="resetPriceTiersButton">Reset Price Tiers</button>
+                </article>
+            </div>
+        </section>
+    `;
+}
 
-const attachManagementHandlers = () => {
+function createSavedRestaurantsPanel() {
+    return `
+        <section class="profile-panel admin-panel admin-panel-wide">
+            <div class="restaurant-list-header">
+                <div class="form-heading">
+                    <p class="eyebrow">Saved restaurants</p>
+                    <h3>${getRestaurants().length} restaurants</h3>
+                </div>
+                <label class="admin-search-field">
+                    <span>Search saved restaurants</span>
+                    <input
+                        type="search"
+                        id="adminRestaurantSearch"
+                        value="${escapeHTML(adminRestaurantSearchTerm)}"
+                        placeholder="Search by name, cuisine, or location"
+                        autocomplete="off"
+                    >
+                </label>
+            </div>
+            <div class="admin-list" id="adminRestaurantList">
+                ${renderAdminRestaurantList()}
+            </div>
+        </section>
+    `;
+}
+
+function attachManagementHandlers() {
     const adminView = document.querySelector("#adminDashboard");
 
     if (!adminView) {
@@ -1160,16 +1352,18 @@ const attachManagementHandlers = () => {
         restaurantForm.addEventListener("submit", handleAddRestaurant);
     }
 
-    adminView.querySelectorAll("[data-edit-restaurant-id]").forEach((button) => {
-        button.addEventListener("click", () => startEditRestaurant(button.dataset.editRestaurantId));
+    adminView.querySelectorAll("[data-edit-restaurant-id]").forEach(function(button) {
+        button.addEventListener("click", function() {
+            return startEditRestaurant(button.dataset.editRestaurantId);
+        });
     });
-    adminView.querySelectorAll("[data-delete-restaurant-id]").forEach((button) => {
+    adminView.querySelectorAll("[data-delete-restaurant-id]").forEach(function(button) {
         button.addEventListener("click", handleDeleteRestaurant);
     });
-    adminView.querySelectorAll("[data-price-tier-seats]").forEach((input) => {
+    adminView.querySelectorAll("[data-price-tier-seats]").forEach(function(input) {
         input.addEventListener("change", handlePriceTierUpdate);
     });
-    adminView.querySelectorAll("[data-delete-table-id]").forEach((button) => {
+    adminView.querySelectorAll("[data-delete-table-id]").forEach(function(button) {
         button.addEventListener("click", handleDeleteTable);
     });
 
@@ -1186,7 +1380,7 @@ const attachManagementHandlers = () => {
     }
 
     if (restaurantSearch) {
-        restaurantSearch.addEventListener("input", (event) => {
+        restaurantSearch.addEventListener("input", function(event) {
             adminRestaurantSearchTerm = event.target.value;
             updateAdminRestaurantList();
         });
@@ -1197,7 +1391,9 @@ const attachManagementHandlers = () => {
             pendingRestaurantImageDataUrl = "";
         }
 
-        imageInput.addEventListener("input", () => handleRestaurantImageUrlInput(imageInput));
+        imageInput.addEventListener("input", function() {
+            return handleRestaurantImageUrlInput(imageInput);
+        });
         updateRestaurantImagePreview(imageInput.value);
     }
 
@@ -1206,35 +1402,35 @@ const attachManagementHandlers = () => {
     }
 
     if (reservationSearch) {
-        reservationSearch.addEventListener("input", (event) => {
+        reservationSearch.addEventListener("input", function(event) {
             adminReservationSearchTerm = event.target.value;
             updateReservationManagementList();
         });
     }
 
     if (reservationStatusFilter) {
-        reservationStatusFilter.addEventListener("change", (event) => {
+        reservationStatusFilter.addEventListener("change", function(event) {
             adminReservationStatusFilter = event.target.value;
             renderActiveAdminSection();
         });
     }
 
     if (reservationRestaurantFilter) {
-        reservationRestaurantFilter.addEventListener("change", (event) => {
+        reservationRestaurantFilter.addEventListener("change", function(event) {
             adminReservationRestaurantFilter = event.target.value;
             renderActiveAdminSection();
         });
     }
 
     if (reservationDateFilter) {
-        reservationDateFilter.addEventListener("change", (event) => {
+        reservationDateFilter.addEventListener("change", function(event) {
             adminReservationDateFilter = event.target.value;
             renderActiveAdminSection();
         });
     }
 
     if (reservationSortSelect) {
-        reservationSortSelect.addEventListener("change", (event) => {
+        reservationSortSelect.addEventListener("change", function(event) {
             adminReservationSort = event.target.value;
             renderActiveAdminSection();
         });
@@ -1243,7 +1439,7 @@ const attachManagementHandlers = () => {
     attachReservationListHandlers();
 
     if (tableRestaurantSelect) {
-        tableRestaurantSelect.addEventListener("change", (event) => {
+        tableRestaurantSelect.addEventListener("change", function(event) {
             adminSelectedRestaurantId = event.target.value;
             adminSelectedTableTime = "";
             ensureAdminTableSelection();
@@ -1252,7 +1448,7 @@ const attachManagementHandlers = () => {
     }
 
     if (tableDateInput) {
-        tableDateInput.addEventListener("change", (event) => {
+        tableDateInput.addEventListener("change", function(event) {
             adminSelectedTableDate = event.target.value;
             adminSelectedTableTime = "";
             ensureAdminTableSelection();
@@ -1261,7 +1457,7 @@ const attachManagementHandlers = () => {
     }
 
     if (tableTimeSelect) {
-        tableTimeSelect.addEventListener("change", (event) => {
+        tableTimeSelect.addEventListener("change", function(event) {
             adminSelectedTableTime = event.target.value;
             renderActiveAdminSection();
         });
@@ -1272,44 +1468,46 @@ const attachManagementHandlers = () => {
     }
 
     if (editingRestaurantId && restaurantForm) {
-        const restaurant = getRestaurants().find(({ id }) => String(id) === String(editingRestaurantId));
+        const restaurant = getRestaurants().find(function({ id }) {
+            return String(id) === String(editingRestaurantId);
+        });
 
         if (restaurant) {
             fillRestaurantForm(restaurant);
         }
     }
-};
+}
 
-const updateAdminRestaurantList = () => {
+function updateAdminRestaurantList() {
     const restaurantList = document.querySelector("#adminRestaurantList");
 
     if (restaurantList) {
         restaurantList.innerHTML = renderAdminRestaurantList();
     }
-};
+}
 
-const attachReservationListHandlers = () => {
+function attachReservationListHandlers() {
     const adminView = document.querySelector("#adminDashboard");
 
     if (!adminView) {
         return;
     }
 
-    adminView.querySelectorAll("[data-reservation-status-id]").forEach((select) => {
+    adminView.querySelectorAll("[data-reservation-status-id]").forEach(function(select) {
         select.addEventListener("change", handleReservationStatusChange);
     });
 
-    adminView.querySelectorAll("[data-reservation-details-id]").forEach((button) => {
-        button.addEventListener("click", () => {
+    adminView.querySelectorAll("[data-reservation-details-id]").forEach(function(button) {
+        button.addEventListener("click", function() {
             expandedReservationId = expandedReservationId === button.dataset.reservationDetailsId
                 ? null
                 : button.dataset.reservationDetailsId;
             updateReservationManagementList();
         });
     });
-};
+}
 
-const updateReservationManagementList = () => {
+function updateReservationManagementList() {
     const reservationList = document.querySelector("#reservationManagementList");
     const reservationCount = document.querySelector("#reservationShownCount");
 
@@ -1321,23 +1519,23 @@ const updateReservationManagementList = () => {
     if (reservationCount) {
         reservationCount.textContent = `${getFilteredReservations().length} shown`;
     }
-};
+}
 
-const isPreviewableImageURL = (imageUrl = "") => {
+function isPreviewableImageURL(imageUrl = "") {
     try {
         const parsedUrl = new URL(imageUrl);
         return ["http:", "https:"].includes(parsedUrl.protocol);
     } catch {
         return false;
     }
-};
+}
 
-const isPreviewableImageSource = (imageSource = "") => {
+function isPreviewableImageSource(imageSource = "") {
     return isPreviewableImageURL(imageSource)
         || String(imageSource).startsWith("data:image/");
-};
+}
 
-const showRestaurantImageError = (message = "") => {
+function showRestaurantImageError(message = "") {
     const errorElement = document.querySelector("#restaurantImageError");
 
     if (!errorElement) {
@@ -1346,9 +1544,9 @@ const showRestaurantImageError = (message = "") => {
 
     errorElement.textContent = message;
     errorElement.hidden = !message;
-};
+}
 
-const updateRestaurantImagePreview = (imageUrl = "") => {
+function updateRestaurantImagePreview(imageUrl = "") {
     const preview = document.querySelector("#restaurantImagePreview");
 
     if (!preview) {
@@ -1367,34 +1565,34 @@ const updateRestaurantImagePreview = (imageUrl = "") => {
     const previewImage = preview.querySelector("img");
 
     if (previewImage) {
-        previewImage.addEventListener("error", () => {
+        previewImage.addEventListener("error", function() {
             preview.innerHTML = "<span>Image preview</span>";
             preview.classList.remove("has-image");
         });
     }
-};
+}
 
-const clearRestaurantImageUploadInput = () => {
+function clearRestaurantImageUploadInput() {
     const uploadInput = document.querySelector("#restaurantImageUpload");
 
     if (uploadInput) {
         uploadInput.value = "";
     }
-};
+}
 
-const getCurrentRestaurantImageSource = () => {
+function getCurrentRestaurantImageSource() {
     const imageInput = document.querySelector("#restaurantImageInput");
     return pendingRestaurantImageDataUrl || (imageInput ? imageInput.value : "");
-};
+}
 
-const handleRestaurantImageUrlInput = (imageInput) => {
+function handleRestaurantImageUrlInput(imageInput) {
     pendingRestaurantImageDataUrl = "";
     clearRestaurantImageUploadInput();
     showRestaurantImageError("");
     updateRestaurantImagePreview(imageInput.value);
-};
+}
 
-const handleRestaurantImageUpload = (event) => {
+function handleRestaurantImageUpload(event) {
     const uploadInput = event.currentTarget;
     const [file] = uploadInput.files || [];
 
@@ -1421,7 +1619,7 @@ const handleRestaurantImageUpload = (event) => {
 
     const reader = new FileReader();
 
-    reader.addEventListener("load", () => {
+    reader.addEventListener("load", function() {
         const dataUrl = String(reader.result || "");
 
         if (!dataUrl.startsWith("data:image/")) {
@@ -1441,16 +1639,16 @@ const handleRestaurantImageUpload = (event) => {
         updateRestaurantImagePreview(dataUrl);
     });
 
-    reader.addEventListener("error", () => {
+    reader.addEventListener("error", function() {
         uploadInput.value = "";
         updateRestaurantImagePreview(getCurrentRestaurantImageSource());
         showRestaurantImageError("The image could not be read. Try a different file.");
     });
 
     reader.readAsDataURL(file);
-};
+}
 
-const getSectionMeta = (section = activeAdminSection) => {
+function getSectionMeta(section = activeAdminSection) {
     const sectionMeta = {
         dashboard: {
             title: "Dashboard",
@@ -1475,9 +1673,9 @@ const getSectionMeta = (section = activeAdminSection) => {
     };
 
     return sectionMeta[section] || sectionMeta.dashboard;
-};
+}
 
-const renderOverviewCards = () => {
+function renderOverviewCards() {
     const restaurants = getRestaurants();
     const activeReservations = getActiveReservations();
     const waitingEntries = getWaitingEntries();
@@ -1506,12 +1704,12 @@ const renderOverviewCards = () => {
             </article>
         </section>
     `;
-};
+}
 
-const renderRecentReservations = (limit = 5) => {
+function renderRecentReservations(limit = 5) {
     const reservations = getReservations()
         .slice()
-        .sort((firstReservation, secondReservation) => {
+        .sort(function(firstReservation, secondReservation) {
             const firstValue = String(firstReservation.reservationId || firstReservation.createdAt || "");
             const secondValue = String(secondReservation.reservationId || secondReservation.createdAt || "");
             return secondValue.localeCompare(firstValue);
@@ -1527,18 +1725,20 @@ const renderRecentReservations = (limit = 5) => {
         `;
     }
 
-    return reservations.map((reservation) => `
-        <article class="reservation-list-item">
-            <div>
-                <strong>${escapeHTML(reservation.guestName || "Guest")}</strong>
-                <p>${escapeHTML(reservation.restaurantName || "Restaurant not set")} &middot; ${escapeHTML(formatReservationDateTime(reservation))}</p>
-            </div>
-            <span class="reservation-meta">${escapeHTML(reservation.status || "unknown")}</span>
-        </article>
-    `).join("");
-};
+    return reservations.map(function(reservation) {
+        return `
+            <article class="reservation-list-item">
+                <div>
+                    <strong>${escapeHTML(reservation.guestName || "Guest")}</strong>
+                    <p>${escapeHTML(reservation.restaurantName || "Restaurant not set")} &middot; ${escapeHTML(formatReservationDateTime(reservation))}</p>
+                </div>
+                <span class="reservation-meta">${escapeHTML(reservation.status || "unknown")}</span>
+            </article>
+        `;
+    }).join("");
+}
 
-const renderReservationSummaryCards = () => {
+function renderReservationSummaryCards() {
     const summary = getReservationSummary();
 
     return `
@@ -1565,65 +1765,71 @@ const renderReservationSummaryCards = () => {
             </article>
         </section>
     `;
-};
+}
 
-const renderReservationControls = () => `
-    <section class="profile-panel admin-panel reservation-controls-panel">
-        <div class="reservation-controls-grid">
-            <label>
-                Search reservations
-                <input
-                    type="search"
-                    id="reservationSearchInput"
-                    value="${escapeHTML(adminReservationSearchTerm)}"
-                    placeholder="Guest, email, restaurant, or reservation ID"
-                    autocomplete="off"
-                >
-            </label>
-            <label>
-                Status
-                <select id="reservationStatusFilter">
-                    <option value="all">All statuses</option>
-                    ${getKnownReservationStatuses().map((status) => `
-                        <option value="${escapeHTML(status)}" ${adminReservationStatusFilter === status ? "selected" : ""}>
-                            ${escapeHTML(status)}
-                        </option>
-                    `).join("")}
-                </select>
-            </label>
-            <label>
-                Restaurant
-                <select id="reservationRestaurantFilter">
-                    <option value="all">All restaurants</option>
-                    ${getReservationRestaurantOptions().map((restaurantName) => `
-                        <option value="${escapeHTML(restaurantName)}" ${adminReservationRestaurantFilter === restaurantName ? "selected" : ""}>
-                            ${escapeHTML(restaurantName)}
-                        </option>
-                    `).join("")}
-                </select>
-            </label>
-            <label>
-                Date
-                <input type="date" id="reservationDateFilter" value="${escapeHTML(adminReservationDateFilter)}">
-            </label>
-            <label>
-                Sort
-                <select id="reservationSortSelect">
-                    <option value="nearest" ${adminReservationSort === "nearest" ? "selected" : ""}>Nearest upcoming</option>
-                    <option value="newest" ${adminReservationSort === "newest" ? "selected" : ""}>Newest created</option>
-                    <option value="guest" ${adminReservationSort === "guest" ? "selected" : ""}>Guest name</option>
-                </select>
-            </label>
-        </div>
-    </section>
-`;
+function renderReservationControls() {
+    return `
+        <section class="profile-panel admin-panel reservation-controls-panel">
+            <div class="reservation-controls-grid">
+                <label>
+                    Search reservations
+                    <input
+                        type="search"
+                        id="reservationSearchInput"
+                        value="${escapeHTML(adminReservationSearchTerm)}"
+                        placeholder="Guest, email, restaurant, or reservation ID"
+                        autocomplete="off"
+                    >
+                </label>
+                <label>
+                    Status
+                    <select id="reservationStatusFilter">
+                        <option value="all">All statuses</option>
+                        ${getKnownReservationStatuses().map(function(status) {
+        return `
+                                <option value="${escapeHTML(status)}" ${adminReservationStatusFilter === status ? "selected" : ""}>
+                                    ${escapeHTML(status)}
+                                </option>
+                            `;
+    }).join("")}
+                    </select>
+                </label>
+                <label>
+                    Restaurant
+                    <select id="reservationRestaurantFilter">
+                        <option value="all">All restaurants</option>
+                        ${getReservationRestaurantOptions().map(function(restaurantName) {
+        return `
+                                <option value="${escapeHTML(restaurantName)}" ${adminReservationRestaurantFilter === restaurantName ? "selected" : ""}>
+                                    ${escapeHTML(restaurantName)}
+                                </option>
+                            `;
+    }).join("")}
+                    </select>
+                </label>
+                <label>
+                    Date
+                    <input type="date" id="reservationDateFilter" value="${escapeHTML(adminReservationDateFilter)}">
+                </label>
+                <label>
+                    Sort
+                    <select id="reservationSortSelect">
+                        <option value="nearest" ${adminReservationSort === "nearest" ? "selected" : ""}>Nearest upcoming</option>
+                        <option value="newest" ${adminReservationSort === "newest" ? "selected" : ""}>Newest created</option>
+                        <option value="guest" ${adminReservationSort === "guest" ? "selected" : ""}>Guest name</option>
+                    </select>
+                </label>
+            </div>
+        </section>
+    `;
+}
 
-const renderStatusBadge = (status = "unknown") => {
+function renderStatusBadge(status = "unknown") {
     const normalizedStatus = String(status || "unknown").toLowerCase();
     return `<span class="reservation-status-badge status-${escapeHTML(normalizedStatus)}">${escapeHTML(normalizedStatus)}</span>`;
-};
+}
 
-const renderReservationDetails = (reservation = {}) => {
+function renderReservationDetails(reservation = {}) {
     const guests = Array.isArray(reservation.guests) ? reservation.guests : [];
     const splitBill = reservation.splitBill || {};
     const preOrderItems = Array.isArray(reservation.preOrder?.items) ? reservation.preOrder.items : [];
@@ -1632,15 +1838,24 @@ const renderReservationDetails = (reservation = {}) => {
     return `
         <div class="reservation-details-panel">
             <section>
+                <h3>Table and seats</h3>
+                <div class="reservation-detail-list">
+                    <div><span>Table</span><strong>${escapeHTML(reservation.tableId || "Not set")}</strong></div>
+                    <div><span>Selected seats</span><strong>${escapeHTML(formatReservationSeatIds(reservation))}</strong></div>
+                </div>
+            </section>
+            <section>
                 <h3>Invited guests</h3>
                 ${guests.length === 0 ? `<p class="summary-muted">No invited guests.</p>` : `
                     <div class="reservation-detail-list">
-                        ${guests.map(({ name, email, rsvpStatus }) => `
-                            <div>
-                                <strong>${escapeHTML(name || "Guest")}</strong>
-                                <span>${escapeHTML(email || "No email")} &middot; ${escapeHTML(rsvpStatus || "pending")}</span>
-                            </div>
-                        `).join("")}
+                        ${guests.map(function({ name, email, rsvpStatus }) {
+        return `
+                                <div>
+                                    <strong>${escapeHTML(name || "Guest")}</strong>
+                                    <span>${escapeHTML(email || "No email")} &middot; ${escapeHTML(rsvpStatus || "pending")}</span>
+                                </div>
+                            `;
+    }).join("")}
                     </div>
                 `}
             </section>
@@ -1651,24 +1866,28 @@ const renderReservationDetails = (reservation = {}) => {
                     <div><span>Pre-order subtotal</span><strong>${formatUSD(splitBill.preOrderSubtotal || reservation.preOrder?.subtotal || 0)}</strong></div>
                     <div><span>Total amount</span><strong>${formatUSD(splitBill.totalAmount || getReservationTotalAmount(reservation))}</strong></div>
                     <div><span>Participants</span><strong>${escapeHTML(splitBill.participantCount || getAcceptedAttendeeCount(reservation))}</strong></div>
-                    ${(splitBill.participants || []).map(({ name, email, share }) => `
-                        <div>
-                            <span>${escapeHTML(email || "No email")}</span>
-                            <strong>${escapeHTML(name || "Participant")} &middot; ${formatUSD(share || 0)}</strong>
-                        </div>
-                    `).join("")}
+                    ${(splitBill.participants || []).map(function({ name, email, share }) {
+        return `
+                            <div>
+                                <span>${escapeHTML(email || "No email")}</span>
+                                <strong>${escapeHTML(name || "Participant")} &middot; ${formatUSD(share || 0)}</strong>
+                            </div>
+                        `;
+    }).join("")}
                 </div>
             </section>
             <section>
                 <h3>Pre-order items</h3>
                 ${preOrderItems.length === 0 ? `<p class="summary-muted">No pre-order items.</p>` : `
                     <div class="reservation-detail-list">
-                        ${preOrderItems.map(({ name, quantity, price }) => `
-                            <div>
-                                <strong>${escapeHTML(name || "Item")}</strong>
-                                <span>${escapeHTML(quantity || 0)} x ${formatUSD(price || 0)}</span>
-                            </div>
-                        `).join("")}
+                        ${preOrderItems.map(function({ name, quantity, price }) {
+        return `
+                                <div>
+                                    <strong>${escapeHTML(name || "Item")}</strong>
+                                    <span>${escapeHTML(quantity || 0)} x ${formatUSD(price || 0)}</span>
+                                </div>
+                            `;
+    }).join("")}
                     </div>
                 `}
             </section>
@@ -1689,9 +1908,9 @@ const renderReservationDetails = (reservation = {}) => {
             </section>
         </div>
     `;
-};
+}
 
-const renderReservationList = () => {
+function renderReservationList() {
     const reservations = getFilteredReservations();
 
     if (reservations.length === 0) {
@@ -1703,7 +1922,7 @@ const renderReservationList = () => {
         `;
     }
 
-    return reservations.map((reservation) => {
+    return reservations.map(function(reservation) {
         const reservationId = reservation.reservationId || "";
         const isExpanded = expandedReservationId === reservationId;
 
@@ -1722,6 +1941,7 @@ const renderReservationList = () => {
                         <span>Table</span>
                         <strong>${escapeHTML(reservation.tableId || "Not set")}</strong>
                         <span>${escapeHTML(normalizeTableExperience(reservation.tableExperience))} &middot; ${formatUSD(Number(reservation.experienceFee) || 0)}</span>
+                        <span>Selected seats: ${escapeHTML(formatReservationSeatIds(reservation))}</span>
                     </div>
                     <div>
                         <span>Accepted attendees</span>
@@ -1741,9 +1961,11 @@ const renderReservationList = () => {
                     <label>
                         Status
                         <select data-reservation-status-id="${escapeHTML(reservationId)}">
-                            ${["active", "confirmed", "completed", "cancelled"].map((status) => `
-                                <option value="${status}" ${getReservationStatus(reservation) === status ? "selected" : ""}>${status}</option>
-                            `).join("")}
+                            ${["active", "confirmed", "completed", "cancelled"].map(function(status) {
+            return `
+                                    <option value="${status}" ${getReservationStatus(reservation) === status ? "selected" : ""}>${status}</option>
+                                `;
+        }).join("")}
                         </select>
                     </label>
                     <button class="secondary-action" type="button" data-reservation-details-id="${escapeHTML(reservationId)}">
@@ -1754,61 +1976,67 @@ const renderReservationList = () => {
             </article>
         `;
     }).join("");
-};
+}
 
-const renderDashboardView = () => `
-    <section class="admin-section">
-        ${renderOverviewCards()}
-        <div class="dashboard-grid">
-            <section class="profile-panel admin-panel">
-                <div class="form-heading">
-                    <p class="eyebrow">Recent Reservations</p>
-                    <h2>Latest booking activity</h2>
-                </div>
-                <div class="reservation-list">
-                    ${renderRecentReservations()}
-                </div>
-            </section>
+function renderDashboardView() {
+    return `
+        <section class="admin-section">
+            ${renderOverviewCards()}
+            <div class="dashboard-grid">
+                <section class="profile-panel admin-panel">
+                    <div class="form-heading">
+                        <p class="eyebrow">Recent Reservations</p>
+                        <h2>Latest booking activity</h2>
+                    </div>
+                    <div class="reservation-list">
+                        ${renderRecentReservations()}
+                    </div>
+                </section>
 
-            <section class="profile-panel admin-panel">
-                <div class="form-heading">
-                    <p class="eyebrow">Quick Actions</p>
-                    <h2>Common tasks</h2>
-                </div>
-                <div class="quick-action-list">
-                    <button class="quick-action-button" type="button" data-admin-section-target="restaurants">Add Restaurant</button>
-                    <button class="quick-action-button" type="button" data-admin-section-target="reservations">View Reservations</button>
-                    <button class="quick-action-button" type="button" data-admin-section-target="tables">Manage Tables</button>
-                </div>
-            </section>
-        </div>
-    </section>
-`;
-
-const renderRestaurantManagerView = () => `
-    <section class="admin-section admin-view">
-        ${createRestaurantFormPanel()}
-        ${createSavedRestaurantsPanel()}
-    </section>
-`;
-
-const renderReservationsView = () => `
-    <section class="admin-section">
-        ${renderReservationSummaryCards()}
-        ${renderReservationControls()}
-        <section class="profile-panel admin-panel">
-            <div class="form-heading">
-                <p class="eyebrow">Reservations</p>
-                <h2 id="reservationShownCount">${getFilteredReservations().length} shown</h2>
-            </div>
-            <div class="reservation-management-list" id="reservationManagementList">
-                ${renderReservationList()}
+                <section class="profile-panel admin-panel">
+                    <div class="form-heading">
+                        <p class="eyebrow">Quick Actions</p>
+                        <h2>Common tasks</h2>
+                    </div>
+                    <div class="quick-action-list">
+                        <button class="quick-action-button" type="button" data-admin-section-target="restaurants">Add Restaurant</button>
+                        <button class="quick-action-button" type="button" data-admin-section-target="reservations">View Reservations</button>
+                        <button class="quick-action-button" type="button" data-admin-section-target="tables">Manage Tables</button>
+                    </div>
+                </section>
             </div>
         </section>
-    </section>
-`;
+    `;
+}
 
-const renderTableControls = () => {
+function renderRestaurantManagerView() {
+    return `
+        <section class="admin-section admin-view">
+            ${createRestaurantFormPanel()}
+            ${createSavedRestaurantsPanel()}
+        </section>
+    `;
+}
+
+function renderReservationsView() {
+    return `
+        <section class="admin-section">
+            ${renderReservationSummaryCards()}
+            ${renderReservationControls()}
+            <section class="profile-panel admin-panel">
+                <div class="form-heading">
+                    <p class="eyebrow">Reservations</p>
+                    <h2 id="reservationShownCount">${getFilteredReservations().length} shown</h2>
+                </div>
+                <div class="reservation-management-list" id="reservationManagementList">
+                    ${renderReservationList()}
+                </div>
+            </section>
+        </section>
+    `;
+}
+
+function renderTableControls() {
     const restaurants = getRestaurants();
     const selectedRestaurant = getRestaurantById(adminSelectedRestaurantId);
     const slots = getRestaurantTimeSlots(selectedRestaurant);
@@ -1819,11 +2047,13 @@ const renderTableControls = () => {
                 <label>
                     Restaurant
                     <select id="tableRestaurantSelect" ${restaurants.length === 0 ? "disabled" : ""}>
-                        ${restaurants.map(({ id, name }) => `
-                            <option value="${escapeHTML(id)}" ${String(adminSelectedRestaurantId) === String(id) ? "selected" : ""}>
-                                ${escapeHTML(name)}
-                            </option>
-                        `).join("")}
+                        ${restaurants.map(function({ id, name }) {
+        return `
+                                <option value="${escapeHTML(id)}" ${String(adminSelectedRestaurantId) === String(id) ? "selected" : ""}>
+                                    ${escapeHTML(name)}
+                                </option>
+                            `;
+    }).join("")}
                     </select>
                 </label>
                 <label>
@@ -1833,19 +2063,21 @@ const renderTableControls = () => {
                 <label>
                     Time
                     <select id="tableTimeSelect" ${slots.length === 0 ? "disabled" : ""}>
-                        ${slots.length === 0 ? `<option value="">No slots configured</option>` : slots.map((time) => `
-                            <option value="${time}" ${adminSelectedTableTime === time ? "selected" : ""} ${isAdminBookingTimeAvailable(time, adminSelectedTableDate, selectedRestaurant) ? "" : "disabled"}>
-                                ${time}
-                            </option>
-                        `).join("")}
+                        ${slots.length === 0 ? `<option value="">No slots configured</option>` : slots.map(function(time) {
+        return `
+                                <option value="${time}" ${adminSelectedTableTime === time ? "selected" : ""} ${isAdminBookingTimeAvailable(time, adminSelectedTableDate, selectedRestaurant) ? "" : "disabled"}>
+                                    ${time}
+                                </option>
+                            `;
+    }).join("")}
                     </select>
                 </label>
             </div>
         </section>
     `;
-};
+}
 
-const renderTableSummaryCards = () => {
+function renderTableSummaryCards() {
     const counts = getAdminTableCounts();
 
     return `
@@ -1872,9 +2104,9 @@ const renderTableSummaryCards = () => {
             </article>
         </section>
     `;
-};
+}
 
-const renderAdminTableCard = (table) => {
+function renderAdminTableCard(table) {
     const status = getAdminTableStatus(table);
     const shapeMarkup = table.shape
         ? `<span>Shape ${escapeHTML(table.shape)}</span>`
@@ -1891,9 +2123,9 @@ const renderAdminTableCard = (table) => {
             <em>${status}</em>
         </article>
     `;
-};
+}
 
-const renderTableCapacityGroups = () => {
+function renderTableCapacityGroups() {
     const priceTiers = getPriceTiers();
     const tableLayout = getAdminSelectedTableLayout();
 
@@ -1906,23 +2138,25 @@ const renderTableCapacityGroups = () => {
         `;
     }
 
-    return getTablesByCapacity().map(({ capacity, tables }) => `
-        <section class="profile-panel admin-panel table-capacity-group">
-            <div class="table-group-header">
-                <div class="form-heading">
-                    <p class="eyebrow">${capacity} seats</p>
-                    <h2>${tables.length} tables</h2>
+    return getTablesByCapacity().map(function({ capacity, tables }) {
+        return `
+            <section class="profile-panel admin-panel table-capacity-group">
+                <div class="table-group-header">
+                    <div class="form-heading">
+                        <p class="eyebrow">${capacity} seats</p>
+                        <h2>${tables.length} tables</h2>
+                    </div>
+                    <span class="pricing-badge">Price tier ${formatUSD(priceTiers[capacity] || 0)}</span>
                 </div>
-                <span class="pricing-badge">Price tier ${formatUSD(priceTiers[capacity] || 0)}</span>
-            </div>
-            <div class="admin-table-grid">
-                ${tables.map(renderAdminTableCard).join("")}
-            </div>
-        </section>
-    `).join("");
-};
+                <div class="admin-table-grid">
+                    ${tables.map(renderAdminTableCard).join("")}
+                </div>
+            </section>
+        `;
+    }).join("");
+}
 
-const renderTablesView = () => {
+function renderTablesView() {
     ensureAdminTableSelection();
 
     return `
@@ -1940,18 +2174,20 @@ const renderTablesView = () => {
             ${renderTableCapacityGroups()}
         </section>
     `;
-};
+}
 
-const renderSettingsView = () => `
-    <section class="admin-section">
-        ${createPriceTiersPanel()}
-        ${createSettingsTableLayoutPanel()}
-        ${renderDataToolsPanel()}
-        ${renderDataOverview()}
-    </section>
-`;
+function renderSettingsView() {
+    return `
+        <section class="admin-section">
+            ${createPriceTiersPanel()}
+            ${createSettingsTableLayoutPanel()}
+            ${renderDataToolsPanel()}
+            ${renderDataOverview()}
+        </section>
+    `;
+}
 
-const getSectionHTML = () => {
+function getSectionHTML() {
     const renderers = {
         dashboard: renderDashboardView,
         restaurants: renderRestaurantManagerView,
@@ -1961,14 +2197,14 @@ const getSectionHTML = () => {
     };
 
     return (renderers[activeAdminSection] || renderDashboardView)();
-};
+}
 
-const setAdminActionMessage = (message, type = "success") => {
+function setAdminActionMessage(message, type = "success") {
     adminActionMessage = message;
     adminActionMessageType = type;
-};
+}
 
-const renderAdminActionMessage = () => {
+function renderAdminActionMessage() {
     if (!adminActionMessage) {
         return "";
     }
@@ -1978,9 +2214,9 @@ const renderAdminActionMessage = () => {
             ${escapeHTML(adminActionMessage)}
         </p>
     `;
-};
+}
 
-const updateAdminActionMessage = () => {
+function updateAdminActionMessage() {
     const messageElement = document.querySelector("#adminActionMessage");
 
     if (messageElement) {
@@ -1994,10 +2230,10 @@ const updateAdminActionMessage = () => {
     if (adminView && adminActionMessage) {
         adminView.insertAdjacentHTML("afterbegin", renderAdminActionMessage());
     }
-};
+}
 
-const updateSectionNavigation = () => {
-    document.querySelectorAll("[data-admin-section]").forEach((button) => {
+function updateSectionNavigation() {
+    document.querySelectorAll("[data-admin-section]").forEach(function(button) {
         const isActive = button.dataset.adminSection === activeAdminSection;
 
         button.classList.toggle("is-active", isActive);
@@ -2008,9 +2244,9 @@ const updateSectionNavigation = () => {
             button.removeAttribute("aria-current");
         }
     });
-};
+}
 
-const updateAdminHeader = () => {
+function updateAdminHeader() {
     const title = document.querySelector("#adminPageTitle");
     const subtitle = document.querySelector("#adminPageSubtitle");
     const meta = getSectionMeta();
@@ -2022,9 +2258,9 @@ const updateAdminHeader = () => {
     if (subtitle) {
         subtitle.textContent = meta.subtitle;
     }
-};
+}
 
-const renderActiveAdminSection = () => {
+function renderActiveAdminSection() {
     const adminView = document.querySelector("#adminDashboard");
 
     if (!adminView) {
@@ -2036,12 +2272,14 @@ const renderActiveAdminSection = () => {
     adminView.innerHTML = `${renderAdminActionMessage()}${getSectionHTML()}`;
     attachManagementHandlers();
 
-    adminView.querySelectorAll("[data-admin-section-target]").forEach((button) => {
-        button.addEventListener("click", () => setActiveAdminSection(button.dataset.adminSectionTarget));
+    adminView.querySelectorAll("[data-admin-section-target]").forEach(function(button) {
+        button.addEventListener("click", function() {
+            return setActiveAdminSection(button.dataset.adminSectionTarget);
+        });
     });
-};
+}
 
-const setActiveAdminSection = (section) => {
+function setActiveAdminSection(section) {
     activeAdminSection = section || "dashboard";
     renderActiveAdminSection();
 
@@ -2055,9 +2293,9 @@ const setActiveAdminSection = (section) => {
     if (menuButton) {
         menuButton.setAttribute("aria-expanded", "false");
     }
-};
+}
 
-const getRestaurantDataFromForm = (formData) => {
+function getRestaurantDataFromForm(formData) {
     const openingTime = isValidRestaurantTime(getFormValue(formData, "openingTime"))
         ? getFormValue(formData, "openingTime")
         : DEFAULT_OPENING_TIME;
@@ -2080,13 +2318,15 @@ const getRestaurantDataFromForm = (formData) => {
         allergenBadges: formData.getAll("allergenBadges"),
         badges: getFormValue(formData, "badges")
             .split(",")
-            .map((badge) => badge.trim())
+            .map(function(badge) {
+            return badge.trim();
+        })
             .filter(Boolean),
         image
     };
-};
+}
 
-const handleAddRestaurant = (event) => {
+function handleAddRestaurant(event) {
     event.preventDefault();
 
     const formData = new FormData(event.target);
@@ -2112,9 +2352,9 @@ const handleAddRestaurant = (event) => {
     pendingRestaurantImageDataUrl = "";
     setAdminActionMessage("Restaurant saved.");
     renderActiveAdminSection();
-};
+}
 
-const fillRestaurantForm = (restaurant) => {
+function fillRestaurantForm(restaurant) {
     const form = document.querySelector("#addRestaurantForm");
 
     if (!form) {
@@ -2130,10 +2370,10 @@ const fillRestaurantForm = (restaurant) => {
     form.elements.priceLevel.value = restaurant.priceLevel || "$$";
     form.elements.distanceCategory.value = restaurant.distanceCategory || "Medium";
     form.elements.badges.value = (restaurant.badges || []).join(", ");
-    form.querySelectorAll('input[name="sustainabilityBadges"]').forEach((input) => {
+    form.querySelectorAll('input[name="sustainabilityBadges"]').forEach(function(input) {
         input.checked = (restaurant.sustainabilityBadges || []).includes(input.value);
     });
-    form.querySelectorAll('input[name="allergenBadges"]').forEach((input) => {
+    form.querySelectorAll('input[name="allergenBadges"]').forEach(function(input) {
         input.checked = (restaurant.allergenBadges || []).includes(input.value);
     });
 
@@ -2144,10 +2384,12 @@ const fillRestaurantForm = (restaurant) => {
     showRestaurantImageError("");
     updateRestaurantImagePreview(restaurantImage);
     form.scrollIntoView({ behavior: "smooth", block: "start" });
-};
+}
 
-const startEditRestaurant = (restaurantId) => {
-    const restaurant = getRestaurants().find(({ id }) => String(id) === String(restaurantId));
+function startEditRestaurant(restaurantId) {
+    const restaurant = getRestaurants().find(function({ id }) {
+        return String(id) === String(restaurantId);
+    });
 
     if (!restaurant) {
         return;
@@ -2155,10 +2397,10 @@ const startEditRestaurant = (restaurantId) => {
 
     editingRestaurantId = restaurant.id;
     renderActiveAdminSection();
-};
+}
 
-const updateRestaurant = (restaurantId, updatedData) => {
-    saveRestaurants(getRestaurants().map((restaurant) => {
+function updateRestaurant(restaurantId, updatedData) {
+    saveRestaurants(getRestaurants().map(function(restaurant) {
         if (String(restaurant.id) !== String(restaurantId)) {
             return restaurant;
         }
@@ -2170,10 +2412,10 @@ const updateRestaurant = (restaurantId, updatedData) => {
             menu: restaurant.menu || []
         };
     }));
-};
+}
 
-const updateRestaurantTableLayout = (restaurantId, tableLayout) => {
-    saveRestaurants(getRestaurants().map((restaurant) => {
+function updateRestaurantTableLayout(restaurantId, tableLayout) {
+    saveRestaurants(getRestaurants().map(function(restaurant) {
         if (String(restaurant.id) !== String(restaurantId)) {
             return restaurant;
         }
@@ -2183,9 +2425,9 @@ const updateRestaurantTableLayout = (restaurantId, tableLayout) => {
             tableLayout: normalizeRestaurantTableLayout(tableLayout)
         };
     }));
-};
+}
 
-const handleAddTable = (event) => {
+function handleAddTable(event) {
     event.preventDefault();
 
     const restaurant = getRestaurantById(adminSelectedRestaurantId);
@@ -2201,7 +2443,7 @@ const handleAddTable = (event) => {
     const seats = Math.floor(Number(formData.get("seats")));
     const experience = normalizeTableExperience(getFormValue(formData, "experience"));
     const tableLayout = getRestaurantTableLayout(restaurant);
-    const hasDuplicateTableId = tableLayout.some((table) => {
+    const hasDuplicateTableId = tableLayout.some(function(table) {
         return table.tableId.toLowerCase() === tableId.toLowerCase();
     });
 
@@ -2229,9 +2471,9 @@ const handleAddTable = (event) => {
     ]);
     setAdminActionMessage(`Table ${tableId} added.`);
     renderActiveAdminSection();
-};
+}
 
-const handleDeleteTable = (event) => {
+function handleDeleteTable(event) {
     const tableId = event.currentTarget.dataset.deleteTableId;
     const restaurant = getRestaurantById(adminSelectedRestaurantId);
 
@@ -2241,29 +2483,35 @@ const handleDeleteTable = (event) => {
 
     updateRestaurantTableLayout(
         restaurant.id,
-        getRestaurantTableLayout(restaurant).filter((table) => table.tableId !== tableId)
+        getRestaurantTableLayout(restaurant).filter(function(table) {
+            return table.tableId !== tableId;
+        })
     );
     setAdminActionMessage(`Table ${tableId} deleted.`);
     renderActiveAdminSection();
-};
+}
 
-const cancelRestaurantEdit = () => {
+function cancelRestaurantEdit() {
     editingRestaurantId = null;
     pendingRestaurantImageDataUrl = "";
     setAdminActionMessage("Restaurant edit cancelled.");
     renderActiveAdminSection();
-};
+}
 
-const handleDeleteRestaurant = (event) => {
+function handleDeleteRestaurant(event) {
     const restaurantId = event.currentTarget.dataset.deleteRestaurantId;
-    const restaurant = getRestaurants().find(({ id }) => String(id) === String(restaurantId));
+    const restaurant = getRestaurants().find(function({ id }) {
+        return String(id) === String(restaurantId);
+    });
     const restaurantName = restaurant?.name || "this restaurant";
 
     if (!window.confirm(`Delete ${restaurantName}? This removes it from the shared restaurant listings.`)) {
         return;
     }
 
-    saveRestaurants(getRestaurants().filter(({ id }) => String(id) !== String(restaurantId)));
+    saveRestaurants(getRestaurants().filter(function({ id }) {
+        return String(id) !== String(restaurantId);
+    }));
 
     if (String(editingRestaurantId) === String(restaurantId)) {
         editingRestaurantId = null;
@@ -2272,9 +2520,9 @@ const handleDeleteRestaurant = (event) => {
 
     setAdminActionMessage("Restaurant deleted.");
     renderActiveAdminSection();
-};
+}
 
-const handlePriceTierUpdate = (event) => {
+function handlePriceTierUpdate(event) {
     const seats = event.target.dataset.priceTierSeats;
     const nextPriceTiers = {
         ...getPriceTiers(),
@@ -2285,13 +2533,13 @@ const handlePriceTierUpdate = (event) => {
     event.target.value = nextPriceTiers[seats];
     setAdminActionMessage(`${seats}-seat fee updated.`);
     updateAdminActionMessage();
-};
+}
 
-const handleReservationStatusChange = (event) => {
+function handleReservationStatusChange(event) {
     const reservationId = event.target.dataset.reservationStatusId;
     const nextStatus = event.target.value;
 
-    saveReservations(getReservations().map((reservation) => {
+    saveReservations(getReservations().map(function(reservation) {
         if (String(reservation.reservationId) !== String(reservationId)) {
             return reservation;
         }
@@ -2304,9 +2552,9 @@ const handleReservationStatusChange = (event) => {
 
     setAdminActionMessage("Reservation status updated.");
     renderActiveAdminSection();
-};
+}
 
-const resetRestaurantsData = () => {
+function resetRestaurantsData() {
     if (!window.confirm("Reset restaurants to the default demo listings? Current custom restaurant listings will be replaced.")) {
         return;
     }
@@ -2315,9 +2563,9 @@ const resetRestaurantsData = () => {
     saveRestaurants(defaultRestaurants);
     setAdminActionMessage("Restaurants reset to default demo listings.");
     renderActiveAdminSection();
-};
+}
 
-const resetPriceTiersData = () => {
+function resetPriceTiersData() {
     if (!window.confirm("Reset price tiers to the default table fees? Current custom fees will be replaced.")) {
         return;
     }
@@ -2325,9 +2573,9 @@ const resetPriceTiersData = () => {
     savePriceTiers(defaultPriceTiers);
     setAdminActionMessage("Price tiers reset to defaults.");
     renderActiveAdminSection();
-};
+}
 
-const showAdminLoginMessage = (message) => {
+function showAdminLoginMessage(message) {
     const messageElement = document.querySelector("#adminLoginMessage");
 
     if (!messageElement) {
@@ -2336,9 +2584,9 @@ const showAdminLoginMessage = (message) => {
 
     messageElement.textContent = message;
     messageElement.hidden = !message;
-};
+}
 
-const handlePasswordToggle = (event) => {
+function handlePasswordToggle(event) {
     const toggleButton = event.currentTarget;
     const passwordField = toggleButton.closest(".password-field");
     const passwordInput = passwordField ? passwordField.querySelector('input[name="password"]') : null;
@@ -2351,9 +2599,9 @@ const handlePasswordToggle = (event) => {
     passwordInput.type = shouldShowPassword ? "text" : "password";
     toggleButton.classList.toggle("is-visible", shouldShowPassword);
     toggleButton.setAttribute("aria-label", shouldShowPassword ? "Hide password" : "Show password");
-};
+}
 
-const handleAdminLoginSubmit = (event) => {
+function handleAdminLoginSubmit(event) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
@@ -2379,9 +2627,9 @@ const handleAdminLoginSubmit = (event) => {
 
     saveAdminSession(adminUser);
     window.location.replace("./index.html");
-};
+}
 
-const setupLoginPage = () => {
+function setupLoginPage() {
     const loginForm = document.querySelector("#adminLoginForm");
     const passwordToggle = document.querySelector("[data-admin-password-toggle]");
 
@@ -2392,15 +2640,17 @@ const setupLoginPage = () => {
 
     if (loginForm) {
         loginForm.addEventListener("submit", handleAdminLoginSubmit);
-        loginForm.addEventListener("input", () => showAdminLoginMessage(""));
+        loginForm.addEventListener("input", function() {
+            return showAdminLoginMessage("");
+        });
     }
 
     if (passwordToggle) {
         passwordToggle.addEventListener("click", handlePasswordToggle);
     }
-};
+}
 
-const setupDashboardPage = () => {
+function setupDashboardPage() {
     const logoutButton = document.querySelector("#adminLogoutButton");
     const viewCustomerSiteButton = document.querySelector("#viewCustomerSiteButton");
     const menuButton = document.querySelector("#adminMenuButton");
@@ -2415,32 +2665,34 @@ const setupDashboardPage = () => {
     savePriceTiers(getPriceTiers());
     renderActiveAdminSection();
 
-    document.querySelectorAll("[data-admin-section]").forEach((button) => {
-        button.addEventListener("click", () => setActiveAdminSection(button.dataset.adminSection));
+    document.querySelectorAll("[data-admin-section]").forEach(function(button) {
+        button.addEventListener("click", function() {
+            return setActiveAdminSection(button.dataset.adminSection);
+        });
     });
 
     if (menuButton && sidebar) {
-        menuButton.addEventListener("click", () => {
+        menuButton.addEventListener("click", function() {
             const isOpen = sidebar.classList.toggle("is-open");
             menuButton.setAttribute("aria-expanded", String(isOpen));
         });
     }
 
     if (viewCustomerSiteButton) {
-        viewCustomerSiteButton.addEventListener("click", () => {
+        viewCustomerSiteButton.addEventListener("click", function() {
             window.location.href = "../index.html";
         });
     }
 
     if (logoutButton) {
-        logoutButton.addEventListener("click", () => {
+        logoutButton.addEventListener("click", function() {
             clearAdminSession();
             window.location.replace("./login.html");
         });
     }
-};
+}
 
-const setupAdminPortal = () => {
+function setupAdminPortal() {
     const page = document.body.dataset.adminPage;
 
     if (page === "login") {
@@ -2451,6 +2703,6 @@ const setupAdminPortal = () => {
     if (page === "dashboard") {
         setupDashboardPage();
     }
-};
+}
 
 setupAdminPortal();
