@@ -1625,29 +1625,45 @@ const COLOR_SPACES = {
 		transfer: LinearTransfer,
 		primaries: Rec709Primaries,
 		luminanceCoefficients: [ 0.2126, 0.7152, 0.0722 ],
-		toReference: ( color ) => color,
-		fromReference: ( color ) => color,
+		toReference: function(color) {
+            return color;
+        },
+		fromReference: function(color) {
+            return color;
+        },
 	},
 	[ SRGBColorSpace ]: {
 		transfer: SRGBTransfer,
 		primaries: Rec709Primaries,
 		luminanceCoefficients: [ 0.2126, 0.7152, 0.0722 ],
-		toReference: ( color ) => color.convertSRGBToLinear(),
-		fromReference: ( color ) => color.convertLinearToSRGB(),
+		toReference: function(color) {
+            return color.convertSRGBToLinear();
+        },
+		fromReference: function(color) {
+            return color.convertLinearToSRGB();
+        },
 	},
 	[ LinearDisplayP3ColorSpace ]: {
 		transfer: LinearTransfer,
 		primaries: P3Primaries,
 		luminanceCoefficients: [ 0.2289, 0.6917, 0.0793 ],
-		toReference: ( color ) => color.applyMatrix3( LINEAR_DISPLAY_P3_TO_LINEAR_SRGB ),
-		fromReference: ( color ) => color.applyMatrix3( LINEAR_SRGB_TO_LINEAR_DISPLAY_P3 ),
+		toReference: function(color) {
+            return color.applyMatrix3( LINEAR_DISPLAY_P3_TO_LINEAR_SRGB );
+        },
+		fromReference: function(color) {
+            return color.applyMatrix3( LINEAR_SRGB_TO_LINEAR_DISPLAY_P3 );
+        },
 	},
 	[ DisplayP3ColorSpace ]: {
 		transfer: SRGBTransfer,
 		primaries: P3Primaries,
 		luminanceCoefficients: [ 0.2289, 0.6917, 0.0793 ],
-		toReference: ( color ) => color.convertSRGBToLinear().applyMatrix3( LINEAR_DISPLAY_P3_TO_LINEAR_SRGB ),
-		fromReference: ( color ) => color.applyMatrix3( LINEAR_SRGB_TO_LINEAR_DISPLAY_P3 ).convertLinearToSRGB(),
+		toReference: function(color) {
+            return color.convertSRGBToLinear().applyMatrix3( LINEAR_DISPLAY_P3_TO_LINEAR_SRGB );
+        },
+		fromReference: function(color) {
+            return color.applyMatrix3( LINEAR_SRGB_TO_LINEAR_DISPLAY_P3 ).convertLinearToSRGB();
+        },
 	},
 };
 
@@ -7896,15 +7912,16 @@ class Object3D extends EventDispatcher {
 
 			object.visibility = this._visibility;
 			object.active = this._active;
-			object.bounds = this._bounds.map( bound => ( {
-				boxInitialized: bound.boxInitialized,
-				boxMin: bound.box.min.toArray(),
-				boxMax: bound.box.max.toArray(),
-
-				sphereInitialized: bound.sphereInitialized,
-				sphereRadius: bound.sphere.radius,
-				sphereCenter: bound.sphere.center.toArray()
-			} ) );
+			object.bounds = this._bounds.map( function(bound) {
+                return ({
+                    boxInitialized: bound.boxInitialized,
+                    boxMin: bound.box.min.toArray(),
+                    boxMax: bound.box.max.toArray(),
+                    sphereInitialized: bound.sphereInitialized,
+                    sphereRadius: bound.sphere.radius,
+                    sphereCenter: bound.sphere.center.toArray()
+                });
+            } );
 
 			object.maxInstanceCount = this._maxInstanceCount;
 			object.maxVertexCount = this._maxVertexCount;
@@ -25604,7 +25621,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			// set up dispose listeners to track when the currently attached buffer is implicitly unbound
 			if ( depthTexture ) {
 
-				const disposeEvent = () => {
+				const disposeEvent = function() {
 
 					delete renderTargetProperties.__boundDepthTexture;
 					delete renderTargetProperties.__depthDisposeCallback;
@@ -29620,7 +29637,7 @@ class WebGLRenderer {
 			// Wait for all the materials in the new object to indicate that they're
 			// ready to be used before resolving the promise.
 
-			return new Promise( ( resolve ) => {
+			return new Promise( function(resolve) {
 
 				function checkMaterialsReady() {
 
@@ -32942,7 +32959,7 @@ class Skeleton {
 	computeBoneTexture() {
 
 		// layout (1 matrix = 4 pixels)
-		//      RGBA RGBA RGBA RGBA (=> column1, column2, column3, column4)
+		//      RGBA RGBA RGBA RGBA (maps to column1, column2, column3, column4)
 		//  with  8x8  pixel texture max   16 bones * 4 pixels =  (8 * 8)
 		//       16x16 pixel texture max   64 bones * 4 pixels = (16 * 16)
 		//       32x32 pixel texture max  256 bones * 4 pixels = (32 * 32)
@@ -33522,7 +33539,7 @@ class BatchedMesh extends Mesh {
 	_initMatricesTexture() {
 
 		// layout (1 matrix = 4 pixels)
-		//      RGBA RGBA RGBA RGBA (=> column1, column2, column3, column4)
+		//      RGBA RGBA RGBA RGBA (maps to column1, column2, column3, column4)
 		//  with  8x8  pixel texture max   16 matrices * 4 pixels =  (8 * 8)
 		//       16x16 pixel texture max   64 matrices * 4 pixels = (16 * 16)
 		//       32x32 pixel texture max  256 matrices * 4 pixels = (32 * 32)
@@ -34251,17 +34268,30 @@ class BatchedMesh extends Mesh {
 		this.boundingBox = source.boundingBox !== null ? source.boundingBox.clone() : null;
 		this.boundingSphere = source.boundingSphere !== null ? source.boundingSphere.clone() : null;
 
-		this._drawRanges = source._drawRanges.map( range => ( { ...range } ) );
-		this._reservedRanges = source._reservedRanges.map( range => ( { ...range } ) );
+		this._drawRanges = source._drawRanges.map( function(range) {
+            return ({
+                ...range
+            });
+        } );
+		this._reservedRanges = source._reservedRanges.map( function(range) {
+            return ({
+                ...range
+            });
+        } );
 
-		this._drawInfo = source._drawInfo.map( inf => ( { ...inf } ) );
-		this._bounds = source._bounds.map( bound => ( {
-			boxInitialized: bound.boxInitialized,
-			box: bound.box.clone(),
-
-			sphereInitialized: bound.sphereInitialized,
-			sphere: bound.sphere.clone()
-		} ) );
+		this._drawInfo = source._drawInfo.map( function(inf) {
+            return ({
+                ...inf
+            });
+        } );
+		this._bounds = source._bounds.map( function(bound) {
+            return ({
+                boxInitialized: bound.boxInitialized,
+                box: bound.box.clone(),
+                sphereInitialized: bound.sphereInitialized,
+                sphere: bound.sphere.clone()
+            });
+        } );
 
 		this._maxInstanceCount = source._maxInstanceCount;
 		this._maxVertexCount = source._maxVertexCount;
@@ -44142,13 +44172,13 @@ class FileLoader extends Loader {
 
 			this.manager.itemStart( url );
 
-			setTimeout( () => {
+			setTimeout( function() {
 
 				if ( onLoad ) onLoad( cached );
 
 				this.manager.itemEnd( url );
 
-			}, 0 );
+			}.bind(this), 0 );
 
 			return cached;
 
@@ -44192,7 +44222,7 @@ class FileLoader extends Loader {
 
 		// start the fetch
 		fetch( req )
-			.then( response => {
+			.then( function(response) {
 
 				if ( response.status === 200 || response.status === 0 ) {
 
@@ -44231,7 +44261,7 @@ class FileLoader extends Loader {
 
 							function readData() {
 
-								reader.read().then( ( { done, value } ) => {
+								reader.read().then( function({ done, value }) {
 
 									if ( done ) {
 
@@ -44254,7 +44284,7 @@ class FileLoader extends Loader {
 
 									}
 
-								}, ( e ) => {
+								}, function(e) {
 
 									controller.error( e );
 
@@ -44275,7 +44305,7 @@ class FileLoader extends Loader {
 				}
 
 			} )
-			.then( response => {
+			.then( function(response) {
 
 				switch ( responseType ) {
 
@@ -44290,7 +44320,7 @@ class FileLoader extends Loader {
 					case 'document':
 
 						return response.text()
-							.then( text => {
+							.then( function(text) {
 
 								const parser = new DOMParser();
 								return parser.parseFromString( text, mimeType );
@@ -44314,14 +44344,16 @@ class FileLoader extends Loader {
 							const exec = re.exec( mimeType );
 							const label = exec && exec[ 1 ] ? exec[ 1 ].toLowerCase() : undefined;
 							const decoder = new TextDecoder( label );
-							return response.arrayBuffer().then( ab => decoder.decode( ab ) );
+							return response.arrayBuffer().then( function(ab) {
+                                return decoder.decode( ab );
+                            } );
 
 						}
 
 				}
 
 			} )
-			.then( data => {
+			.then( function(data) {
 
 				// Add to cache only on HTTP success, so that we do not cache
 				// error response bodies as proper responses to requests.
@@ -44338,7 +44370,7 @@ class FileLoader extends Loader {
 				}
 
 			} )
-			.catch( err => {
+			.catch( function(err) {
 
 				// Abort errors and other errors are handled the same
 
@@ -44363,12 +44395,12 @@ class FileLoader extends Loader {
 
 				this.manager.itemError( url );
 
-			} )
-			.finally( () => {
+			}.bind(this) )
+			.finally( function() {
 
 				this.manager.itemEnd( url );
 
-			} );
+			}.bind(this) );
 
 		this.manager.itemStart( url );
 
@@ -47273,7 +47305,7 @@ class ObjectLoader extends Loader {
 
 				object._visibility = data.visibility;
 				object._active = data.active;
-				object._bounds = data.bounds.map( bound => {
+				object._bounds = data.bounds.map( function(bound) {
 
 					const box = new Box3();
 					box.min.fromArray( bound.boxMin );
@@ -47582,13 +47614,13 @@ class ImageBitmapLoader extends Loader {
 			// If cached is a promise, wait for it to resolve
 			if ( cached.then ) {
 
-				cached.then( imageBitmap => {
+				cached.then( function(imageBitmap) {
 
 					if ( onLoad ) onLoad( imageBitmap );
 
 					scope.manager.itemEnd( url );
 
-				} ).catch( e => {
+				} ).catch( function(e) {
 
 					if ( onError ) onError( e );
 
@@ -53639,7 +53671,7 @@ class ShapePath {
 
 			const polyLen = inPolygon.length;
 
-			// inPt on polygon contour => immediate success    or
+			// inPt on polygon contour maps to immediate success    or
 			// toggling of inside/outside at every single! intersection point of an edge
 			//  with the horizontal line through inPt, left of inPt
 			//  not counting lowerY endpoints of edges and whole edges on that line
@@ -53667,7 +53699,7 @@ class ShapePath {
 					if ( inPt.y === edgeLowPt.y ) {
 
 						if ( inPt.x === edgeLowPt.x )		return	true;		// inPt is on contour ?
-						// continue;				// no intersection or edgeLowPt => doesn't count !!!
+						// continue;				// no intersection or edgeLowPt maps to doesn't count !!!
 
 					} else {
 
