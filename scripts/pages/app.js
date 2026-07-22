@@ -74,7 +74,12 @@ function handleRestaurantBookingClick(event) {
         return;
     }
 
-    startBooking(Number(button.dataset.restaurantId));
+    const bookingPreferences =
+        getCustomerPageName() === "home" && typeof getDiscoveryBookingPreferences === "function"
+            ? getDiscoveryBookingPreferences()
+            : {};
+
+    startBooking(Number(button.dataset.restaurantId), bookingPreferences);
 }
 
 function handleRestaurantsNavigation(event) {

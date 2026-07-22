@@ -698,3 +698,741 @@
     opacity: 1;
 }
 
+/* Booking page presentation is scoped so shared customer pages remain untouched. */
+body[data-customer-page="booking"] .profile-page {
+    padding: 24px 0 64px;
+    background: #f3ecdf;
+}
+
+body[data-customer-page="booking"] .profile-page-inner {
+    width: min(1400px, calc(100% - 28px));
+}
+
+body[data-customer-page="booking"] .profile-page-heading {
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+body[data-customer-page="booking"] .profile-page-heading h1 {
+    max-width: none;
+    margin: 2px 0 0;
+    font-size: clamp(2rem, 3.6vw, 3.4rem);
+    line-height: 1;
+}
+
+body[data-customer-page="booking"] .booking-page-intro {
+    max-width: 680px;
+    margin: 8px 0 0;
+    color: #625f56;
+    line-height: 1.5;
+}
+
+body[data-customer-page="booking"] .booking-progress {
+    margin: 0 0 16px;
+    border: 1px solid #d9c9ad;
+    border-radius: 14px;
+    padding: 8px;
+    background: rgba(255, 253, 248, 0.82);
+    box-shadow: 0 8px 22px rgba(45, 39, 26, 0.05);
+}
+
+body[data-customer-page="booking"] .booking-progress ol {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+body[data-customer-page="booking"] .booking-progress li {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: #777267;
+    background: transparent;
+}
+
+body[data-customer-page="booking"] .booking-progress li > span {
+    width: 27px;
+    height: 27px;
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid #cbbb9f;
+    border-radius: 50%;
+    color: #514d43;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+body[data-customer-page="booking"] .booking-progress li > strong {
+    overflow: hidden;
+    font-size: 0.82rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body[data-customer-page="booking"] .booking-progress li.is-current {
+    border-color: #c99a45;
+    color: #083f2f;
+    background: #fff9eb;
+}
+
+body[data-customer-page="booking"] .booking-progress li.is-current > span,
+body[data-customer-page="booking"] .booking-progress li.is-complete > span {
+    border-color: #07543a;
+    color: #fffdf7;
+    background: #07543a;
+}
+
+body[data-customer-page="booking"] .booking-view {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-areas:
+        "table restaurant"
+        "table controls"
+        "invites invites"
+        "preorder split"
+        "pricing confirm";
+    gap: 16px;
+    align-items: start;
+}
+
+body[data-customer-page="booking"] .booking-view > .profile-panel {
+    border-color: #d9c9ad;
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(42, 38, 27, 0.07);
+    animation: none;
+}
+
+body[data-customer-page="booking"] .booking-view > .profile-panel:hover {
+    border-color: #d9c9ad;
+    box-shadow: 0 12px 30px rgba(42, 38, 27, 0.07);
+    transform: none;
+}
+
+body[data-customer-page="booking"] .booking-table-panel {
+    grid-area: table;
+    gap: 12px;
+    padding: 16px;
+}
+
+body[data-customer-page="booking"] .booking-restaurant-panel {
+    grid-area: restaurant;
+    grid-template-columns: 1fr;
+    gap: 0;
+}
+
+body[data-customer-page="booking"] .booking-summary-image {
+    min-height: 152px;
+}
+
+body[data-customer-page="booking"] .booking-summary-content {
+    gap: 11px;
+    padding: 18px;
+}
+
+body[data-customer-page="booking"] .booking-summary-content .form-heading h3 {
+    font-size: 1.7rem;
+}
+
+body[data-customer-page="booking"] .booking-summary-content .badges {
+    max-height: 66px;
+    overflow: auto;
+}
+
+body[data-customer-page="booking"] .booking-controls-panel {
+    grid-area: controls;
+    gap: 14px;
+    padding: 18px;
+}
+
+body[data-customer-page="booking"] .booking-slot-layout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+body[data-customer-page="booking"] .booking-date-field input {
+    min-height: 44px;
+}
+
+body[data-customer-page="booking"] .time-slot-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    max-height: 132px;
+    overflow: auto;
+    padding: 2px 3px 3px 2px;
+    scrollbar-width: thin;
+}
+
+body[data-customer-page="booking"] .time-slot {
+    min-height: 35px;
+    padding: 0 7px;
+    font-size: 0.76rem;
+}
+
+body[data-customer-page="booking"] .booking-party-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid #ded0b7;
+    border-radius: 12px;
+    padding: 10px 11px;
+    background: #fffcf6;
+}
+
+body[data-customer-page="booking"] .booking-party-control > div:first-child {
+    display: grid;
+    gap: 2px;
+}
+
+body[data-customer-page="booking"] .booking-party-control .booking-control-label {
+    margin: 0;
+}
+
+body[data-customer-page="booking"] .booking-party-control small {
+    color: #6e6a61;
+    font-size: 0.69rem;
+    font-weight: 700;
+}
+
+body[data-customer-page="booking"] .booking-stepper {
+    display: grid;
+    grid-template-columns: 34px 38px 34px;
+    align-items: center;
+    overflow: hidden;
+    border: 1px solid #c9b895;
+    border-radius: 10px;
+    background: #fff;
+}
+
+body[data-customer-page="booking"] .booking-stepper button {
+    min-height: 34px;
+    border: 0;
+    color: #073f2f;
+    background: transparent;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+body[data-customer-page="booking"] .booking-stepper button:hover,
+body[data-customer-page="booking"] .booking-stepper button:focus-visible {
+    color: #fff;
+    background: #07543a;
+    outline: 0;
+}
+
+body[data-customer-page="booking"] .booking-stepper button:disabled {
+    color: #aaa398;
+    cursor: not-allowed;
+}
+
+body[data-customer-page="booking"] .booking-stepper output {
+    color: #17231c;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+body[data-customer-page="booking"] .booking-selection-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: hidden;
+    border: 1px solid #d9c9ad;
+    border-radius: 12px;
+    background: #f8f1e5;
+}
+
+body[data-customer-page="booking"] .booking-selection-summary > div {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+    padding: 9px 10px;
+    border-right: 1px solid #e2d7c4;
+    border-bottom: 1px solid #e2d7c4;
+}
+
+body[data-customer-page="booking"] .booking-selection-summary > div:nth-child(even) {
+    border-right: 0;
+}
+
+body[data-customer-page="booking"] .booking-selection-summary > div:nth-last-child(-n + 2) {
+    border-bottom: 0;
+}
+
+body[data-customer-page="booking"] .booking-selection-summary span,
+body[data-customer-page="booking"] .booking-success-facts span {
+    color: #716d63;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+body[data-customer-page="booking"] .booking-selection-summary strong {
+    overflow: hidden;
+    color: #123c2f;
+    font-size: 0.77rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body[data-customer-page="booking"] .booking-reset-action {
+    width: fit-content;
+    border: 0;
+    padding: 2px 0;
+    color: #07543a;
+    background: transparent;
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+body[data-customer-page="booking"] .booking-table-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+body[data-customer-page="booking"] .booking-table-heading h2 {
+    margin: 0;
+    font-size: clamp(1.55rem, 2.2vw, 2.25rem);
+}
+
+body[data-customer-page="booking"] .booking-table-heading .summary-muted {
+    margin: 5px 0 0;
+    font-size: 0.78rem;
+}
+
+body[data-customer-page="booking"] .booking-change-table {
+    flex: 0 0 auto;
+}
+
+body[data-customer-page="booking"] .waitlist-status-panel {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px 14px;
+    padding: 10px 12px;
+    background: #f8f2e7;
+}
+
+body[data-customer-page="booking"] .waitlist-status-panel .form-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+}
+
+body[data-customer-page="booking"] .waitlist-status-panel .form-heading h3,
+body[data-customer-page="booking"] .waitlist-status-panel .form-heading p,
+body[data-customer-page="booking"] .waitlist-status-panel > p {
+    margin: 0;
+}
+
+body[data-customer-page="booking"] .waitlist-status-panel .form-heading h3 {
+    font-family: "DM Sans", sans-serif;
+    font-size: 0.84rem;
+}
+
+body[data-customer-page="booking"] .waitlist-status-panel > p {
+    grid-column: 1;
+    font-size: 0.72rem;
+}
+
+body[data-customer-page="booking"] .table-experience-heading {
+    margin: 0;
+}
+
+body[data-customer-page="booking"] .table-experience-controls {
+    gap: 8px;
+}
+
+body[data-customer-page="booking"] .table-experience-control {
+    min-height: 52px;
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 7px 9px;
+}
+
+body[data-customer-page="booking"] .table-experience-icon {
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 0.85rem;
+}
+
+body[data-customer-page="booking"] .table-experience-check {
+    width: auto;
+    height: auto;
+    border-radius: 5px;
+    padding: 3px 5px;
+    font-size: 0.55rem;
+}
+
+body[data-customer-page="booking"] .table-status-legend {
+    justify-content: flex-end;
+    gap: 8px 14px;
+    font-size: 0.72rem;
+}
+
+body[data-customer-page="booking"] .table-status-legend > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body[data-customer-page="booking"] .table-status-legend .legend-dot {
+    display: inline-block;
+    flex: 0 0 auto;
+}
+
+body[data-customer-page="booking"] .invited-guests-panel {
+    grid-area: invites;
+}
+
+body[data-customer-page="booking"] .pre-order-panel {
+    grid-area: preorder;
+}
+
+body[data-customer-page="booking"] .split-bill-panel {
+    grid-area: split;
+}
+
+/* Keep the payment preview readable inside the narrow desktop sidebar. */
+body[data-customer-page="booking"] .split-bill-breakdown {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+body[data-customer-page="booking"] .split-bill-breakdown > div {
+    min-width: 0;
+    align-content: start;
+    gap: 6px;
+    padding: 12px;
+}
+
+body[data-customer-page="booking"] .split-bill-breakdown span {
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+    line-height: 1.35;
+}
+
+body[data-customer-page="booking"] .split-bill-breakdown strong {
+    min-width: 0;
+    overflow-wrap: normal;
+    word-break: normal;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+body[data-customer-page="booking"] .split-bill-breakdown > div:nth-child(5) {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    border-color: var(--color-accent);
+    padding: 14px 16px;
+    background: var(--color-accent-soft);
+}
+
+body[data-customer-page="booking"] .split-bill-breakdown > div:nth-child(5) span {
+    color: var(--brand-dark);
+}
+
+body[data-customer-page="booking"] .split-bill-breakdown > div:nth-child(5) strong {
+    color: var(--brand-dark);
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+body[data-customer-page="booking"] .split-bill-list,
+body[data-customer-page="booking"] .split-bill-row,
+body[data-customer-page="booking"] .split-bill-row > span {
+    min-width: 0;
+}
+
+body[data-customer-page="booking"] .split-bill-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+}
+
+body[data-customer-page="booking"] .split-bill-row > span > strong {
+    overflow-wrap: break-word;
+    word-break: normal;
+}
+
+body[data-customer-page="booking"] .split-bill-row em {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+body[data-customer-page="booking"] .split-bill-row > strong:last-child {
+    align-self: center;
+    overflow-wrap: normal;
+    word-break: normal;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+body[data-customer-page="booking"] .pricing-panel {
+    grid-area: pricing;
+}
+
+body[data-customer-page="booking"] .booking-confirm-panel {
+    grid-area: confirm;
+    align-self: stretch;
+    color: #fffaf0;
+    background: #063b2e;
+}
+
+body[data-customer-page="booking"] .booking-confirm-panel h3,
+body[data-customer-page="booking"] .booking-confirm-panel .eyebrow,
+body[data-customer-page="booking"] .booking-confirm-panel .summary-muted {
+    color: #fffaf0;
+}
+
+body[data-customer-page="booking"] .booking-validation {
+    margin: 0;
+    border: 1px solid rgba(236, 205, 142, 0.45);
+    border-radius: 11px;
+    padding: 11px 12px;
+    color: #fff3d7;
+    background: rgba(255, 248, 228, 0.08);
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+body[data-customer-page="booking"] .booking-validation.is-ready {
+    border-color: rgba(125, 209, 163, 0.55);
+    color: #dff8e7;
+    background: rgba(111, 197, 151, 0.12);
+}
+
+body[data-customer-page="booking"] .booking-confirm-panel .primary-action {
+    width: 100%;
+    min-width: 0;
+    color: #11241c;
+    background: #e5bd70;
+}
+
+body[data-customer-page="booking"] .booking-empty-panel {
+    grid-column: 1 / -1;
+    justify-items: start;
+    min-height: 320px;
+    align-content: center;
+    gap: 12px;
+}
+
+body[data-customer-page="booking"] .booking-view.is-confirmed {
+    grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.7fr);
+    grid-template-areas: "success checkin";
+}
+
+body[data-customer-page="booking"] .booking-success-panel {
+    grid-area: success;
+    min-height: 460px;
+    display: grid;
+    align-content: center;
+    gap: 16px;
+    border-color: #c99a45;
+    background: #fffdf8;
+}
+
+body[data-customer-page="booking"] .booking-success-panel h2 {
+    margin: 0;
+    color: #073b2d;
+    font-size: clamp(2.4rem, 5vw, 4.8rem);
+    line-height: 0.98;
+}
+
+body[data-customer-page="booking"] .booking-success-panel > p:not(.eyebrow) {
+    max-width: 640px;
+    margin: 0;
+    color: #625f56;
+    line-height: 1.6;
+}
+
+body[data-customer-page="booking"] .booking-success-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    overflow: hidden;
+    border: 1px solid #d9c9ad;
+    border-radius: 13px;
+    background: #d9c9ad;
+}
+
+body[data-customer-page="booking"] .booking-success-facts > div {
+    display: grid;
+    gap: 4px;
+    padding: 14px;
+    background: #fffaf0;
+}
+
+body[data-customer-page="booking"] .booking-success-facts strong {
+    color: #143e31;
+}
+
+body[data-customer-page="booking"] .booking-view.is-confirmed .check-in-panel {
+    grid-area: checkin;
+}
+
+body[data-customer-page="booking"] .booking-view.is-confirmed .check-in-card {
+    grid-template-columns: 1fr;
+}
+
+body[data-customer-page="booking"] .booking-view.is-confirmed .qr-code {
+    margin: 0 auto;
+}
+
+@media (max-width: 1120px) {
+    body[data-customer-page="booking"] .booking-view,
+    body[data-customer-page="booking"] .booking-view.is-confirmed {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "table"
+            "restaurant"
+            "controls"
+            "invites"
+            "preorder"
+            "split"
+            "pricing"
+            "confirm"
+            "success"
+            "checkin";
+    }
+
+    body[data-customer-page="booking"] .booking-restaurant-panel {
+        grid-template-columns: minmax(240px, 0.42fr) minmax(0, 0.58fr);
+    }
+}
+
+@media (max-width: 620px) {
+    body[data-customer-page="booking"] .profile-page {
+        padding: 18px 0 44px;
+    }
+
+    body[data-customer-page="booking"] .profile-page-inner {
+        width: min(100% - 20px, 480px);
+    }
+
+    body[data-customer-page="booking"] .profile-page-heading {
+        gap: 14px;
+        margin-bottom: 12px;
+    }
+
+    body[data-customer-page="booking"] .profile-page-heading h1 {
+        font-size: 2.2rem;
+    }
+
+    body[data-customer-page="booking"] .profile-page-heading .secondary-action {
+        width: 100%;
+    }
+
+    body[data-customer-page="booking"] .booking-progress {
+        overflow-x: auto;
+    }
+
+    body[data-customer-page="booking"] .booking-progress ol {
+        min-width: 520px;
+    }
+
+    body[data-customer-page="booking"] .booking-progress li {
+        padding: 7px 8px;
+    }
+
+    body[data-customer-page="booking"] .booking-table-panel {
+        padding: 10px;
+    }
+
+    body[data-customer-page="booking"] .booking-table-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    body[data-customer-page="booking"] .booking-change-table {
+        width: 100%;
+    }
+
+    body[data-customer-page="booking"] .waitlist-status-panel {
+        grid-template-columns: 1fr;
+    }
+
+    body[data-customer-page="booking"] .waitlist-status-panel > p {
+        grid-column: auto;
+    }
+
+    body[data-customer-page="booking"] .table-experience-controls {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 3px;
+        scroll-snap-type: x proximity;
+    }
+
+    body[data-customer-page="booking"] .table-experience-control {
+        min-width: 148px;
+        scroll-snap-align: start;
+    }
+
+    body[data-customer-page="booking"] .table-status-legend {
+        justify-content: flex-start;
+    }
+
+    body[data-customer-page="booking"] .booking-restaurant-panel {
+        grid-template-columns: 1fr;
+    }
+
+    body[data-customer-page="booking"] .booking-summary-image {
+        min-height: 210px;
+    }
+
+    body[data-customer-page="booking"] .booking-controls-panel,
+    body[data-customer-page="booking"] .invited-guests-panel,
+    body[data-customer-page="booking"] .pre-order-panel,
+    body[data-customer-page="booking"] .split-bill-panel,
+    body[data-customer-page="booking"] .pricing-panel,
+    body[data-customer-page="booking"] .booking-confirm-panel,
+    body[data-customer-page="booking"] .booking-success-panel,
+    body[data-customer-page="booking"] .check-in-panel {
+        padding: 18px;
+    }
+
+    body[data-customer-page="booking"] .booking-success-facts {
+        grid-template-columns: 1fr;
+    }
+
+    body[data-customer-page="booking"] .booking-success-panel .booking-actions > * {
+        width: 100%;
+    }
+}
+
+@media (max-width: 420px) {
+    body[data-customer-page="booking"] .split-bill-breakdown {
+        grid-template-columns: 1fr;
+    }
+
+    body[data-customer-page="booking"] .split-bill-breakdown > div:nth-child(5) {
+        grid-column: 1;
+    }
+}

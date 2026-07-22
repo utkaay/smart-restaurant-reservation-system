@@ -1,186 +1,381 @@
-@media (max-width: 1080px) {
+@media (max-width: 1200px) {
     .admin-shell {
-        grid-template-columns: 236px minmax(0, 1fr);
+        grid-template-columns: 224px minmax(0, 1fr);
+    }
+
+    .admin-sidebar {
+        padding-inline: 16px;
+    }
+
+    .admin-main {
+        padding-inline: 28px;
     }
 
     .dashboard-overview-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .dashboard-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .reservation-controls-grid,
-    .reservation-card-main,
-    .table-controls-grid,
-    .table-layout-form-grid,
-    .settings-count-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .restaurant-management-grid {
+        grid-template-columns: minmax(340px, 0.92fr) minmax(430px, 1.08fr);
+    }
+
+    .reservation-card-main {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
-@media (max-width: 820px) {
+@media (max-width: 980px) {
     .admin-shell {
         display: block;
+        min-height: 100vh;
     }
 
     .admin-sidebar {
         position: fixed;
-        inset: 64px 16px auto 16px;
-        z-index: 20;
-        height: auto;
-        max-height: calc(100vh - 88px);
-        overflow-y: auto;
-        border: 1px solid var(--color-border);
-        border-radius: var(--admin-card-radius);
-        padding: 18px;
-        box-shadow: var(--shadow-large);
-        transform: translateY(-14px);
-        opacity: 0;
-        pointer-events: none;
-        transition:
-            opacity var(--admin-transition),
-            transform var(--admin-transition);
+        inset: 0 auto 0 0;
+        z-index: 60;
+        width: min(300px, calc(100vw - 44px));
+        height: 100dvh;
+        transform: translateX(-105%);
+        transition: transform 180ms ease;
+        box-shadow: 18px 0 48px rgba(7, 31, 24, 0.28);
     }
 
     .admin-sidebar.is-open {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateY(0);
+        transform: translateX(0);
     }
 
-    .admin-mobile-header {
-        position: sticky;
-        top: 0;
-        z-index: 15;
+    .admin-sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 55;
+        display: block;
+        border: 0;
+        background: rgba(6, 28, 21, 0.52);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease;
+    }
+
+    .admin-sidebar-backdrop:not([hidden]) {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .admin-topbar {
         min-height: 64px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        border-bottom: 1px solid var(--color-border);
-        padding: 10px 16px;
-        background: rgba(255, 252, 245, 0.94);
-        backdrop-filter: blur(16px);
+        padding-inline: 18px;
+    }
+
+    .admin-menu-button,
+    .admin-mobile-brand {
+        display: inline-flex;
     }
 
     .admin-mobile-brand {
-        color: var(--color-primary-hover);
-        font-family: var(--font-heading);
+        align-items: center;
+        gap: 7px;
+        color: var(--admin-green);
+        font-family: var(--admin-serif);
+        font-size: 1rem;
         font-weight: 700;
     }
 
-    .admin-menu-button {
-        min-width: 92px;
+    .admin-main {
+        padding: 28px 20px 48px;
     }
 
-    .admin-main {
-        width: min(100% - 28px, 760px);
-        padding: 32px 0 54px;
+    .restaurant-management-grid,
+    .support-workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .restaurant-editor-panel,
+    .restaurant-list-panel,
+    .support-list-panel,
+    .support-detail-panel {
+        max-height: none;
+        overflow: visible;
+    }
+
+    .reservation-controls-grid,
+    .table-controls-grid,
+    .settings-tools-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .reservation-details-panel {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-login-shell {
+        grid-template-columns: minmax(300px, 0.82fr) minmax(400px, 1.18fr);
+    }
+
+    .admin-login-brand-panel,
+    .admin-login-form-panel {
+        padding: 38px;
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 700px) {
+    .admin-topbar {
+        gap: 10px;
+        padding-inline: 14px;
+    }
+
+    .admin-topbar-status span:not(.material-symbols-outlined) {
+        display: none;
+    }
+
+    .admin-main {
+        padding: 22px 14px 40px;
+    }
+
     .admin-page-heading {
         align-items: flex-start;
         flex-direction: column;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .admin-page-heading h1 {
+        font-size: clamp(1.7rem, 8vw, 2.15rem);
+    }
+
+    .admin-page-date {
+        align-self: stretch;
+        justify-content: center;
     }
 
     .dashboard-overview-grid,
-    .admin-form,
+    .settings-count-grid,
+    .support-overview-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-grid,
     .admin-form-grid,
     .price-tier-grid,
-    .restaurant-list-header,
-    .admin-list-item,
-    .reservation-list-item,
     .reservation-controls-grid,
     .reservation-card-main,
     .reservation-details-panel,
     .table-controls-grid,
     .table-layout-form-grid,
     .settings-tools-grid,
-    .settings-count-grid {
+    .support-controls-grid,
+    .support-contact-grid {
         grid-template-columns: 1fr;
     }
 
-    .admin-form-section {
-        padding: 14px;
+    .admin-panel,
+    .profile-panel,
+    .settings-card,
+    .reservation-management-card {
+        border-radius: 16px;
     }
 
-    .restaurant-management-meta {
-        justify-content: flex-start;
+    .overview-card,
+    .dashboard-activity-panel,
+    .dashboard-distribution-panel,
+    .dashboard-support-panel,
+    .dashboard-quick-panel,
+    .restaurant-editor-panel,
+    .restaurant-list-panel,
+    .reservation-controls-panel,
+    .reservation-management-card,
+    .table-controls-panel,
+    .table-capacity-group,
+    .settings-card,
+    .support-controls-panel,
+    .support-list-panel,
+    .support-detail-panel {
+        padding: 16px;
     }
 
+    .overview-card {
+        min-height: 140px;
+        align-content: start;
+        padding: 62px 14px 14px;
+    }
+
+    .overview-card strong {
+        font-size: 1.75rem;
+    }
+
+    .overview-card-icon {
+        top: 14px;
+        left: 14px;
+    }
+
+    .overview-card > span:not(.overview-card-icon) {
+        min-height: 2.4em;
+        line-height: 1.2;
+    }
+
+    .reservation-card-actions,
     .admin-form-actions,
-    .admin-sidebar-actions {
-        flex-direction: column;
+    .settings-save-row,
+    .restaurant-list-toolbar,
+    .support-list-heading,
+    .support-request-detail > header {
         align-items: stretch;
+        flex-direction: column;
     }
 
-    .admin-form-actions .primary-action,
-    .admin-form-actions .secondary-action,
-    .admin-list-actions .secondary-action,
-    .admin-list-actions .danger-action {
+    .reservation-card-actions label,
+    .reservation-card-actions select,
+    .reservation-card-actions button,
+    .admin-form-actions button,
+    .settings-save-row button {
         width: 100%;
+    }
+
+    .restaurant-management-card {
+        grid-template-columns: 92px minmax(0, 1fr);
+    }
+
+    .restaurant-management-image {
+        width: 92px;
+        height: 100%;
+        min-height: 116px;
+    }
+
+    .restaurant-management-meta,
+    .admin-list-actions {
+        grid-column: 1 / -1;
     }
 
     .admin-list-actions {
         justify-content: stretch;
     }
 
-    .reservation-card-actions {
-        align-items: stretch;
-        flex-direction: column;
+    .admin-list-actions button {
+        flex: 1;
     }
 
-    .reservation-card-actions .secondary-action,
-    .reservation-card-actions label {
+    .table-layout-row {
+        align-items: flex-start;
+        grid-template-columns: 1fr auto;
+    }
+
+    .admin-table-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .support-request-row {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .support-request-meta {
+        grid-column: 2;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .admin-login-body {
+        min-height: 100dvh;
+    }
+
+    .admin-login-shell {
+        display: block;
+        min-height: 100dvh;
+    }
+
+    .admin-login-brand-panel {
+        min-height: 245px;
+        padding: 26px 22px;
+    }
+
+    .admin-login-brand-copy {
+        margin-top: 38px;
+    }
+
+    .admin-login-brand-copy h1 {
+        max-width: 12ch;
+        font-size: clamp(2rem, 11vw, 3rem);
+    }
+
+    .admin-login-brand-copy > p:last-child {
+        display: none;
+    }
+
+    .admin-login-live-summary {
+        margin-top: 22px;
+    }
+
+    .admin-login-live-summary > div {
+        padding-inline: 10px;
+    }
+
+    .admin-login-live-summary strong {
+        font-size: 1.15rem;
+    }
+
+    .admin-login-form-panel {
+        min-height: auto;
+        padding: 32px 20px 40px;
+    }
+}
+
+@media (max-width: 430px) {
+    .admin-mobile-brand span:last-child,
+    .admin-sidebar-subtitle {
+        display: none;
+    }
+
+    .admin-menu-button {
+        width: 42px;
+        min-width: 42px;
+        padding-inline: 0;
+    }
+
+    .dashboard-overview-grid,
+    .settings-count-grid,
+    .support-overview-grid {
+        gap: 10px;
+    }
+
+    .overview-card {
+        min-width: 0;
+        padding: 62px 12px 12px;
+    }
+
+    .overview-card p,
+    .overview-card small {
+        overflow-wrap: anywhere;
+    }
+
+    .restaurant-management-card {
+        grid-template-columns: 1fr;
+    }
+
+    .restaurant-management-image {
         width: 100%;
+        height: 150px;
     }
 
-    .table-group-header {
+    .table-status-legend {
         align-items: flex-start;
         flex-direction: column;
     }
 
     .admin-table-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
     }
 
-    .table-layout-row {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .table-layout-row .danger-action,
-    .table-layout-form-grid .primary-action {
-        width: 100%;
-    }
-
-    .settings-tool-card {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    .settings-tool-card .secondary-action {
-        width: 100%;
-    }
-}
-
-@keyframes adminFadeUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    .admin-login-brand-panel {
+        min-height: 228px;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .admin-sidebar,
+    .admin-sidebar-backdrop,
     .admin-body *,
     .admin-body *::before,
     .admin-body *::after {

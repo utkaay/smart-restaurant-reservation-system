@@ -1,22 +1,32 @@
 function getSectionMeta(section = activeAdminSection) {
     const sectionMeta = {
         dashboard: {
+            kicker: "Operations overview",
             title: "Dashboard",
             subtitle: "Manage restaurants, reservations, pricing, and table availability."
         },
         restaurants: {
+            kicker: "Restaurant portfolio",
             title: "Restaurant Manager",
             subtitle: "Add, edit, and maintain restaurant listings."
         },
         reservations: {
+            kicker: "Guest operations",
             title: "Reservations",
             subtitle: "Review and manage customer bookings."
         },
         tables: {
+            kicker: "Dining room operations",
             title: "Table Management",
             subtitle: "Monitor table capacity and reservation availability."
         },
+        support: {
+            kicker: "Guest service",
+            title: "Support Inbox",
+            subtitle: "Review and resolve requests submitted through the customer Contact page."
+        },
         settings: {
+            kicker: "Portal configuration",
             title: "Settings",
             subtitle: "Configure pricing, defaults, and demo data."
         }
@@ -29,31 +39,98 @@ function renderOverviewCards() {
     const restaurants = getRestaurants();
     const activeReservations = getActiveReservations();
     const waitingEntries = getWaitingEntries();
+    const statusCounts = getReservationStatusCounts();
+    const tableSummary = getDashboardTableSummary();
+    const supportSummary = getSupportSummary();
 
     return `
         <section class="dashboard-overview-grid" aria-label="Dashboard overview">
-            <article class="overview-card">
+            <article class="overview-card" data-stat="restaurants">
+                <span class="material-symbols-outlined overview-card-icon" aria-hidden="true">storefront</span>
                 <span>Total Restaurants</span>
                 <strong>${restaurants.length}</strong>
-                <p>Saved in localStorage</p>
+                <p>Saved listings</p>
             </article>
-            <article class="overview-card">
+            <article class="overview-card" data-stat="active">
+                <span class="material-symbols-outlined overview-card-icon" aria-hidden="true">event_available</span>
                 <span>Active Reservations</span>
                 <strong>${activeReservations.length}</strong>
-                <p>Reservations marked active</p>
+                <p>Active or confirmed</p>
             </article>
-            <article class="overview-card">
+            <article class="overview-card" data-stat="completed">
+                <span class="material-symbols-outlined overview-card-icon" aria-hidden="true">task_alt</span>
+                <span>Completed / Cancelled</span>
+                <strong>${statusCounts.completed + statusCounts.cancelled}</strong>
+                <p>${statusCounts.completed} completed &middot; ${statusCounts.cancelled} cancelled</p>
+            </article>
+            <article class="overview-card" data-stat="waitlist">
+                <span class="material-symbols-outlined overview-card-icon" aria-hidden="true">groups</span>
                 <span>Waitlist Entries</span>
                 <strong>${waitingEntries.length}</strong>
-                <p>Entries marked waiting</p>
+                <p>Currently waiting</p>
             </article>
-            <article class="overview-card">
+            <article class="overview-card" data-stat="tables">
+                <span class="material-symbols-outlined overview-card-icon" aria-hidden="true">table_restaurant</span>
+                <span>Available / Reserved Tables</span>
+                <strong>${tableSummary.available} / ${tableSummary.reserved}</strong>
+                <p>${tableSummary.total} saved tables</p>
+            </article>
+            <article class="overview-card" data-stat="rating">
+                <span class="material-symbols-outlined overview-card-icon" aria-hidden="true">star</span>
                 <span>Average Restaurant Rating</span>
                 <strong>${getAverageRestaurantRating()}</strong>
-                <p>Calculated from restaurant ratings</p>
+                <p>From saved ratings</p>
+            </article>
+            <article class="overview-card" data-stat="support">
+                <span class="material-symbols-outlined overview-card-icon" aria-hidden="true">inbox</span>
+                <span>Open Support Requests</span>
+                <strong>${supportSummary.new + supportSummary["in-progress"]}</strong>
+                <p>${supportSummary.new} new &middot; ${supportSummary["in-progress"]} in progress</p>
             </article>
         </section>
     `;
+}
+
+function renderReservationDistribution() {
+    const distribution = getRestaurantReservationDistribution();
+    const maximum = Math.max(1, ...distribution.map(function ({ count }) {
+        return count;
+    }));
+
+    if (distribution.length === 0) {
+        return `<div class="empty-state compact"><h3>No restaurant data</h3><p>Add a restaurant to see reservation distribution.</p></div>`;
+    }
+
+    return `
+        <div class="admin-distribution-list" aria-label="Active reservation distribution by restaurant">
+            ${distribution.slice(0, 6).map(function ({ name, count }) {
+                const width = count === 0 ? 0 : Math.max(8, Math.round((count / maximum) * 100));
+                return `
+                    <div class="admin-distribution-row">
+                        <div><span>${escapeHTML(name)}</span><strong>${count}</strong></div>
+                        <span class="admin-distribution-track"><span style="width:${width}%"></span></span>
+                    </div>
+                `;
+            }).join("")}
+        </div>
+    `;
+}
+
+function renderRecentSupportActivity(limit = 4) {
+    const requests = getSupportRequests().slice(0, limit);
+
+    if (requests.length === 0) {
+        return `<div class="empty-state compact"><h3>Inbox is clear</h3><p>Contact support requests will appear here.</p></div>`;
+    }
+
+    return requests.map(function (request) {
+        return `
+            <button class="dashboard-support-item" type="button" data-open-support-key="${escapeHTML(request.key)}">
+                <span><strong>${escapeHTML(request.user.name)}</strong><small>${escapeHTML(request.topic)} &middot; ${escapeHTML(formatSupportRequestDate(request.createdAt))}</small></span>
+                ${renderSupportStatusBadge(request.status)}
+            </button>
+        `;
+    }).join("");
 }
 
 function renderRecentReservations(limit = 5) {
@@ -79,6 +156,7 @@ function renderRecentReservations(limit = 5) {
         .map(function (reservation) {
             return `
             <article class="reservation-list-item">
+                <span class="material-symbols-outlined" aria-hidden="true">event_seat</span>
                 <div>
                     <strong>${escapeHTML(reservation.guestName || "Guest")}</strong>
                     <p>${escapeHTML(reservation.restaurantName || "Restaurant not set")} &middot; ${escapeHTML(formatReservationDateTime(reservation))}</p>
@@ -103,7 +181,7 @@ function renderReservationSummaryCards() {
             <article class="overview-card">
                 <span>Active Reservations</span>
                 <strong>${summary.active}</strong>
-                <p>Status is active</p>
+                <p>Status is active or confirmed</p>
             </article>
             <article class="overview-card">
                 <span>Upcoming Today</span>
@@ -193,6 +271,16 @@ function renderReservationDetails(reservation = {}) {
 
     return `
         <div class="reservation-details-panel">
+            <section>
+                <h3>Guest and booking</h3>
+                <div class="reservation-detail-list">
+                    <div><span>Guest</span><strong>${escapeHTML(reservation.guestName || "Guest")}</strong></div>
+                    <div><span>Email</span><strong>${escapeHTML(reservation.guestEmail || "Not provided")}</strong></div>
+                    <div><span>Phone</span><strong>${escapeHTML(reservation.guestPhone || "Not provided")}</strong></div>
+                    <div><span>Party size</span><strong>${escapeHTML(reservation.partySize || getAcceptedAttendeeCount(reservation))}</strong></div>
+                    <div><span>Experience</span><strong>${escapeHTML(normalizeTableExperience(reservation.tableExperience))}</strong></div>
+                </div>
+            </section>
             <section>
                 <h3>Table and seats</h3>
                 <div class="reservation-detail-list">
@@ -357,7 +445,7 @@ function renderDashboardView() {
         <section class="admin-section">
             ${renderOverviewCards()}
             <div class="dashboard-grid">
-                <section class="profile-panel admin-panel">
+                <section class="profile-panel admin-panel dashboard-activity-panel">
                     <div class="form-heading">
                         <p class="eyebrow">Recent Reservations</p>
                         <h2>Latest booking activity</h2>
@@ -367,15 +455,32 @@ function renderDashboardView() {
                     </div>
                 </section>
 
-                <section class="profile-panel admin-panel">
+                <section class="profile-panel admin-panel dashboard-distribution-panel">
+                    <div class="form-heading">
+                        <p class="eyebrow">Live distribution</p>
+                        <h2>Active reservations by restaurant</h2>
+                    </div>
+                    ${renderReservationDistribution()}
+                </section>
+
+                <section class="profile-panel admin-panel dashboard-support-panel">
+                    <div class="form-heading">
+                        <p class="eyebrow">Support inbox</p>
+                        <h2>Recent guest requests</h2>
+                    </div>
+                    <div class="dashboard-support-list">${renderRecentSupportActivity()}</div>
+                </section>
+
+                <section class="profile-panel admin-panel dashboard-quick-panel">
                     <div class="form-heading">
                         <p class="eyebrow">Quick Actions</p>
                         <h2>Common tasks</h2>
                     </div>
                     <div class="quick-action-list">
-                        <button class="quick-action-button" type="button" data-admin-section-target="restaurants">Add Restaurant</button>
-                        <button class="quick-action-button" type="button" data-admin-section-target="reservations">View Reservations</button>
-                        <button class="quick-action-button" type="button" data-admin-section-target="tables">Manage Tables</button>
+                        <button class="quick-action-button" type="button" data-admin-section-target="restaurants"><span class="material-symbols-outlined" aria-hidden="true">add_business</span><span>Add Restaurant<small>Create a new listing</small></span></button>
+                        <button class="quick-action-button" type="button" data-admin-section-target="reservations"><span class="material-symbols-outlined" aria-hidden="true">calendar_month</span><span>View Reservations<small>Manage guest bookings</small></span></button>
+                        <button class="quick-action-button" type="button" data-admin-section-target="tables"><span class="material-symbols-outlined" aria-hidden="true">table_restaurant</span><span>Manage Tables<small>Review dining room capacity</small></span></button>
+                        <button class="quick-action-button" type="button" data-admin-section-target="support"><span class="material-symbols-outlined" aria-hidden="true">inbox</span><span>Open Support<small>Review guest requests</small></span></button>
                     </div>
                 </section>
             </div>
@@ -477,7 +582,7 @@ function renderTableSummaryCards() {
             <article class="overview-card">
                 <span>Reserved</span>
                 <strong>${counts.reserved}</strong>
-                <p>Active reservations only</p>
+                <p>Active or confirmed reservations</p>
             </article>
             <article class="overview-card">
                 <span>Total Seat Capacity</span>
@@ -575,6 +680,7 @@ function getSectionHTML() {
         restaurants: renderRestaurantManagerView,
         reservations: renderReservationsView,
         tables: renderTablesView,
+        support: renderSupportView,
         settings: renderSettingsView
     };
 
@@ -631,6 +737,7 @@ function updateSectionNavigation() {
 function updateAdminHeader() {
     const title = document.querySelector("#adminPageTitle");
     const subtitle = document.querySelector("#adminPageSubtitle");
+    const kicker = document.querySelector("#adminPageKicker");
     const meta = getSectionMeta();
 
     if (title) {
@@ -639,6 +746,10 @@ function updateAdminHeader() {
 
     if (subtitle) {
         subtitle.textContent = meta.subtitle;
+    }
+
+    if (kicker) {
+        kicker.textContent = meta.kicker || "Management portal";
     }
 }
 
@@ -653,26 +764,28 @@ function renderActiveAdminSection() {
     updateSectionNavigation();
     adminView.innerHTML = `${renderAdminActionMessage()}${getSectionHTML()}`;
     attachManagementHandlers();
+    attachSupportManagementHandlers();
+    updateSupportNavigationCount();
 
     adminView.querySelectorAll("[data-admin-section-target]").forEach(function (button) {
         button.addEventListener("click", function () {
             return setActiveAdminSection(button.dataset.adminSectionTarget);
         });
     });
+
+    adminView.querySelectorAll("[data-open-support-key]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            adminSelectedSupportRequestId = button.dataset.openSupportKey;
+            setActiveAdminSection("support");
+        });
+    });
 }
 
 function setActiveAdminSection(section) {
+    if (section && section !== activeAdminSection) {
+        adminActionMessage = "";
+    }
     activeAdminSection = section || "dashboard";
     renderActiveAdminSection();
-
-    const sidebar = document.querySelector("#adminSidebar");
-    const menuButton = document.querySelector("#adminMenuButton");
-
-    if (sidebar) {
-        sidebar.classList.remove("is-open");
-    }
-
-    if (menuButton) {
-        menuButton.setAttribute("aria-expanded", "false");
-    }
+    closeAdminSidebar();
 }

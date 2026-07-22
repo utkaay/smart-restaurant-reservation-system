@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jack&rsquo;s Smart Reservation System</title>
     <link rel="icon" href="data:,">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300,0,0&amp;family=Playfair+Display:wght@400;500;600;700&amp;display=swap"
+    >
     <link rel="stylesheet" href="styles/base.css">
     <link rel="stylesheet" href="styles/home.css">
     <link rel="stylesheet" href="styles/account.css">
@@ -16,23 +22,34 @@
     <link rel="stylesheet" href="styles/restaurants.css">
     <link rel="stylesheet" href="styles/refinements.css">
     <link rel="stylesheet" href="styles/responsive.css">
+    <link rel="stylesheet" href="styles/home-discovery.css">
+    <link rel="stylesheet" href="styles/customer-header.css">
 </head>
 <body data-customer-page="home">
-    <header class="site-header">
-        <nav class="nav">
-            <a class="logo" href="index.html" id="homeLink">Jack&rsquo;s Smart Reservation System</a>
-            <div class="nav-groups">
-                <div class="nav-links main-nav" aria-label="Main navigation">
-                    <a href="#restaurants" id="restaurantsNavLink">Restaurants</a>
-                    <a href="pages/concierge.html" id="smartConciergeLink">Smart Concierge</a>
-                    <a href="pages/contact.html">Contact</a>
-                </div>
-                <div class="nav-links auth-nav" aria-label="Account navigation">
-                    <a href="pages/login.html" id="authNavLink" aria-label="Account"></a>
-                    <button class="nav-action is-hidden" type="button" id="logoutButton" hidden>Logout</button>
+    <header class="customer-header customer-header--landing" data-customer-header data-header-variant="landing">
+        <div class="customer-header__inner">
+            <a class="customer-header__brand" href="#home" id="homeLink" aria-label="Jack's home">
+                <span class="customer-header__brand-wordmark">JACK&rsquo;S</span>
+                <small class="customer-header__brand-subtitle">Smart Reservation System</small>
+            </a>
+            <button class="customer-header__menu" type="button" aria-expanded="false" aria-controls="customerHeaderPanel" aria-label="Open navigation menu" data-customer-menu-button>
+                <span class="customer-header__menu-lines" aria-hidden="true"></span>
+            </button>
+            <div class="customer-header__panel" id="customerHeaderPanel">
+                <nav class="customer-header__nav" aria-label="Primary navigation">
+                    <a class="customer-header__link" href="#home" data-header-route="discover" aria-current="page">Discover</a>
+                    <a class="customer-header__link" href="#restaurants" id="restaurantsNavLink" data-header-route="restaurants">Restaurants</a>
+                    <a class="customer-header__link" href="pages/concierge.html" id="smartConciergeLink" data-header-route="concierge">Smart Concierge</a>
+                    <a class="customer-header__link" href="pages/profile.html" data-header-route="bookings" data-customer-member hidden>My Bookings</a>
+                    <a class="customer-header__link" href="pages/contact.html" data-header-route="contact">Contact</a>
+                </nav>
+                <div class="customer-header__actions" aria-label="Account and reservation navigation">
+                    <a class="customer-header__auth-link" href="pages/login.html" id="authNavLink" data-header-route="account" data-profile-nav-initials aria-label="Login">Login</a>
+                    <button class="customer-header__logout is-hidden" type="button" id="logoutButton" data-customer-member hidden>Logout</button>
+                    <a class="customer-header__cta" href="#searchForm" data-header-route="find-table">Find a Table</a>
                 </div>
             </div>
-        </nav>
+        </div>
     </header>
 
     <main>
@@ -41,49 +58,311 @@
             <section class="home-hero" id="home">
                 <video
                     class="home-hero-video"
+                    id="heroBackgroundVideo"
                     autoplay
                     muted
                     loop
                     playsinline
+                    preload="auto"
                     aria-hidden="true"
+                    tabindex="-1"
                 >
                     <source src="assets/videos/restaurant-background.mp4" type="video/mp4">
                 </video>
 
                 <div class="home-hero-overlay" aria-hidden="true"></div>
 
+                <button
+                    class="home-film-toggle"
+                    id="heroVideoToggle"
+                    type="button"
+                    aria-controls="heroBackgroundVideo"
+                    aria-label="Pause background film"
+                >
+                    <span class="material-symbols-outlined" data-film-icon aria-hidden="true">volume_up</span>
+                    <span>Background film</span>
+                </button>
+
                 <div class="home-hero-content">
-                    <p class="eyebrow home-hero-eyebrow">Discover, compare, reserve</p>
-                    <h1>Book the right table for every craving.</h1>
+                    <p class="eyebrow home-hero-eyebrow">Discover &middot; Choose &middot; Reserve</p>
+                    <h1>A table chosen<br>for the moment.</h1>
                     <p class="home-hero-copy">
-                        Search restaurants by cuisine, name, location, or dining style.
+                        Discover exceptional restaurants and<br>
+                        reserve the exact table that feels right.
                     </p>
 
-                    <form class="search-bar home-hero-search" id="searchForm" role="search">
-                        <label class="sr-only" for="searchInput">Search restaurants</label>
-                        <input
-                            id="searchInput"
-                            type="search"
-                            placeholder="Cuisine, restaurant, location, or badge"
-                            autocomplete="off"
-                        >
-                        <button type="submit">Search</button>
-                    </form>
+                    <div class="home-hero-actions">
+                        <a class="home-primary-cta" href="#restaurants">Explore restaurants</a>
+                        <a class="home-secondary-cta" href="pages/concierge.html">
+                            Try Smart Concierge
+                            <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                        </a>
+                    </div>
+                </div>
 
-                    <div
-                        class="filter-pills home-hero-filters"
-                        id="filterPills"
-                        aria-label="Restaurant categories"
-                    ></div>
+                <form class="search-bar home-hero-search" id="searchForm" role="search">
+                    <label class="home-availability-field home-location-field" for="searchInput">
+                        <span class="material-symbols-outlined home-availability-icon" aria-hidden="true">location_on</span>
+                        <span class="home-availability-copy">
+                            <span class="home-availability-label">Location</span>
+                            <input
+                                id="searchInput"
+                                type="search"
+                                placeholder="Dubai"
+                                autocomplete="off"
+                            >
+                        </span>
+                    </label>
+
+                    <label class="home-availability-field" for="homeDateSelect">
+                        <span class="material-symbols-outlined home-availability-icon" aria-hidden="true">calendar_month</span>
+                        <span class="home-availability-copy">
+                            <span class="home-availability-label">Date</span>
+                            <select id="homeDateSelect" aria-label="Reservation date">
+                                <option>Tonight</option>
+                                <option>Tomorrow</option>
+                                <option>Friday</option>
+                            </select>
+                        </span>
+                    </label>
+
+                    <label class="home-availability-field" for="homeTimeSelect">
+                        <span class="material-symbols-outlined home-availability-icon" aria-hidden="true">schedule</span>
+                        <span class="home-availability-copy">
+                            <span class="home-availability-label">Time</span>
+                            <select id="homeTimeSelect" aria-label="Reservation time">
+                                <option>7:30 PM</option>
+                                <option>8:00 PM</option>
+                                <option>8:30 PM</option>
+                            </select>
+                        </span>
+                    </label>
+
+                    <label class="home-availability-field" for="homeGuestsSelect">
+                        <span class="material-symbols-outlined home-availability-icon" aria-hidden="true">person</span>
+                        <span class="home-availability-copy">
+                            <span class="home-availability-label">Guests</span>
+                            <select id="homeGuestsSelect" aria-label="Number of guests">
+                                <option>2 guests</option>
+                                <option>3 guests</option>
+                                <option>4 guests</option>
+                            </select>
+                        </span>
+                    </label>
+
+                    <button type="submit">Search availability</button>
+                </form>
+            </section>
+
+            <section class="home-curated-section" id="curatedExperiences" aria-labelledby="curatedHeading">
+                <h2 id="curatedHeading">Curated for every kind of evening</h2>
+                <div class="home-curated-grid">
+                    <article class="home-curated-card">
+                        <img
+                            src="assets/home/curated-date-night.png"
+                            alt="An intimate restaurant prepared for a date night"
+                            loading="eager"
+                        >
+                        <h3>Date night</h3>
+                    </article>
+                    <article class="home-curated-card">
+                        <img
+                            src="assets/home/curated-fine-dining.png"
+                            alt="A refined fine-dining table setting"
+                            loading="eager"
+                        >
+                        <h3>Fine dining</h3>
+                    </article>
+                    <article class="home-curated-card">
+                        <img
+                            src="assets/home/curated-casual.png"
+                            alt="A relaxed casual dining spread"
+                            loading="eager"
+                        >
+                        <h3>Casual</h3>
+                    </article>
                 </div>
             </section>
 
-            <section class="restaurants-section" id="restaurants">
-                <div class="section-heading">
-                    <h2>Explore restaurants</h2>
-                    <p>Discover restaurants by cuisine, location, and dining style.</p>
+            <section class="restaurants-section home-results-section" id="restaurants" aria-labelledby="discoveryHeading">
+                <div class="home-discovery-shell">
+                    <header class="home-discovery-heading">
+                        <h2 id="discoveryHeading">Discover your next table</h2>
+                        <p>Remarkable restaurants, matched to your moment.</p>
+                    </header>
+
+                    <div class="home-discovery-toolbar">
+                        <label class="home-discovery-search" for="discoverySearchInput">
+                            <span class="material-symbols-outlined" aria-hidden="true">search</span>
+                            <input
+                                id="discoverySearchInput"
+                                type="search"
+                                placeholder="Restaurant, cuisine or neighborhood"
+                                autocomplete="off"
+                            >
+                        </label>
+
+                        <div class="home-discovery-filter-divider" aria-hidden="true"></div>
+
+                        <div
+                            class="filter-pills home-discovery-filters"
+                            id="filterPills"
+                            aria-label="Restaurant filters"
+                        ></div>
+
+                        <div class="home-discovery-view-divider" aria-hidden="true"></div>
+
+                        <div class="home-discovery-view-toggle" aria-label="Restaurant view">
+                            <button class="active" type="button" data-discovery-view="grid" aria-label="Grid view" aria-pressed="true">
+                                <span class="material-symbols-outlined" aria-hidden="true">grid_view</span>
+                            </button>
+                            <button type="button" data-discovery-view="list" aria-label="List view" aria-pressed="false">
+                                <span class="material-symbols-outlined" aria-hidden="true">map</span>
+                            </button>
+                        </div>
+
+                        <p class="home-discovery-result-count" id="discoveryResultCount" aria-live="polite"></p>
+                    </div>
+
+                    <div class="home-discovery-layout">
+                        <aside class="home-discovery-plan" aria-labelledby="discoveryPlanHeading">
+                            <h3 id="discoveryPlanHeading">Your plan</h3>
+
+                            <div class="home-discovery-plan-items">
+                                <div class="home-discovery-plan-control" data-plan-control="date">
+                                    <button
+                                        class="home-discovery-plan-item"
+                                        type="button"
+                                        id="discoveryPlanDateTrigger"
+                                        data-plan-trigger="date"
+                                        aria-haspopup="dialog"
+                                        aria-expanded="false"
+                                        aria-controls="discoveryPlanDateMenu"
+                                    >
+                                        <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span>
+                                        <strong id="discoveryPlanDate" aria-live="polite">Tonight</strong>
+                                        <span class="material-symbols-outlined home-plan-chevron" aria-hidden="true">expand_more</span>
+                                    </button>
+                                    <div
+                                        class="home-discovery-plan-menu"
+                                        id="discoveryPlanDateMenu"
+                                        data-plan-menu="date"
+                                        role="dialog"
+                                        aria-labelledby="discoveryPlanDateTrigger"
+                                        hidden
+                                    >
+                                        <button type="button" class="home-plan-option" data-plan-option="date" data-plan-value="tonight" aria-pressed="true">Tonight</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="date" data-plan-value="tomorrow" aria-pressed="false">Tomorrow</button>
+                                        <label class="home-plan-custom-date" for="discoveryPlanCustomDate">
+                                            <span>Custom date</span>
+                                            <input type="date" id="discoveryPlanCustomDate" aria-label="Choose a custom reservation date">
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="home-discovery-plan-control" data-plan-control="time">
+                                    <button
+                                        class="home-discovery-plan-item"
+                                        type="button"
+                                        id="discoveryPlanTimeTrigger"
+                                        data-plan-trigger="time"
+                                        aria-haspopup="dialog"
+                                        aria-expanded="false"
+                                        aria-controls="discoveryPlanTimeMenu"
+                                    >
+                                        <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+                                        <strong id="discoveryPlanTime" aria-live="polite">7:30 PM</strong>
+                                        <span class="material-symbols-outlined home-plan-chevron" aria-hidden="true">expand_more</span>
+                                    </button>
+                                    <div
+                                        class="home-discovery-plan-menu home-plan-time-menu"
+                                        id="discoveryPlanTimeMenu"
+                                        data-plan-menu="time"
+                                        role="dialog"
+                                        aria-labelledby="discoveryPlanTimeTrigger"
+                                        hidden
+                                    >
+                                        <button type="button" class="home-plan-option" data-plan-option="time" data-plan-value="18:00" aria-pressed="false">6:00 PM</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="time" data-plan-value="18:30" aria-pressed="false">6:30 PM</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="time" data-plan-value="19:00" aria-pressed="false">7:00 PM</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="time" data-plan-value="19:30" aria-pressed="true">7:30 PM</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="time" data-plan-value="20:00" aria-pressed="false">8:00 PM</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="time" data-plan-value="20:30" aria-pressed="false">8:30 PM</button>
+                                    </div>
+                                </div>
+                                <div class="home-discovery-plan-control" data-plan-control="guests">
+                                    <button
+                                        class="home-discovery-plan-item"
+                                        type="button"
+                                        id="discoveryPlanGuestsTrigger"
+                                        data-plan-trigger="guests"
+                                        aria-haspopup="dialog"
+                                        aria-expanded="false"
+                                        aria-controls="discoveryPlanGuestsMenu"
+                                    >
+                                        <span class="material-symbols-outlined" aria-hidden="true">person</span>
+                                        <strong id="discoveryPlanGuests" aria-live="polite">2 guests</strong>
+                                        <span class="material-symbols-outlined home-plan-chevron" aria-hidden="true">expand_more</span>
+                                    </button>
+                                    <div
+                                        class="home-discovery-plan-menu home-plan-guests-menu"
+                                        id="discoveryPlanGuestsMenu"
+                                        data-plan-menu="guests"
+                                        role="dialog"
+                                        aria-labelledby="discoveryPlanGuestsTrigger"
+                                        hidden
+                                    >
+                                        <button type="button" class="home-plan-option" data-plan-option="guests" data-plan-value="1" aria-pressed="false">1 guest</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="guests" data-plan-value="2" aria-pressed="true">2 guests</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="guests" data-plan-value="3" aria-pressed="false">3 guests</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="guests" data-plan-value="4" aria-pressed="false">4 guests</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="guests" data-plan-value="5" aria-pressed="false">5 guests</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="guests" data-plan-value="6" aria-pressed="false">6 guests</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="guests" data-plan-value="7" aria-pressed="false">7 guests</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="guests" data-plan-value="8" aria-pressed="false">8 guests</button>
+                                    </div>
+                                </div>
+                                <div class="home-discovery-plan-control" data-plan-control="mood">
+                                    <button
+                                        class="home-discovery-plan-item"
+                                        type="button"
+                                        id="discoveryPlanMoodTrigger"
+                                        data-plan-trigger="mood"
+                                        aria-haspopup="dialog"
+                                        aria-expanded="false"
+                                        aria-controls="discoveryPlanMoodMenu"
+                                    >
+                                        <span class="material-symbols-outlined" aria-hidden="true">favorite</span>
+                                        <strong id="discoveryPlanMood" aria-live="polite">Date night</strong>
+                                        <span class="material-symbols-outlined home-plan-chevron" aria-hidden="true">expand_more</span>
+                                    </button>
+                                    <div
+                                        class="home-discovery-plan-menu home-plan-mood-menu"
+                                        id="discoveryPlanMoodMenu"
+                                        data-plan-menu="mood"
+                                        role="dialog"
+                                        aria-labelledby="discoveryPlanMoodTrigger"
+                                        hidden
+                                    >
+                                        <button type="button" class="home-plan-option" data-plan-option="mood" data-plan-value="Date night" aria-pressed="true">Date night</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="mood" data-plan-value="Family friendly" aria-pressed="false">Family friendly</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="mood" data-plan-value="Quick bite" aria-pressed="false">Quick bite</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="mood" data-plan-value="Fine dining" aria-pressed="false">Fine dining</button>
+                                        <button type="button" class="home-plan-option" data-plan-option="mood" data-plan-value="Casual" aria-pressed="false">Casual</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="home-discovery-plan-actions">
+                                <button type="button" id="discoveryClearFilters">Clear all</button>
+                                <button type="button" id="discoveryResetFilters" aria-label="Reset restaurant filters">
+                                    <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+                                </button>
+                            </div>
+                        </aside>
+
+                        <div class="restaurant-grid home-discovery-grid" id="restaurantGrid" aria-live="polite"></div>
+                    </div>
                 </div>
-                <div class="restaurant-grid" id="restaurantGrid" aria-live="polite"></div>
             </section>
         </div>
 
@@ -111,6 +390,8 @@
     <script src="scripts/pages/booking-guests.js"></script>
     <script src="scripts/pages/booking-selection.js"></script>
     <script src="scripts/pages/auth.js"></script>
+    <script src="scripts/pages/home.js"></script>
     <script src="scripts/pages/app.js"></script>
+    <script src="scripts/pages/customer-header.js"></script>
 </body>
 </html>

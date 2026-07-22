@@ -1,0 +1,835 @@
+body[data-customer-page="concierge"] {
+    --concierge-deep: #05130e;
+    --concierge-green: #0a5238;
+    --concierge-green-soft: #0e6144;
+    --concierge-gold: #d1a45d;
+    --concierge-gold-light: #e5bf72;
+    --concierge-ivory: #faf7ef;
+    --concierge-header: #faf5ec;
+    --concierge-sage: #dfe1d4;
+    --concierge-border: #e6ded2;
+    min-width: 320px;
+    background: var(--concierge-ivory);
+}
+
+body[data-customer-page="concierge"] .profile-page {
+    min-height: calc(100vh - 73px);
+    border-top: 0;
+    padding: 0;
+    background: var(--concierge-ivory);
+}
+
+body[data-customer-page="concierge"] .profile-page-inner.concierge-layout {
+    display: grid;
+    grid-template-columns: minmax(430px, 35%) minmax(0, 65%);
+    width: 100%;
+    min-height: calc(100vh - 73px);
+    margin: 0;
+}
+
+body[data-customer-page="concierge"] .concierge-planner {
+    position: sticky;
+    top: 73px;
+    display: flex;
+    min-width: 0;
+    height: calc(100vh - 73px);
+    min-height: 0;
+    flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 34px 38px 24px;
+    color: #fffdf8;
+    background-color: var(--concierge-deep);
+    background-image: url("../assets/concierge/constellation-background.png");
+    background-position: center;
+    background-size: cover;
+}
+
+body[data-customer-page="concierge"] .profile-page-heading {
+    display: block;
+    margin: 0;
+}
+
+body[data-customer-page="concierge"] .profile-page-heading .eyebrow {
+    margin: 0 0 12px;
+    color: var(--concierge-gold-light);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+}
+
+body[data-customer-page="concierge"] .profile-page-heading h1 {
+    max-width: 470px;
+    margin: 0;
+    color: #fffdf8;
+    font-family: var(--font-heading);
+    font-size: clamp(2.85rem, 3.7vw, 3.45rem);
+    font-weight: 600;
+    line-height: 0.98;
+    text-wrap: balance;
+}
+
+body[data-customer-page="concierge"] .concierge-intro {
+    max-width: 460px;
+    margin: 18px 0 0;
+    color: rgba(255, 253, 248, 0.9);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+body[data-customer-page="concierge"] .concierge-progress {
+    display: grid;
+    grid-template-columns: auto minmax(100px, 1fr);
+    align-items: center;
+    gap: 22px;
+    max-width: 410px;
+    margin-top: 17px;
+    color: var(--concierge-gold-light);
+    font-size: 0.92rem;
+}
+
+body[data-customer-page="concierge"] .concierge-progress-track {
+    display: block;
+    height: 5px;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.16);
+}
+
+body[data-customer-page="concierge"] .concierge-progress-track span {
+    display: block;
+    width: 36%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--concierge-gold-light);
+}
+
+body[data-customer-page="concierge"] .concierge-controls-slot {
+    margin-top: 21px;
+}
+
+body[data-customer-page="concierge"] .concierge-controls-panel {
+    display: grid;
+    gap: 0;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+body[data-customer-page="concierge"] .concierge-original-filter-heading {
+    display: none;
+}
+
+body[data-customer-page="concierge"] .concierge-mood-fieldset {
+    min-width: 0;
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+body[data-customer-page="concierge"] .concierge-mood-fieldset legend {
+    margin-bottom: 9px;
+    color: #fffdf8;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+body[data-customer-page="concierge"] .concierge-mood-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+}
+
+body[data-customer-page="concierge"] .concierge-mood-option {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(80, 139, 111, 0.68);
+    border-radius: var(--radius-pill);
+    padding: 0 14px;
+    color: #fffdf8;
+    background: rgba(3, 30, 22, 0.42);
+    font: inherit;
+    font-size: 0.96rem;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--transition-base), background var(--transition-base), transform var(--transition-base);
+}
+
+body[data-customer-page="concierge"] .concierge-mood-option:last-child {
+    grid-column: 1;
+}
+
+body[data-customer-page="concierge"] .concierge-mood-option:hover {
+    border-color: var(--concierge-gold-light);
+    transform: translateY(-1px);
+}
+
+body[data-customer-page="concierge"] .concierge-mood-option:focus-visible {
+    outline: 2px solid var(--concierge-gold-light);
+    outline-offset: 3px;
+}
+
+body[data-customer-page="concierge"] .concierge-mood-option.is-selected {
+    border-color: var(--concierge-green-soft);
+    background: var(--concierge-green);
+}
+
+body[data-customer-page="concierge"] .concierge-mood-option .material-symbols-outlined {
+    flex: 0 0 auto;
+    font-size: 1.35rem;
+}
+
+body[data-customer-page="concierge"] .smart-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 22px;
+}
+
+body[data-customer-page="concierge"] .smart-filter-grid label,
+body[data-customer-page="concierge"] .concierge-profile-filter {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    min-width: 0;
+    color: rgba(255, 253, 248, 0.88);
+    font-size: 0.76rem;
+    font-weight: 500;
+}
+
+body[data-customer-page="concierge"] .smart-filter-grid .concierge-native-mood {
+    display: none;
+}
+
+body[data-customer-page="concierge"] .smart-filter-grid select,
+body[data-customer-page="concierge"] .concierge-profile-value {
+    display: flex;
+    width: 100%;
+    min-height: 42px;
+    align-items: center;
+    gap: 7px;
+    overflow: hidden;
+    border: 1px solid rgba(80, 139, 111, 0.68);
+    border-radius: var(--radius-md);
+    padding: 0 12px;
+    color: #fffdf8;
+    background-color: rgba(3, 30, 22, 0.64);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body[data-customer-page="concierge"] .smart-filter-grid select:focus {
+    border-color: var(--concierge-gold-light);
+    box-shadow: 0 0 0 3px rgba(229, 191, 114, 0.2);
+}
+
+body[data-customer-page="concierge"] .smart-filter-grid select option {
+    color: var(--color-text);
+    background: var(--concierge-ivory);
+}
+
+body[data-customer-page="concierge"] .concierge-profile-value .material-symbols-outlined {
+    flex: 0 0 auto;
+    color: var(--concierge-gold-light);
+    font-size: 1rem;
+}
+
+body[data-customer-page="concierge"] .concierge-profile-value span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body[data-customer-page="concierge"] .concierge-find-matches {
+    min-height: 54px;
+    border: 0;
+    border-radius: 9px;
+    margin-top: 22px;
+    color: var(--concierge-deep);
+    background: var(--concierge-gold-light);
+    font: inherit;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+body[data-customer-page="concierge"] .concierge-find-matches:hover {
+    background: #eccb88;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+    transform: translateY(-1px);
+}
+
+body[data-customer-page="concierge"] .concierge-find-matches:focus-visible {
+    outline: 2px solid #fffdf8;
+    outline-offset: 3px;
+}
+
+body[data-customer-page="concierge"] .concierge-back.secondary-action {
+    display: inline-flex;
+    width: fit-content;
+    min-height: 40px;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    margin-top: auto;
+    padding: 12px 0 0;
+    color: rgba(255, 253, 248, 0.75);
+    background: transparent;
+    font-size: 0.82rem;
+}
+
+body[data-customer-page="concierge"] .concierge-back.secondary-action:hover {
+    color: var(--concierge-gold-light);
+    box-shadow: none;
+}
+
+body[data-customer-page="concierge"] .concierge-back .material-symbols-outlined {
+    font-size: 1.1rem;
+}
+
+body[data-customer-page="concierge"] .concierge-results-area {
+    min-width: 0;
+    padding: 32px 36px 42px;
+    background: var(--concierge-ivory);
+}
+
+body[data-customer-page="concierge"] .smart-concierge-view {
+    display: block;
+}
+
+body[data-customer-page="concierge"] .concierge-results-panel {
+    display: grid;
+    gap: 12px;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+body[data-customer-page="concierge"] .concierge-results-panel > .form-heading {
+    display: grid;
+    gap: 5px;
+    margin-bottom: 1px;
+}
+
+body[data-customer-page="concierge"] .concierge-results-panel > .form-heading .eyebrow {
+    display: none;
+}
+
+body[data-customer-page="concierge"] .concierge-results-panel > .form-heading h3 {
+    margin: 0;
+    color: var(--concierge-deep);
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 2.7vw, 2.5rem);
+    font-weight: 600;
+    line-height: 1.05;
+}
+
+body[data-customer-page="concierge"] .concierge-results-explanation {
+    max-width: 760px;
+    margin: 0;
+    color: #68675f;
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+body[data-customer-page="concierge"] .smart-recommendation-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+body[data-customer-page="concierge"] .smart-recommendation-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(300px, 40%) minmax(0, 60%);
+    min-height: 214px;
+    overflow: hidden;
+    border: 1px solid var(--concierge-border);
+    border-radius: 12px;
+    background: rgba(255, 253, 248, 0.72);
+    box-shadow: none;
+    transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+body[data-customer-page="concierge"] .smart-recommendation-card:hover {
+    border-color: #d9c8ac;
+    box-shadow: 0 14px 32px rgba(35, 29, 20, 0.08);
+    transform: translateY(-1px);
+}
+
+body[data-customer-page="concierge"] .smart-recommendation-card.is-best-match {
+    border-color: var(--concierge-gold);
+    box-shadow: 0 8px 22px rgba(157, 116, 51, 0.14);
+}
+
+body[data-customer-page="concierge"] .smart-recommendation-card.is-leading-result:not(.is-best-match) {
+    border-color: #c7bda9;
+    box-shadow: 0 8px 22px rgba(45, 39, 30, 0.08);
+}
+
+body[data-customer-page="concierge"] .smart-recommendation-card.is-alternative {
+    background: rgba(248, 245, 236, 0.88);
+}
+
+body[data-customer-page="concierge"] .smart-card-image {
+    position: static;
+    min-height: 190px;
+    margin: 12px 0 12px 12px;
+    border-radius: 9px;
+    background-position: center;
+    background-size: cover;
+}
+
+body[data-customer-page="concierge"] .smart-card-image::after {
+    content: none;
+}
+
+body[data-customer-page="concierge"] .smart-card-image::before {
+    content: none;
+}
+
+body[data-customer-page="concierge"] .smart-card-image > span {
+    position: absolute;
+    top: 24px;
+    right: 28px;
+    display: grid;
+    width: 82px;
+    height: 82px;
+    place-content: center;
+    gap: 1px;
+    border: 5px solid var(--concierge-green);
+    border-left-color: #dedfd6;
+    border-radius: 50%;
+    padding: 0;
+    color: var(--concierge-deep);
+    background: var(--concierge-ivory);
+    box-shadow: none;
+    text-align: center;
+}
+
+body[data-customer-page="concierge"] .smart-card-image > span strong {
+    font-family: var(--font-heading);
+    font-size: 1.55rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+body[data-customer-page="concierge"] .smart-card-image > span small {
+    font-size: 0.72rem;
+    font-weight: 500;
+}
+
+body[data-customer-page="concierge"] .smart-card-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 156px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 6px 16px;
+    min-width: 0;
+    padding: 13px 20px 12px 22px;
+}
+
+body[data-customer-page="concierge"] .smart-card-body.has-result-label {
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+}
+
+body[data-customer-page="concierge"] .concierge-best-match {
+    display: inline-flex;
+    grid-column: 1;
+    grid-row: 1;
+    width: fit-content;
+    min-height: 26px;
+    align-items: center;
+    gap: 6px;
+    border-radius: 5px;
+    padding: 3px 9px;
+    color: var(--concierge-deep);
+    background: var(--concierge-gold);
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+
+body[data-customer-page="concierge"] .concierge-best-match .material-symbols-outlined {
+    font-size: 1rem;
+}
+
+body[data-customer-page="concierge"] .concierge-card-heading {
+    display: grid;
+    grid-column: 1;
+    grid-row: 1;
+    align-content: start;
+    gap: 4px;
+    min-width: 0;
+}
+
+body[data-customer-page="concierge"] .smart-card-body.has-result-label .concierge-card-heading {
+    grid-row: 2;
+}
+
+body[data-customer-page="concierge"] .concierge-card-heading h3 {
+    overflow: hidden;
+    margin: 0;
+    color: var(--concierge-deep);
+    font-family: var(--font-heading);
+    font-size: clamp(1.55rem, 2vw, 2rem);
+    font-weight: 600;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body[data-customer-page="concierge"] .concierge-cuisine {
+    margin: 2px 0 0;
+    color: #68675f;
+    font-size: 0.69rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+}
+
+body[data-customer-page="concierge"] .concierge-card-heading .location,
+body[data-customer-page="concierge"] .concierge-rating {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    color: #62625d;
+    font-size: 0.76rem;
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+body[data-customer-page="concierge"] .concierge-card-heading .material-symbols-outlined {
+    flex: 0 0 auto;
+    font-size: 1rem;
+}
+
+body[data-customer-page="concierge"] .concierge-rating .material-symbols-outlined {
+    color: var(--concierge-gold);
+    font-variation-settings: "FILL" 1;
+}
+
+body[data-customer-page="concierge"] .concierge-price::before {
+    content: "\00b7";
+    margin: 0 7px 0 3px;
+    color: #9c9a90;
+}
+
+body[data-customer-page="concierge"] .smart-card-body > .badges {
+    display: flex;
+    grid-column: 1;
+    grid-row: 3;
+    align-self: end;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+}
+
+body[data-customer-page="concierge"] .smart-card-body.has-result-label > .badges {
+    grid-row: 4;
+}
+
+body[data-customer-page="concierge"] .concierge-alternative-note {
+    display: flex;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-self: start;
+    margin: 1px 0 0;
+    color: #81745f;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+body[data-customer-page="concierge"] .smart-card-body.has-result-label .concierge-alternative-note {
+    grid-row: 3;
+}
+
+body[data-customer-page="concierge"] .smart-card-body > .badges .badge {
+    min-height: 25px;
+    border-radius: 6px;
+    padding: 5px 9px;
+    color: #464b43;
+    background: var(--concierge-sage);
+    font-size: 0.66rem;
+    font-weight: 500;
+}
+
+body[data-customer-page="concierge"] .smart-card-body > .badges .badge.allergen {
+    color: #74453f;
+    background: #f2dfd7;
+}
+
+body[data-customer-page="concierge"] .smart-card-body .book-button {
+    grid-column: 2;
+    grid-row: 3;
+    width: 100%;
+    min-height: 44px;
+    align-self: end;
+    border: 1px solid var(--concierge-gold);
+    border-radius: 8px;
+    margin: 0;
+    padding: 0 12px;
+    color: #9b6d25;
+    background: transparent;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+body[data-customer-page="concierge"] .smart-card-body.has-result-label .book-button {
+    grid-row: 4;
+}
+
+body[data-customer-page="concierge"] .concierge-empty-state {
+    display: grid;
+    min-height: 300px;
+    place-items: center;
+    align-content: center;
+    gap: 8px;
+    border: 1px dashed #cabfae;
+    border-radius: 12px;
+    padding: 36px;
+    color: #68675f;
+    background: rgba(255, 253, 248, 0.68);
+    text-align: center;
+}
+
+body[data-customer-page="concierge"] .concierge-empty-state > .material-symbols-outlined {
+    color: var(--concierge-gold);
+    font-size: 2.2rem;
+}
+
+body[data-customer-page="concierge"] .concierge-empty-state h3,
+body[data-customer-page="concierge"] .concierge-empty-state p {
+    margin: 0;
+}
+
+body[data-customer-page="concierge"] .concierge-empty-state h3 {
+    color: var(--concierge-deep);
+    font-family: var(--font-heading);
+    font-size: 1.65rem;
+}
+
+body[data-customer-page="concierge"] .smart-card-body .book-button:hover {
+    color: var(--concierge-deep);
+    background: var(--concierge-gold-light);
+    box-shadow: none;
+}
+
+body[data-customer-page="concierge"] .concierge-results-panel.is-refreshed .smart-recommendation-card:first-child {
+    border-color: var(--concierge-green);
+    box-shadow: 0 0 0 3px rgba(10, 82, 56, 0.12), 0 8px 22px rgba(157, 116, 51, 0.14);
+}
+
+body[data-customer-page="concierge"] .footer {
+    display: none;
+}
+
+@media (max-width: 1240px) {
+    body[data-customer-page="concierge"] .nav {
+        padding: 0 28px;
+    }
+
+    body[data-customer-page="concierge"] .brand-subtitle {
+        display: none;
+    }
+
+    body[data-customer-page="concierge"] .profile-page-inner.concierge-layout {
+        grid-template-columns: minmax(390px, 38%) minmax(0, 62%);
+    }
+
+    body[data-customer-page="concierge"] .concierge-planner {
+        padding-inline: 32px;
+    }
+
+    body[data-customer-page="concierge"] .concierge-results-area {
+        padding-inline: 30px;
+    }
+
+    body[data-customer-page="concierge"] .smart-recommendation-card {
+        grid-template-columns: minmax(220px, 36%) minmax(0, 64%);
+    }
+
+    body[data-customer-page="concierge"] .smart-card-body {
+        grid-template-columns: minmax(0, 1fr) 128px;
+        padding-inline: 20px;
+    }
+
+    body[data-customer-page="concierge"] .smart-card-image > span {
+        right: 23px;
+        width: 90px;
+        height: 90px;
+    }
+}
+
+@media (max-width: 980px) {
+    body[data-customer-page="concierge"] .profile-page-inner.concierge-layout {
+        grid-template-columns: 1fr;
+    }
+
+    body[data-customer-page="concierge"] .concierge-planner {
+        position: static;
+        top: auto;
+        height: auto;
+        min-height: auto;
+        overflow: visible;
+        padding: 46px clamp(24px, 7vw, 64px) 42px;
+        background-position: center 38%;
+    }
+
+    body[data-customer-page="concierge"] .profile-page-heading h1,
+    body[data-customer-page="concierge"] .concierge-intro,
+    body[data-customer-page="concierge"] .concierge-progress {
+        max-width: 620px;
+    }
+
+    body[data-customer-page="concierge"] .concierge-back.secondary-action {
+        margin-top: 24px;
+    }
+
+    body[data-customer-page="concierge"] .concierge-results-area {
+        padding: 42px clamp(20px, 5vw, 48px) 56px;
+    }
+
+    body[data-customer-page="concierge"] .smart-recommendation-card {
+        grid-template-columns: minmax(260px, 40%) minmax(0, 60%);
+    }
+}
+
+@media (max-width: 700px) {
+    body[data-customer-page="concierge"] .concierge-planner {
+        padding: 24px 20px 26px;
+    }
+
+    body[data-customer-page="concierge"] .profile-page-heading h1 {
+        font-size: clamp(2.2rem, 10vw, 2.75rem);
+        line-height: 1.02;
+    }
+
+    body[data-customer-page="concierge"] .concierge-intro {
+        margin-top: 12px;
+        font-size: 0.93rem;
+    }
+
+    body[data-customer-page="concierge"] .concierge-progress {
+        margin-top: 12px;
+    }
+
+    body[data-customer-page="concierge"] .concierge-controls-slot {
+        margin-top: 16px;
+    }
+
+    body[data-customer-page="concierge"] .concierge-mood-options {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body[data-customer-page="concierge"] .concierge-mood-option:last-child {
+        grid-column: 1;
+    }
+
+    body[data-customer-page="concierge"] .concierge-mood-option {
+        min-height: 42px;
+        padding-inline: 12px;
+        font-size: 0.86rem;
+    }
+
+    body[data-customer-page="concierge"] .smart-filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    body[data-customer-page="concierge"] .concierge-profile-filter {
+        grid-column: 1 / -1;
+    }
+
+    body[data-customer-page="concierge"] .concierge-find-matches {
+        min-height: 50px;
+        margin-top: 16px;
+    }
+
+    body[data-customer-page="concierge"] .concierge-results-area {
+        padding-inline: 14px;
+    }
+
+    body[data-customer-page="concierge"] .smart-recommendation-card {
+        display: flex;
+        min-height: 0;
+        flex-direction: column;
+    }
+
+    body[data-customer-page="concierge"] .smart-card-image {
+        min-height: 210px;
+        margin: 12px 12px 0;
+    }
+
+    body[data-customer-page="concierge"] .smart-card-image > span {
+        top: 26px;
+        right: 26px;
+    }
+
+    body[data-customer-page="concierge"] .smart-card-body {
+        grid-template-columns: minmax(0, 1fr) 138px;
+        padding: 18px;
+    }
+}
+
+@media (max-width: 460px) {
+    body[data-customer-page="concierge"] .nav-groups {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    body[data-customer-page="concierge"] .main-nav {
+        max-width: 100%;
+        flex-wrap: wrap;
+        overflow: visible;
+    }
+
+    body[data-customer-page="concierge"] .concierge-progress {
+        gap: 14px;
+    }
+
+    body[data-customer-page="concierge"] .smart-card-body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    body[data-customer-page="concierge"] .concierge-best-match {
+        order: 0;
+    }
+
+    body[data-customer-page="concierge"] .concierge-card-heading {
+        order: 1;
+    }
+
+    body[data-customer-page="concierge"] .concierge-alternative-note {
+        order: 2;
+    }
+
+    body[data-customer-page="concierge"] .smart-card-body > .badges {
+        order: 3;
+    }
+
+    body[data-customer-page="concierge"] .smart-card-body .book-button {
+        order: 4;
+        width: 100%;
+        margin-top: 8px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body[data-customer-page="concierge"] .concierge-mood-option,
+    body[data-customer-page="concierge"] .concierge-find-matches,
+    body[data-customer-page="concierge"] .smart-recommendation-card {
+        transition: none;
+    }
+}

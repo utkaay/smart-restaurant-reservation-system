@@ -55,14 +55,15 @@ function createInstance(options) {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.domElement.className = "booking-table-3d-canvas";
     renderer.domElement.setAttribute("role", "img");
+    renderer.domElement.tabIndex = 0;
     renderer.domElement.setAttribute(
         "aria-label",
-        "Interactive 3D restaurant at sunset with a floor and seat selector. Select a table, then its chairs. Keyboard users can use the mirrored table and seat buttons after the canvas."
+        "Interactive 3D restaurant floor. Drag or use arrow keys to rotate, scroll or use plus and minus to zoom, select a table, then choose its chairs. Keyboard users can also use the mirrored table and seat buttons after the canvas."
     );
 
     const labelsLayer = document.createElement("div");
     labelsLayer.className = "booking-table-3d-labels";
-    labelsLayer.setAttribute("aria-hidden", "true");
+    labelsLayer.setAttribute("aria-label", "Interactive table labels");
     const tooltip = document.createElement("div");
     tooltip.className = "booking-table-3d-tooltip";
     tooltip.hidden = true;
@@ -93,6 +94,11 @@ function createInstance(options) {
         hoveredSeatId: "",
         focusedTableId: "",
         cameraTarget: HOME_TARGET.clone(),
+        orbitAzimuth: 0,
+        orbitPolar: Math.PI / 3,
+        orbitDistance: 20,
+        pointerDown: null,
+        suppressClick: false,
         cameraAnimationFrame: 0,
         sceneAnimationFrame: 0,
         lastSceneAnimationTime: 0,
@@ -115,8 +121,8 @@ function createInstance(options) {
 function getHomeCameraPose(instance) {
     const isMobile = instance.container.clientWidth < 680;
     return {
-        fov: isMobile ? 40 : 35,
-        position: new THREE.Vector3(0, isMobile ? 21 : 12.6, isMobile ? 24 : 17),
+        fov: isMobile ? 44 : 35,
+        position: new THREE.Vector3(0, isMobile ? 22 : 12.6, isMobile ? 28 : 17),
         target: HOME_TARGET.clone()
     };
 }
@@ -143,6 +149,48 @@ function applyCameraPose(instance, pose) {
     instance.cameraTarget.copy(pose.target);
     instance.camera.updateProjectionMatrix();
     instance.camera.lookAt(instance.cameraTarget);
+    syncOrbitFromCamera(instance);
+}
+
+function syncOrbitFromCamera(instance) {
+    const offset = instance.camera.position.clone().sub(instance.cameraTarget);
+    const spherical = new THREE.Spherical().setFromVector3(offset);
+    instance.orbitDistance = spherical.radius;
+    instance.orbitPolar = spherical.phi;
+    instance.orbitAzimuth = spherical.theta;
+}
+
+function applyOrbitCamera(instance) {
+    const spherical = new THREE.Spherical(
+        instance.orbitDistance,
+        instance.orbitPolar,
+        instance.orbitAzimuth
+    );
+    instance.camera.position.copy(instance.cameraTarget).add(new THREE.Vector3().setFromSpherical(spherical));
+    instance.camera.lookAt(instance.cameraTarget);
+    render(instance);
+}
+
+function beginManualCameraControl(instance) {
+    cancelAnimationFrame(instance.cameraAnimationFrame);
+    instance.cameraAnimationFrame = 0;
+    syncOrbitFromCamera(instance);
+}
+
+function rotateCamera(instance, deltaX, deltaY) {
+    beginManualCameraControl(instance);
+    instance.orbitAzimuth -= deltaX * 0.006;
+    instance.orbitPolar = THREE.MathUtils.clamp(instance.orbitPolar + deltaY * 0.0045, 0.36, 1.36);
+    applyOrbitCamera(instance);
+}
+
+function zoomCamera(instance, factor) {
+    beginManualCameraControl(instance);
+    const isFocused = Boolean(instance.focusedTableId);
+    const minimumDistance = isFocused ? 3.8 : 9;
+    const maximumDistance = isFocused ? 22 : 38;
+    instance.orbitDistance = THREE.MathUtils.clamp(instance.orbitDistance * factor, minimumDistance, maximumDistance);
+    applyOrbitCamera(instance);
 }
 
 function animateCameraTo(instance, pose, duration = ANIMATION_SETTINGS.cameraTransitionDuration) {
@@ -175,6 +223,7 @@ function animateCameraTo(instance, pose, duration = ANIMATION_SETTINGS.cameraTra
             instance.cameraAnimationFrame = requestAnimationFrame(step);
         } else {
             instance.cameraAnimationFrame = 0;
+            syncOrbitFromCamera(instance);
         }
     }
 
@@ -242,8 +291,12 @@ function updateLabels(instance) {
     instance.tableViews.forEach(function ({ labelAnchor, label }) {
         labelAnchor.getWorldPosition(worldPosition);
         worldPosition.project(instance.camera);
-        const x = (worldPosition.x * 0.5 + 0.5) * width;
-        const y = (-worldPosition.y * 0.5 + 0.5) * height;
+        const projectedX = (worldPosition.x * 0.5 + 0.5) * width;
+        const projectedY = (-worldPosition.y * 0.5 + 0.5) * height;
+        const horizontalInset = Math.max(18, label.offsetWidth / 2 + 5);
+        const verticalInset = Math.max(12, label.offsetHeight / 2 + 5);
+        const x = THREE.MathUtils.clamp(projectedX, horizontalInset, Math.max(horizontalInset, width - horizontalInset));
+        const y = THREE.MathUtils.clamp(projectedY, verticalInset, Math.max(verticalInset, height - verticalInset));
         label.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
         label.hidden =
             worldPosition.z > 1 ||
@@ -311,7 +364,7 @@ function startSceneAnimation(instance) {
 }
 
 function getMaterialForMesh(mesh, materials, state) {
-    if (state.status === "Disabled") {
+    if (state.status === "Unavailable") {
         return materials.disabled;
     }
 
@@ -373,7 +426,7 @@ function applyVisualState(instance) {
                 }
             });
             chairView.surfaceMeshes.forEach(function (mesh) {
-                if (status === "Disabled") {
+                if (status === "Unavailable") {
                     mesh.material = instance.materials.disabled;
                 } else if (status === "Reserved") {
                     mesh.material = instance.materials.reserved;
@@ -393,8 +446,13 @@ function applyVisualState(instance) {
         view.label.classList.toggle("is-muted", !matches);
         view.label.classList.toggle("is-selected", selected);
         view.label.classList.toggle("is-reserved", status === "Reserved");
-        view.label.classList.toggle("is-disabled", status === "Disabled");
+        view.label.classList.toggle("is-unavailable", status === "Unavailable");
         view.label.querySelector(".booking-table-status-dot").dataset.status = status.toLowerCase();
+        view.label.disabled = !matches || (status !== "Available" && status !== "Selected");
+        view.label.setAttribute(
+            "aria-label",
+            `Table ${tableId}, ${view.table.experience}, ${view.table.seats} seats, ${status}`
+        );
     });
     if (instance.reducedMotion) {
         applyStaticChairState(instance);
@@ -506,7 +564,45 @@ function positionTooltip(instance, event) {
 function attachInteractions(instance) {
     const canvas = instance.renderer.domElement;
 
+    function onPointerDown(event) {
+        if (event.button !== 0) {
+            return;
+        }
+
+        instance.pointerDown = {
+            startX: event.clientX,
+            startY: event.clientY,
+            lastX: event.clientX,
+            lastY: event.clientY,
+            moved: false
+        };
+        try {
+            canvas.setPointerCapture?.(event.pointerId);
+        } catch {
+            // Synthetic pointer events used by automated checks do not create an active pointer capture.
+        }
+    }
+
     function onPointerMove(event) {
+        if (instance.pointerDown) {
+            const deltaX = event.clientX - instance.pointerDown.lastX;
+            const deltaY = event.clientY - instance.pointerDown.lastY;
+            const totalDistance = Math.hypot(
+                event.clientX - instance.pointerDown.startX,
+                event.clientY - instance.pointerDown.startY
+            );
+            instance.pointerDown.lastX = event.clientX;
+            instance.pointerDown.lastY = event.clientY;
+            instance.pointerDown.moved = instance.pointerDown.moved || totalDistance > 4;
+            if (instance.pointerDown.moved) {
+                instance.suppressClick = true;
+                instance.tooltip.hidden = true;
+                canvas.style.cursor = "grabbing";
+                rotateCamera(instance, deltaX, deltaY);
+            }
+            return;
+        }
+
         const seatView = findInteractiveSeat(instance, event);
         if (seatView) {
             instance.hoveredTableId = "";
@@ -537,11 +633,64 @@ function attachInteractions(instance) {
         render(instance);
     }
 
+    function onPointerUp(event) {
+        const didMove = Boolean(instance.pointerDown?.moved);
+        instance.pointerDown = null;
+        instance.suppressClick = didMove;
+        try {
+            if (!canvas.hasPointerCapture || canvas.hasPointerCapture(event.pointerId)) {
+                canvas.releasePointerCapture?.(event.pointerId);
+            }
+        } catch {
+            // The pointer may already have been released by the browser.
+        }
+        canvas.style.cursor = "default";
+    }
+
     function onPointerLeave() {
+        if (instance.pointerDown) {
+            return;
+        }
         return clearHover(instance);
     }
 
+    function onWheel(event) {
+        event.preventDefault();
+        zoomCamera(instance, Math.exp(event.deltaY * 0.0012));
+    }
+
+    function onKeyDown(event) {
+        const rotationStep = 18;
+        if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            rotateCamera(instance, -rotationStep, 0);
+        } else if (event.key === "ArrowRight") {
+            event.preventDefault();
+            rotateCamera(instance, rotationStep, 0);
+        } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            rotateCamera(instance, 0, -rotationStep);
+        } else if (event.key === "ArrowDown") {
+            event.preventDefault();
+            rotateCamera(instance, 0, rotationStep);
+        } else if (event.key === "+" || event.key === "=") {
+            event.preventDefault();
+            zoomCamera(instance, 0.86);
+        } else if (event.key === "-" || event.key === "_") {
+            event.preventDefault();
+            zoomCamera(instance, 1.16);
+        } else if (event.key === "Home") {
+            event.preventDefault();
+            setHomeCamera(instance);
+        }
+    }
+
     function onClick(event) {
+        if (instance.suppressClick) {
+            instance.suppressClick = false;
+            return;
+        }
+
         const seatView = findInteractiveSeat(instance, event);
         if (seatView) {
             instance.onSeatToggle?.(seatView.chair.userData.seatId);
@@ -559,25 +708,71 @@ function attachInteractions(instance) {
         return setHomeCamera(instance);
     }
 
+    function onZoomIn() {
+        return zoomCamera(instance, 0.86);
+    }
+
+    function onZoomOut() {
+        return zoomCamera(instance, 1.16);
+    }
+
     function onContextLost(event) {
         event.preventDefault();
         instance.onFailure?.();
         destroyBookingTableSelector3D();
     }
 
+    canvas.addEventListener("pointerdown", onPointerDown);
     canvas.addEventListener("pointermove", onPointerMove);
+    canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerUp);
     canvas.addEventListener("pointerleave", onPointerLeave);
     canvas.addEventListener("click", onClick);
+    canvas.addEventListener("wheel", onWheel, { passive: false });
+    canvas.addEventListener("keydown", onKeyDown);
     canvas.addEventListener("webglcontextlost", onContextLost);
     instance.returnButton?.addEventListener("click", onReturn);
+    instance.resetButton?.addEventListener("click", onReturn);
+    instance.zoomInButton?.addEventListener("click", onZoomIn);
+    instance.zoomOutButton?.addEventListener("click", onZoomOut);
+    instance.tableViews.forEach(function (view) {
+        function onLabelClick() {
+            const status = instance.getTableStatus(view.table);
+            if (view.table.experience !== instance.experienceFilter || (status !== "Available" && status !== "Selected")) {
+                return;
+            }
+            if (status === "Selected") {
+                focusTable(instance, view.table.tableId);
+            } else {
+                instance.onTableSelect?.(view.table.tableId);
+            }
+        }
+
+        view.label.addEventListener("click", onLabelClick);
+        instance.listeners.push([view.label, "click", onLabelClick]);
+    });
     instance.listeners.push(
+        [canvas, "pointerdown", onPointerDown],
         [canvas, "pointermove", onPointerMove],
+        [canvas, "pointerup", onPointerUp],
+        [canvas, "pointercancel", onPointerUp],
         [canvas, "pointerleave", onPointerLeave],
         [canvas, "click", onClick],
+        [canvas, "wheel", onWheel],
+        [canvas, "keydown", onKeyDown],
         [canvas, "webglcontextlost", onContextLost]
     );
     if (instance.returnButton) {
         instance.listeners.push([instance.returnButton, "click", onReturn]);
+    }
+    if (instance.resetButton) {
+        instance.listeners.push([instance.resetButton, "click", onReturn]);
+    }
+    if (instance.zoomInButton) {
+        instance.listeners.push([instance.zoomInButton, "click", onZoomIn]);
+    }
+    if (instance.zoomOutButton) {
+        instance.listeners.push([instance.zoomOutButton, "click", onZoomOut]);
     }
 }
 
@@ -656,6 +851,22 @@ export function updateBookingTableSelector3D(options = {}) {
     applyVisualState(activeInstance);
     render(activeInstance);
     return true;
+}
+
+export function getBookingTableSelector3DState() {
+    if (!activeInstance || activeInstance.disposed) {
+        return null;
+    }
+
+    return {
+        cameraPosition: activeInstance.camera.position.toArray(),
+        cameraTarget: activeInstance.cameraTarget.toArray(),
+        focusedTableId: activeInstance.focusedTableId,
+        selectedTableId: activeInstance.selectedTableId,
+        selectedSeatIds: [...activeInstance.selectedSeatIds],
+        orbitDistance: activeInstance.orbitDistance,
+        tableCount: activeInstance.tableViews.size
+    };
 }
 
 export function destroyBookingTableSelector3D() {

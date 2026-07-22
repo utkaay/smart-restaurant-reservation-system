@@ -1,0 +1,1234 @@
+body[data-customer-page="profile"] {
+    --profile-cream: #f7f3e9;
+    --profile-surface: #fffdf7;
+    --profile-green: #003c2e;
+    --profile-deep-green: #002e23;
+    --profile-ink: #082f26;
+    --profile-gold: #d6a43d;
+    --profile-gold-deep: #a97012;
+    --profile-line: #dfc68f;
+    --profile-muted: #656961;
+    color: var(--profile-ink);
+    background: var(--profile-cream);
+}
+
+body[data-customer-page="profile"] .profile-site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: block;
+    width: 100%;
+    height: 101px;
+    min-height: 101px;
+    overflow: visible;
+    border-bottom: 1px solid rgba(214, 164, 61, 0.54);
+    background: var(--profile-deep-green);
+    box-shadow: none;
+}
+
+body[data-customer-page="profile"] .profile-nav {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.8fr) minmax(420px, 1.5fr) auto;
+    align-items: stretch;
+    gap: 30px;
+    width: min(1460px, calc(100% - 72px));
+    height: 100px;
+    min-height: 100px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+body[data-customer-page="profile"] .profile-brand {
+    display: flex;
+    align-self: center;
+    flex-direction: column;
+    width: fit-content;
+    color: var(--profile-gold);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 2.35rem;
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+body[data-customer-page="profile"] .profile-brand small {
+    margin-top: 8px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+}
+
+body[data-customer-page="profile"] .profile-nav-links {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: clamp(28px, 5vw, 70px);
+}
+
+body[data-customer-page="profile"] .profile-nav-links a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    color: #fffaf0;
+    padding-inline: 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+body[data-customer-page="profile"] .profile-nav-links a::after {
+    position: absolute;
+    right: 0;
+    bottom: 12px;
+    left: 0;
+    height: 2px;
+    border-radius: 999px;
+    background: transparent;
+    content: "";
+}
+
+body[data-customer-page="profile"] .profile-nav-links a:hover,
+body[data-customer-page="profile"] .profile-nav-links a:focus-visible,
+body[data-customer-page="profile"] .profile-nav-links a.is-active {
+    color: #fffdf7;
+}
+
+body[data-customer-page="profile"] .profile-nav-links a.is-active::after {
+    background: var(--profile-gold);
+}
+
+body[data-customer-page="profile"] .profile-nav-account {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+body[data-customer-page="profile"] .profile-nav-avatar {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border: 1px solid var(--profile-gold);
+    border-radius: 50%;
+    color: var(--profile-gold);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.2rem;
+    text-decoration: none;
+}
+
+body[data-customer-page="profile"] .profile-auth-proxy {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+
+body[data-customer-page="profile"] .profile-logout-button {
+    min-height: 36px;
+    border: 0;
+    padding: 0 4px;
+    color: rgba(255, 250, 240, 0.82);
+    background: transparent;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+body[data-customer-page="profile"] .profile-nav-avatar:hover,
+body[data-customer-page="profile"] .profile-nav-avatar:focus-visible,
+body[data-customer-page="profile"] .profile-logout-button:hover,
+body[data-customer-page="profile"] .profile-logout-button:focus-visible {
+    color: #fffdf7;
+}
+
+body[data-customer-page="profile"] .profile-page {
+    padding: 28px 0 64px;
+    background: var(--profile-cream);
+}
+
+body[data-customer-page="profile"] .profile-page-inner {
+    width: min(1460px, calc(100% - 72px));
+    margin: 0 auto;
+}
+
+body[data-customer-page="profile"] .profile-page-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 22px;
+}
+
+body[data-customer-page="profile"] .profile-page-heading .eyebrow {
+    display: none;
+}
+
+body[data-customer-page="profile"] .profile-page-heading h1,
+body[data-customer-page="profile"] .my-bookings-heading h2,
+body[data-customer-page="profile"] .my-booking-title-row h3,
+body[data-customer-page="profile"] .taste-profile h2,
+body[data-customer-page="profile"] .profile-editor h2,
+body[data-customer-page="profile"] .my-bookings-empty h3,
+body[data-customer-page="profile"] .profile-data-empty h2 {
+    color: var(--profile-ink);
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 500;
+    letter-spacing: -0.035em;
+}
+
+body[data-customer-page="profile"] .profile-page-heading h1 {
+    max-width: none;
+    margin: 0;
+    font-size: clamp(2.7rem, 4vw, 4rem);
+    line-height: 0.98;
+}
+
+body[data-customer-page="profile"] .profile-page-subtitle {
+    margin: 10px 0 0;
+    color: var(--profile-muted);
+    font-size: 1rem;
+}
+
+body[data-customer-page="profile"] .profile-page-heading .secondary-action {
+    min-height: 42px;
+    border-color: rgba(169, 112, 18, 0.36);
+    color: var(--profile-ink);
+    background: rgba(255, 253, 247, 0.7);
+}
+
+body[data-customer-page="profile"] .profile-dashboard {
+    display: grid;
+    grid-template-columns: minmax(288px, 0.29fr) minmax(0, 0.71fr);
+    align-items: start;
+    gap: 28px;
+}
+
+body[data-customer-page="profile"] .profile-identity-card {
+    position: sticky;
+    top: 20px;
+    display: grid;
+    justify-items: center;
+    gap: 18px;
+    min-height: 610px;
+    overflow: hidden;
+    border: 1px solid var(--profile-gold-deep);
+    border-radius: 16px;
+    padding: 34px 30px 28px;
+    color: #fffaf0;
+    background: var(--profile-green);
+    box-shadow: 0 18px 36px rgba(0, 46, 35, 0.12);
+}
+
+body[data-customer-page="profile"] .profile-identity-card .account-avatar {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 116px;
+    height: 116px;
+    border: 1px solid var(--profile-gold);
+    border-radius: 50%;
+    color: var(--profile-gold);
+    background: transparent;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 2.4rem;
+    font-weight: 500;
+}
+
+body[data-customer-page="profile"] .profile-identity-card h2 {
+    position: relative;
+    z-index: 1;
+    margin: 4px 0 0;
+    color: #fffdf7;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 2rem;
+    font-weight: 500;
+    line-height: 1.1;
+    text-align: center;
+}
+
+body[data-customer-page="profile"] .profile-contact-list {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    width: 100%;
+}
+
+body[data-customer-page="profile"] .profile-identity-card .account-detail {
+    display: grid;
+    gap: 6px;
+    border-top: 1px solid rgba(214, 164, 61, 0.42);
+    padding: 14px 0;
+}
+
+body[data-customer-page="profile"] .profile-identity-card .account-detail span {
+    color: #d9bd7d;
+    font-size: 0.74rem;
+    text-transform: none;
+}
+
+body[data-customer-page="profile"] .profile-identity-card .account-detail strong {
+    color: #fffdf7;
+    font-size: 0.9rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+body[data-customer-page="profile"] .profile-edit-button {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 210px);
+    min-height: 46px;
+    margin-top: auto;
+    border: 1px solid var(--profile-gold);
+    border-radius: 9px;
+    color: var(--profile-gold);
+    background: transparent;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+body[data-customer-page="profile"] .profile-main-column {
+    display: grid;
+    min-width: 0;
+    gap: 20px;
+}
+
+body[data-customer-page="profile"] .dashboard-card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+body[data-customer-page="profile"] .dashboard-card {
+    display: grid;
+    align-content: center;
+    min-height: 104px;
+    overflow: hidden;
+    border: 1px solid var(--profile-line);
+    border-radius: 14px;
+    padding: 18px 20px 16px;
+    background: rgba(255, 253, 247, 0.82);
+    box-shadow: none;
+}
+
+body[data-customer-page="profile"] .dashboard-card > span {
+    grid-column: 1;
+    color: #5f625c;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+body[data-customer-page="profile"] .dashboard-card strong {
+    grid-column: 1;
+    margin: 3px 0 0;
+    color: var(--profile-ink);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 2rem;
+    font-weight: 500;
+    line-height: 1;
+}
+
+body[data-customer-page="profile"] .dashboard-card p {
+    grid-column: 1;
+    margin: 5px 0 0;
+    color: #777970;
+    font-size: 0.7rem;
+    line-height: 1.3;
+}
+
+body[data-customer-page="profile"] .my-bookings-section {
+    min-width: 0;
+}
+
+body[data-customer-page="profile"] .my-bookings-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 9px;
+}
+
+body[data-customer-page="profile"] .my-bookings-heading > div {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+}
+
+body[data-customer-page="profile"] .my-bookings-heading h2 {
+    margin: 0;
+    font-size: clamp(1.8rem, 2.5vw, 2.45rem);
+}
+
+body[data-customer-page="profile"] .my-bookings-heading p {
+    margin: 0;
+    color: var(--profile-muted);
+    font-size: 0.82rem;
+    white-space: nowrap;
+}
+
+body[data-customer-page="profile"] .clear-reservations-button {
+    border: 0;
+    padding: 5px 0;
+    color: #8f513e;
+    background: transparent;
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+body[data-customer-page="profile"] .clear-reservations-button:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+}
+
+body[data-customer-page="profile"] .my-bookings-tabs {
+    display: flex;
+    gap: 3px;
+    width: fit-content;
+    margin-bottom: 10px;
+    border: 1px solid var(--profile-line);
+    border-radius: 999px;
+    padding: 3px;
+    background: var(--profile-surface);
+}
+
+body[data-customer-page="profile"] .my-bookings-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 32px;
+    border: 0;
+    border-radius: 999px;
+    padding: 0 12px;
+    color: #5d625c;
+    background: transparent;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+body[data-customer-page="profile"] .my-bookings-tab span {
+    display: grid;
+    place-items: center;
+    min-width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    color: var(--profile-ink);
+    background: #eceadd;
+    font-size: 0.66rem;
+}
+
+body[data-customer-page="profile"] .my-bookings-tab.is-active {
+    color: var(--profile-surface);
+    background: var(--profile-green);
+}
+
+body[data-customer-page="profile"] .my-bookings-tab.is-active span {
+    background: #e8bd61;
+}
+
+body[data-customer-page="profile"] .my-bookings-list {
+    display: grid;
+    gap: 12px;
+}
+
+body[data-customer-page="profile"] .my-booking-card {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid var(--profile-line);
+    border-radius: 14px;
+    background: rgba(255, 253, 247, 0.86);
+    box-shadow: 0 8px 20px rgba(0, 46, 35, 0.045);
+}
+
+body[data-customer-page="profile"] .my-booking-card.is-cancelled {
+    border-color: #d8c9bc;
+    background: #fbf8f2;
+}
+
+body[data-customer-page="profile"] .my-booking-card.is-completed {
+    border-color: #cfd7cc;
+}
+
+body[data-customer-page="profile"] .my-booking-media {
+    min-height: 146px;
+    overflow: hidden;
+    background: #dfe5d9;
+}
+
+body[data-customer-page="profile"] .my-booking-image,
+body[data-customer-page="profile"] .my-booking-image-fallback {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 146px;
+    object-fit: cover;
+    background: #dfe5d9;
+}
+
+body[data-customer-page="profile"] .my-booking-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-content: center;
+    gap: 11px 18px;
+    min-width: 0;
+    padding: 16px 20px;
+}
+
+body[data-customer-page="profile"] .my-booking-title-row {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+body[data-customer-page="profile"] .my-booking-location {
+    margin: 0 0 2px;
+    color: var(--profile-gold-deep);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+body[data-customer-page="profile"] .my-booking-title-row h3 {
+    margin: 0;
+    font-size: clamp(1.55rem, 2.4vw, 2.05rem);
+    line-height: 1.03;
+}
+
+body[data-customer-page="profile"] .my-booking-status {
+    flex: 0 0 auto;
+    border: 1px solid #8dac86;
+    border-radius: 999px;
+    padding: 5px 12px;
+    color: #285f3c;
+    background: #edf4e9;
+    font-size: 0.68rem;
+    font-weight: 800;
+}
+
+body[data-customer-page="profile"] .is-completed .my-booking-status {
+    border-color: #a8b6a5;
+    color: #405844;
+    background: #eef1eb;
+}
+
+body[data-customer-page="profile"] .is-cancelled .my-booking-status {
+    border-color: #d5b6ab;
+    color: #915342;
+    background: #f8ebe6;
+}
+
+body[data-customer-page="profile"] .my-booking-facts {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(72px, 1fr));
+    align-items: end;
+    gap: 8px;
+    min-width: 0;
+}
+
+body[data-customer-page="profile"] .my-booking-facts div {
+    min-width: 0;
+    border-left: 1px solid #e4d8c0;
+    padding-left: 9px;
+}
+
+body[data-customer-page="profile"] .my-booking-facts div:first-child {
+    border-left: 0;
+    padding-left: 0;
+}
+
+body[data-customer-page="profile"] .my-booking-facts span,
+body[data-customer-page="profile"] .my-booking-qr span {
+    display: block;
+    margin-bottom: 4px;
+    color: #777970;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+body[data-customer-page="profile"] .my-booking-facts strong {
+    display: block;
+    color: #24352e;
+    font-size: 0.76rem;
+    overflow-wrap: anywhere;
+}
+
+body[data-customer-page="profile"] .my-booking-actions {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+body[data-customer-page="profile"] .my-booking-actions .secondary-action {
+    min-height: 38px;
+    border-color: #997023;
+    border-radius: 8px;
+    padding: 0 13px;
+    color: #6f5017;
+    background: transparent;
+    font-size: 0.75rem;
+}
+
+body[data-customer-page="profile"] .my-booking-actions .secondary-action:first-child {
+    border-color: #174b3d;
+    color: #174b3d;
+}
+
+body[data-customer-page="profile"] .my-booking-details {
+    grid-column: 1 / -1;
+    border-top: 1px solid #e4d5b8;
+    padding: 20px;
+    background: #f5efe3;
+}
+
+body[data-customer-page="profile"] .my-booking-details-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr 1fr 1fr;
+    gap: 16px;
+}
+
+body[data-customer-page="profile"] .my-booking-details-grid > section {
+    min-width: 0;
+    border-right: 1px solid #dfd3be;
+    padding-right: 16px;
+}
+
+body[data-customer-page="profile"] .my-booking-details-grid > section:last-child {
+    border-right: 0;
+    padding-right: 0;
+}
+
+body[data-customer-page="profile"] .my-booking-details .eyebrow,
+body[data-customer-page="profile"] .taste-profile .eyebrow,
+body[data-customer-page="profile"] .profile-editor .eyebrow {
+    margin: 0 0 10px;
+    color: var(--profile-gold-deep);
+    font-size: 0.66rem;
+}
+
+body[data-customer-page="profile"] .my-booking-details dl,
+body[data-customer-page="profile"] .my-booking-details dd {
+    margin: 0;
+}
+
+body[data-customer-page="profile"] .my-booking-details dl,
+body[data-customer-page="profile"] .my-bookings-guest-list,
+body[data-customer-page="profile"] .my-bookings-price-list {
+    display: grid;
+    gap: 8px;
+}
+
+body[data-customer-page="profile"] .my-booking-details dl div,
+body[data-customer-page="profile"] .my-bookings-guest-list div,
+body[data-customer-page="profile"] .my-bookings-price-list div {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+body[data-customer-page="profile"] .my-booking-details dt,
+body[data-customer-page="profile"] .my-bookings-guest-list span,
+body[data-customer-page="profile"] .my-bookings-price-list span {
+    color: #6e716a;
+    font-size: 0.72rem;
+}
+
+body[data-customer-page="profile"] .my-booking-details dd,
+body[data-customer-page="profile"] .my-bookings-guest-list strong,
+body[data-customer-page="profile"] .my-bookings-price-list strong {
+    color: #193d32;
+    font-size: 0.74rem;
+    font-weight: 800;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+body[data-customer-page="profile"] .my-bookings-price-list .is-discount strong {
+    color: #2e7348;
+}
+
+body[data-customer-page="profile"] .my-bookings-price-list strong {
+    white-space: nowrap;
+    overflow-wrap: normal;
+}
+
+body[data-customer-page="profile"] .my-bookings-price-list .is-total {
+    border-top: 1px solid #d7c8aa;
+    margin-top: 2px;
+    padding-top: 8px;
+}
+
+body[data-customer-page="profile"] .my-booking-checkin.is-highlighted {
+    border-radius: 10px;
+    padding: 10px;
+    background: var(--profile-surface);
+}
+
+body[data-customer-page="profile"] .my-booking-qr {
+    display: grid;
+    gap: 9px;
+}
+
+body[data-customer-page="profile"] .my-booking-qr canvas {
+    width: 112px;
+    height: 112px;
+    border: 1px solid #d7c8aa;
+    border-radius: 8px;
+    padding: 5px;
+    background: var(--profile-surface);
+}
+
+body[data-customer-page="profile"] .my-booking-qr strong {
+    display: block;
+    color: var(--profile-ink);
+    font-size: 0.73rem;
+    overflow-wrap: anywhere;
+}
+
+body[data-customer-page="profile"] .my-booking-qr p,
+body[data-customer-page="profile"] .my-bookings-muted {
+    margin: 7px 0 0;
+    color: #6e716a;
+    font-size: 0.72rem;
+    line-height: 1.45;
+}
+
+body[data-customer-page="profile"] .my-booking-cancel-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    border-top: 1px solid #d7c8aa;
+    margin-top: 16px;
+    padding-top: 14px;
+}
+
+body[data-customer-page="profile"] .my-booking-cancel-row p {
+    margin: 0;
+    color: #6e716a;
+    font-size: 0.76rem;
+}
+
+body[data-customer-page="profile"] .my-booking-cancel {
+    flex: 0 0 auto;
+    border: 0;
+    padding: 4px 0;
+    color: #9b4e38;
+    background: transparent;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+body[data-customer-page="profile"] .my-bookings-empty,
+body[data-customer-page="profile"] .profile-data-empty {
+    display: grid;
+    justify-items: center;
+    min-height: 180px;
+    border: 1px solid var(--profile-line);
+    border-radius: 14px;
+    padding: 34px 24px;
+    text-align: center;
+    background: rgba(255, 253, 247, 0.8);
+}
+
+body[data-customer-page="profile"] .my-bookings-empty h3,
+body[data-customer-page="profile"] .profile-data-empty h2 {
+    margin: 0 0 8px;
+    font-size: 1.8rem;
+}
+
+body[data-customer-page="profile"] .my-bookings-empty p,
+body[data-customer-page="profile"] .profile-data-empty p {
+    max-width: 520px;
+    margin: 0 0 18px;
+    color: var(--profile-muted);
+}
+
+body[data-customer-page="profile"] .taste-profile {
+    border-top: 1px solid rgba(169, 112, 18, 0.24);
+    padding-top: 16px;
+}
+
+body[data-customer-page="profile"] .taste-profile-heading,
+body[data-customer-page="profile"] .profile-editor-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+body[data-customer-page="profile"] .taste-profile h2,
+body[data-customer-page="profile"] .profile-editor h2 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+body[data-customer-page="profile"] .taste-profile-heading button,
+body[data-customer-page="profile"] .profile-editor-heading button {
+    border: 0;
+    padding: 5px 0;
+    color: var(--profile-gold-deep);
+    background: transparent;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+body[data-customer-page="profile"] .taste-profile-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+body[data-customer-page="profile"] .taste-profile-chips > span {
+    border: 1px solid #bac7af;
+    border-radius: 999px;
+    padding: 6px 14px;
+    color: #254a3d;
+    background: #edf1e7;
+    font-size: 0.76rem;
+}
+
+body[data-customer-page="profile"] .taste-profile-progress {
+    display: grid;
+    grid-template-columns: auto minmax(120px, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    margin-top: 14px;
+    color: #454942;
+    font-size: 0.76rem;
+}
+
+body[data-customer-page="profile"] .taste-profile-progress > div {
+    height: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e7e4db;
+}
+
+body[data-customer-page="profile"] .taste-profile-progress > div span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--profile-green);
+}
+
+body[data-customer-page="profile"] .profile-editor {
+    scroll-margin-top: 20px;
+    border: 1px solid var(--profile-line);
+    border-radius: 15px;
+    padding: 22px;
+    background: var(--profile-surface);
+    box-shadow: 0 14px 30px rgba(0, 46, 35, 0.07);
+}
+
+body[data-customer-page="profile"] .profile-editor [data-profile-form-host] > .profile-panel {
+    border: 0;
+    border-radius: 0;
+    margin-top: 18px;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+body[data-customer-page="profile"] .profile-editor .guest-form {
+    gap: 16px;
+}
+
+body[data-customer-page="profile"] .profile-editor .form-heading {
+    display: none;
+}
+
+body[data-customer-page="profile"] .profile-editor .primary-action,
+body[data-customer-page="profile"] .profile-editor-cancel {
+    width: fit-content;
+    min-width: 150px;
+}
+
+body[data-customer-page="profile"] .profile-editor-cancel {
+    margin-left: 10px;
+}
+
+body[data-customer-page="profile"] .footer {
+    border-top-color: rgba(169, 112, 18, 0.22);
+    background: var(--profile-cream);
+}
+
+body[data-customer-page="profile"] button,
+body[data-customer-page="profile"] a {
+    transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+body[data-customer-page="profile"] .profile-edit-button:hover,
+body[data-customer-page="profile"] .profile-edit-button:focus-visible {
+    color: var(--profile-deep-green);
+    background: var(--profile-gold);
+}
+
+body[data-customer-page="profile"] .my-bookings-tab:focus-visible,
+body[data-customer-page="profile"] .my-booking-actions button:focus-visible,
+body[data-customer-page="profile"] .my-booking-cancel:focus-visible,
+body[data-customer-page="profile"] .clear-reservations-button:focus-visible,
+body[data-customer-page="profile"] .taste-profile button:focus-visible,
+body[data-customer-page="profile"] .profile-edit-button:focus-visible,
+body[data-customer-page="profile"] .profile-editor-heading button:focus-visible,
+body[data-customer-page="profile"] .profile-nav a:focus-visible,
+body[data-customer-page="profile"] .profile-nav button:focus-visible {
+    outline: 3px solid rgba(214, 164, 61, 0.42);
+    outline-offset: 3px;
+}
+
+@media (max-width: 1180px) {
+    body[data-customer-page="profile"] .profile-nav,
+    body[data-customer-page="profile"] .profile-page-inner {
+        width: min(100% - 40px, 1120px);
+    }
+
+    body[data-customer-page="profile"] .profile-nav {
+        grid-template-columns: minmax(190px, 0.7fr) minmax(360px, 1.4fr) auto;
+        gap: 18px;
+    }
+
+    body[data-customer-page="profile"] .profile-dashboard {
+        grid-template-columns: minmax(250px, 0.27fr) minmax(0, 0.73fr);
+        gap: 20px;
+    }
+
+    body[data-customer-page="profile"] .my-booking-summary {
+        grid-template-columns: 1fr;
+    }
+
+    body[data-customer-page="profile"] .my-booking-facts,
+    body[data-customer-page="profile"] .my-booking-actions {
+        grid-column: 1;
+    }
+
+    body[data-customer-page="profile"] .my-booking-actions {
+        justify-content: flex-start;
+    }
+
+    body[data-customer-page="profile"] .my-booking-details-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body[data-customer-page="profile"] .my-booking-details-grid > section:nth-child(2) {
+        border-right: 0;
+        padding-right: 0;
+    }
+}
+
+@media (max-width: 840px) {
+    body[data-customer-page="profile"] .profile-site-header {
+        height: 119px;
+        min-height: 119px;
+    }
+
+    body[data-customer-page="profile"] .profile-nav {
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        width: 100%;
+        height: 118px;
+        min-height: 118px;
+        padding: 14px 16px 0;
+    }
+
+    body[data-customer-page="profile"] .profile-brand {
+        font-size: 1.55rem;
+    }
+
+    body[data-customer-page="profile"] .profile-brand small {
+        margin-top: 6px;
+        font-size: 0.5rem;
+    }
+
+    body[data-customer-page="profile"] .profile-nav-account {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    body[data-customer-page="profile"] .profile-nav-avatar {
+        width: 42px;
+        height: 42px;
+        font-size: 1rem;
+    }
+
+    body[data-customer-page="profile"] .profile-nav-links {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        justify-content: flex-start;
+        gap: 28px;
+        overflow-x: auto;
+        padding-top: 8px;
+    }
+
+    body[data-customer-page="profile"] .profile-nav-links a {
+        flex: 0 0 auto;
+        min-height: 42px;
+        font-size: 0.78rem;
+    }
+
+    body[data-customer-page="profile"] .profile-nav-links a::after {
+        bottom: 0;
+    }
+
+    body[data-customer-page="profile"] .profile-page {
+        padding-top: 22px;
+    }
+
+    body[data-customer-page="profile"] .profile-page-inner {
+        width: min(100% - 28px, 760px);
+    }
+
+    body[data-customer-page="profile"] .profile-page-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    body[data-customer-page="profile"] .profile-page-heading h1 {
+        font-size: clamp(2.35rem, 11vw, 3.3rem);
+    }
+
+    body[data-customer-page="profile"] .profile-page-heading .secondary-action {
+        min-height: 36px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+    }
+
+    body[data-customer-page="profile"] .profile-dashboard {
+        display: flex;
+        flex-direction: column;
+    }
+
+    body[data-customer-page="profile"] .profile-main-column {
+        order: 1;
+        width: 100%;
+    }
+
+    body[data-customer-page="profile"] .profile-identity-card {
+        position: relative;
+        top: auto;
+        order: 2;
+        width: 100%;
+        min-height: 0;
+        margin-top: 4px;
+    }
+
+    body[data-customer-page="profile"] .dashboard-card-grid {
+        grid-template-columns: repeat(3, minmax(190px, 1fr));
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scroll-snap-type: x proximity;
+    }
+
+    body[data-customer-page="profile"] .dashboard-card {
+        min-height: 96px;
+        scroll-snap-align: start;
+    }
+}
+
+@media (max-width: 620px) {
+    body[data-customer-page="profile"] .profile-nav {
+        gap: 8px;
+        padding-inline: 12px;
+    }
+
+    body[data-customer-page="profile"] .profile-nav-account {
+        gap: 7px;
+    }
+
+    body[data-customer-page="profile"] .profile-logout-button {
+        font-size: 0.68rem;
+    }
+
+    body[data-customer-page="profile"] .profile-page {
+        padding: 20px 0 44px;
+    }
+
+    body[data-customer-page="profile"] .profile-page-inner {
+        width: min(100% - 24px, 560px);
+    }
+
+    body[data-customer-page="profile"] .profile-page-heading h1 {
+        font-size: 2.38rem;
+        line-height: 1.02;
+    }
+
+    body[data-customer-page="profile"] .profile-page-subtitle {
+        font-size: 0.88rem;
+        line-height: 1.45;
+    }
+
+    body[data-customer-page="profile"] .dashboard-card-grid {
+        gap: 10px;
+    }
+
+    body[data-customer-page="profile"] .dashboard-card {
+        min-height: 88px;
+        padding: 14px 16px;
+    }
+
+    body[data-customer-page="profile"] .dashboard-card p {
+        display: none;
+    }
+
+    body[data-customer-page="profile"] .my-bookings-heading {
+        align-items: flex-start;
+    }
+
+    body[data-customer-page="profile"] .my-bookings-heading > div {
+        display: block;
+    }
+
+    body[data-customer-page="profile"] .my-bookings-heading h2 {
+        font-size: 1.95rem;
+    }
+
+    body[data-customer-page="profile"] .my-bookings-heading p {
+        margin-top: 4px;
+    }
+
+    body[data-customer-page="profile"] .clear-reservations-button {
+        margin-top: 6px;
+    }
+
+    body[data-customer-page="profile"] .my-bookings-tabs {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    body[data-customer-page="profile"] .my-bookings-tab {
+        flex: 1 0 auto;
+        justify-content: center;
+    }
+
+    body[data-customer-page="profile"] .my-booking-card {
+        grid-template-columns: 1fr;
+    }
+
+    body[data-customer-page="profile"] .my-booking-media,
+    body[data-customer-page="profile"] .my-booking-image,
+    body[data-customer-page="profile"] .my-booking-image-fallback {
+        height: 156px;
+        min-height: 0;
+    }
+
+    body[data-customer-page="profile"] .my-booking-summary {
+        padding: 16px;
+    }
+
+    body[data-customer-page="profile"] .my-booking-title-row {
+        gap: 10px;
+    }
+
+    body[data-customer-page="profile"] .my-booking-title-row h3 {
+        font-size: 1.75rem;
+    }
+
+    body[data-customer-page="profile"] .my-booking-facts {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    body[data-customer-page="profile"] .my-booking-facts div,
+    body[data-customer-page="profile"] .my-booking-facts div:first-child {
+        border-left: 0;
+        padding-left: 0;
+    }
+
+    body[data-customer-page="profile"] .my-booking-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body[data-customer-page="profile"] .my-booking-actions .secondary-action {
+        width: 100%;
+    }
+
+    body[data-customer-page="profile"] .my-booking-details {
+        padding: 18px;
+    }
+
+    body[data-customer-page="profile"] .my-booking-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body[data-customer-page="profile"] .my-booking-details-grid > section,
+    body[data-customer-page="profile"] .my-booking-details-grid > section:nth-child(2) {
+        border-right: 0;
+        border-bottom: 1px solid #dfd3be;
+        padding: 0 0 16px;
+    }
+
+    body[data-customer-page="profile"] .my-booking-details-grid > section:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    body[data-customer-page="profile"] .my-booking-cancel-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    body[data-customer-page="profile"] .taste-profile h2,
+    body[data-customer-page="profile"] .profile-editor h2 {
+        font-size: 1.75rem;
+    }
+
+    body[data-customer-page="profile"] .taste-profile-progress {
+        grid-template-columns: 1fr auto;
+    }
+
+    body[data-customer-page="profile"] .taste-profile-progress > div {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+
+    body[data-customer-page="profile"] .profile-identity-card {
+        padding: 28px 24px;
+    }
+
+    body[data-customer-page="profile"] .profile-editor {
+        padding: 18px;
+    }
+
+    body[data-customer-page="profile"] .profile-editor .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body[data-customer-page="profile"] .profile-editor .primary-action,
+    body[data-customer-page="profile"] .profile-editor-cancel {
+        width: 100%;
+        margin: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body[data-customer-page="profile"] button,
+    body[data-customer-page="profile"] a {
+        transition: none;
+    }
+}

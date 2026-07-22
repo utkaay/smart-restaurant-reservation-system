@@ -32,8 +32,39 @@ function getRestaurantDataFromForm(formData) {
 function handleAddRestaurant(event) {
     event.preventDefault();
 
+    if (adminActionInProgress) {
+        return;
+    }
+
     const formData = new FormData(event.target);
     const restaurantData = getRestaurantDataFromForm(formData);
+    const normalizedName = restaurantData.name.toLowerCase();
+    const normalizedLocation = restaurantData.location.toLowerCase();
+    const duplicateRestaurant = getRestaurants().find(function (restaurant) {
+        return (
+            String(restaurant.id) !== String(editingRestaurantId) &&
+            String(restaurant.name || "").trim().toLowerCase() === normalizedName &&
+            String(restaurant.location || "").trim().toLowerCase() === normalizedLocation
+        );
+    });
+
+    if (!restaurantData.name || !restaurantData.cuisine || !restaurantData.location) {
+        setAdminActionMessage("Enter the restaurant name, cuisine, and location.", "error");
+        updateAdminActionMessage();
+        return;
+    }
+
+    if (!Number.isFinite(restaurantData.rating) || restaurantData.rating < 0 || restaurantData.rating > 5) {
+        setAdminActionMessage("Enter a restaurant rating from 0 to 5.", "error");
+        updateAdminActionMessage();
+        return;
+    }
+
+    if (duplicateRestaurant) {
+        setAdminActionMessage("A restaurant with this name and location already exists.", "error");
+        updateAdminActionMessage();
+        return;
+    }
 
     if (!isPreviewableImageSource(restaurantData.image)) {
         showRestaurantImageError("Add an image URL or upload an image file.");
@@ -41,17 +72,32 @@ function handleAddRestaurant(event) {
         return;
     }
 
-    if (editingRestaurantId) {
-        updateRestaurant(editingRestaurantId, restaurantData);
-    } else {
-        saveRestaurants([
-            ...getRestaurants(),
-            {
-                id: Date.now(),
-                ...restaurantData,
-                menu: []
+    adminActionInProgress = true;
+
+    try {
+        if (editingRestaurantId) {
+            updateRestaurant(editingRestaurantId, restaurantData);
+        } else {
+            const restaurants = getRestaurants();
+            let restaurantId = Date.now();
+
+            while (restaurants.some(function ({ id }) {
+                return String(id) === String(restaurantId);
+            })) {
+                restaurantId += 1;
             }
-        ]);
+
+            saveRestaurants([
+                ...restaurants,
+                {
+                    id: restaurantId,
+                    ...restaurantData,
+                    menu: []
+                }
+            ]);
+        }
+    } finally {
+        adminActionInProgress = false;
     }
 
     editingRestaurantId = null;
@@ -140,6 +186,10 @@ function updateRestaurantTableLayout(restaurantId, tableLayout) {
 function handleAddTable(event) {
     event.preventDefault();
 
+    if (adminActionInProgress) {
+        return;
+    }
+
     const restaurant = getRestaurantById(adminSelectedRestaurantId);
 
     if (!restaurant) {
@@ -175,7 +225,9 @@ function handleAddTable(event) {
         return;
     }
 
+    adminActionInProgress = true;
     updateRestaurantTableLayout(restaurant.id, [...tableLayout, { tableId, seats, experience }]);
+    adminActionInProgress = false;
     setAdminActionMessage(`Table ${tableId} added.`);
     renderActiveAdminSection();
 }
@@ -185,6 +237,16 @@ function handleDeleteTable(event) {
     const restaurant = getRestaurantById(adminSelectedRestaurantId);
 
     if (!restaurant || !tableId) {
+        return;
+    }
+
+    const status = getAdminTableStatus({ tableId });
+    const warning =
+        status === "Reserved"
+            ? `Table ${tableId} is reserved for the selected slot. Delete it from ${restaurant.name} anyway? Existing reservation history will remain.`
+            : `Delete table ${tableId} from ${restaurant.name}?`;
+
+    if (!window.confirm(warning)) {
         return;
     }
 
@@ -244,10 +306,69 @@ function handlePriceTierUpdate(event) {
     updateAdminActionMessage();
 }
 
+function handlePriceTierFormSubmit(event) {
+    event.preventDefault();
+
+    if (adminActionInProgress) {
+        return;
+    }
+
+    const inputs = Array.from(event.currentTarget.querySelectorAll("[data-price-tier-seats]"));
+    const invalidInput = inputs.find(function (input) {
+        const amount = Number(input.value);
+        return !Number.isFinite(amount) || amount < 0;
+    });
+    const errorElement = document.querySelector("#priceTierError");
+
+    if (invalidInput) {
+        if (errorElement) {
+            errorElement.textContent = "Enter a non-negative amount for every table fee.";
+            errorElement.hidden = false;
+        }
+        invalidInput.focus();
+        return;
+    }
+
+    const nextPriceTiers = inputs.reduce(function (tiers, input) {
+        tiers[input.dataset.priceTierSeats] = Number(input.value);
+        return tiers;
+    }, {});
+
+    adminActionInProgress = true;
+    savePriceTiers(nextPriceTiers);
+    adminActionInProgress = false;
+
+    if (errorElement) {
+        errorElement.textContent = "";
+        errorElement.hidden = true;
+    }
+
+    setAdminActionMessage("Pricing settings saved.");
+    updateAdminActionMessage();
+}
+
 function handleReservationStatusChange(event) {
     const reservationId = event.target.dataset.reservationStatusId;
     const nextStatus = event.target.value;
+    const reservation = getReservations().find(function (entry) {
+        return String(entry.reservationId) === String(reservationId);
+    });
 
+    if (!reservation || adminActionInProgress || !["active", "confirmed", "completed", "cancelled"].includes(nextStatus)) {
+        renderActiveAdminSection();
+        return;
+    }
+
+    if (
+        nextStatus === "cancelled" &&
+        getReservationStatus(reservation) !== "cancelled" &&
+        !window.confirm(`Cancel reservation ${reservationId}? The reservation will remain in history.`)
+    ) {
+        renderActiveAdminSection();
+        return;
+    }
+
+    adminActionInProgress = true;
     saveReservations(
         getReservations().map(function (reservation) {
             if (String(reservation.reservationId) !== String(reservationId)) {
@@ -260,6 +381,7 @@ function handleReservationStatusChange(event) {
             };
         })
     );
+    adminActionInProgress = false;
 
     setAdminActionMessage("Reservation status updated.");
     renderActiveAdminSection();

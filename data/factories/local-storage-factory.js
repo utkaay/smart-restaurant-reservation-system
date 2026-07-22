@@ -1,4 +1,5 @@
 const DEFAULT_CONTACT_MESSAGES = [];
+const DEFAULT_SUPPORT_REQUESTS = [];
 
 const LOCAL_STORAGE_FACTORY = {
     restaurants: DEFAULT_RESTAURANTS,
@@ -6,5 +7,6 @@ const LOCAL_STORAGE_FACTORY = {
     reservations: DEFAULT_RESERVATIONS,
     waitlist: DEFAULT_WAITLIST,
     users: DEFAULT_USERS,
-    contactMessages: DEFAULT_CONTACT_MESSAGES
+    contactMessages: DEFAULT_CONTACT_MESSAGES,
+    jacksSupportRequests: DEFAULT_SUPPORT_REQUESTS
 };
