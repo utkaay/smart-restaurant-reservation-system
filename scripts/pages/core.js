@@ -221,6 +221,8 @@ function createEmptyBookingState() {
         restaurantId: null,
         date: "",
         time: DEFAULT_OPENING_TIME,
+        partySize: 1,
+        mood: "",
         tableId: "",
         selectedSeatIds: [],
         experienceFilter: "Regular",
@@ -262,6 +264,27 @@ function normalizeBookingDate(value) {
 
 function normalizeBookingText(value, maximumLength = 100) {
     return typeof value === "string" ? value.trim().slice(0, maximumLength) : "";
+}
+
+function normalizeBookingPartySize(value, fallback = 1) {
+    const partySize = Math.trunc(Number(value));
+
+    if (!Number.isFinite(partySize) || partySize < 1 || partySize > 8) {
+        return fallback;
+    }
+
+    return partySize;
+}
+
+function normalizeBookingMood(value) {
+    const allowedMoods = ["Date night", "Family friendly", "Quick bite", "Fine dining", "Casual"];
+    const normalizedValue = normalizeBookingText(value, 40).toLowerCase();
+
+    return (
+        allowedMoods.find(function (mood) {
+            return mood.toLowerCase() === normalizedValue;
+        }) || ""
+    );
 }
 
 function normalizeBookingSeatIds(seatIds) {
@@ -348,6 +371,8 @@ function normalizeBookingDraft(savedDraft) {
         restaurantId,
         date: normalizeBookingDate(savedDraft.date),
         time: isValidRestaurantTime(savedDraft.time) ? savedDraft.time : DEFAULT_OPENING_TIME,
+        partySize: normalizeBookingPartySize(savedDraft.partySize),
+        mood: normalizeBookingMood(savedDraft.mood),
         tableId: normalizeBookingText(savedDraft.tableId, 30),
         selectedSeatIds: normalizeBookingSeatIds(savedDraft.selectedSeatIds),
         experienceFilter: normalizeTableExperience(savedDraft.experienceFilter),

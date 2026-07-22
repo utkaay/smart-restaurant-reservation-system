@@ -1,8 +1,58 @@
-function redirectToLoginForBooking(restaurantId = bookingState.restaurantId) {
+let bookingConfirmationInProgress = false;
+
+function getSafeBookingReservations() {
+    return getReservations().filter(function (reservation) {
+        return reservation && typeof reservation === "object" && !Array.isArray(reservation);
+    });
+}
+
+function isBlockingReservation(reservation = {}) {
+    const status = String(reservation.status || "active").toLowerCase();
+    return status === "active" || status === "confirmed";
+}
+
+function hasBookingCapacity(profile = getCurrentUserProfile()) {
+    if (!profile) {
+        return false;
+    }
+
+    return (
+        getSafeBookingReservations().filter(function (reservation) {
+            if (!isBlockingReservation(reservation)) {
+                return false;
+            }
+
+            if (profile.id && reservation.guestUserId) {
+                return String(reservation.guestUserId) === String(profile.id);
+            }
+
+            return (
+                normalizeEmail(reservation.guestEmail || "") === normalizeEmail(profile.email || "") &&
+                String(reservation.guestPhone || "") === String(profile.phone || "")
+            );
+        }).length < MAX_ACTIVE_RESERVATIONS
+    );
+}
+
+function normalizeBookingPreferences(preferences = {}) {
+    const safePreferences = preferences && typeof preferences === "object" && !Array.isArray(preferences) ? preferences : {};
+
+    return {
+        date: normalizeBookingDate(safePreferences.date) || getTodayDateValue(),
+        time: isValidRestaurantTime(safePreferences.time) ? safePreferences.time : "",
+        partySize: normalizeBookingPartySize(safePreferences.partySize ?? safePreferences.guests),
+        mood: normalizeBookingMood(safePreferences.mood)
+    };
+}
+
+function redirectToLoginForBooking(restaurantId = bookingState.restaurantId, preferences = bookingState) {
+    const bookingPreferences = normalizeBookingPreferences(preferences);
+
     if (restaurantId) {
         savePendingAction({
             type: "booking",
-            restaurantId
+            restaurantId,
+            ...bookingPreferences
         });
     }
 
@@ -18,23 +68,31 @@ function redirectToLoginForBooking(restaurantId = bookingState.restaurantId) {
     showLoginPage();
 }
 
-function startBooking(restaurantId) {
+function startBooking(restaurantId, preferences = {}) {
+    const bookingPreferences = normalizeBookingPreferences(preferences);
     const profile = getCurrentUserProfile();
 
     if (!profile) {
-        redirectToLoginForBooking(restaurantId);
+        redirectToLoginForBooking(restaurantId, bookingPreferences);
         return;
     }
 
     const restaurant = getRestaurants().find(function ({ id }) {
         return Number(id) === Number(restaurantId);
     });
-    const date = getTodayDateValue();
+    const date = bookingPreferences.date;
+    const requestedTime = bookingPreferences.time;
+    const time =
+        restaurant && getRestaurantTimeSlots(restaurant).includes(requestedTime)
+            ? requestedTime
+            : getDefaultBookingTime(date, restaurant);
 
     bookingState = {
         restaurantId: Number(restaurantId),
         date,
-        time: getDefaultBookingTime(date, restaurant),
+        time,
+        partySize: bookingPreferences.partySize,
+        mood: bookingPreferences.mood,
         tableId: "",
         selectedSeatIds: [],
         experienceFilter: "Regular",
@@ -44,6 +102,7 @@ function startBooking(restaurantId) {
         preOrderItems: {},
         confirmedReservation: null
     };
+    bookingConfirmationInProgress = false;
     bookingMessage = "";
     invitedGuestMessage = "";
     seatSelectionMessage = "";
@@ -84,7 +143,7 @@ function renderTimeSlots() {
                 data-time="${time}"
                 ${isDisabled ? "disabled" : ""}
             >
-                ${time}
+                ${escapeHTML(formatBookingTimeDisplay(time))}
             </button>
         `;
             })
@@ -92,25 +151,29 @@ function renderTimeSlots() {
     `;
 }
 
-function getTableStatus({ tableId }) {
+function getTableStatus({ tableId, seats }) {
     const { restaurantId, date, time } = bookingState;
 
     if (!date || !time || !isBookingTimeAvailable(time)) {
-        return "Disabled";
+        return "Unavailable";
     }
 
-    const isReserved = getReservations().some(function (reservation) {
+    const isReserved = getSafeBookingReservations().some(function (reservation) {
         return (
-            reservation.status === "active" &&
+            isBlockingReservation(reservation) &&
             Number(reservation.restaurantId) === Number(restaurantId) &&
             reservation.date === date &&
             reservation.time === time &&
-            reservation.tableId === tableId
+            String(reservation.tableId || "") === String(tableId)
         );
     });
 
     if (isReserved) {
         return "Reserved";
+    }
+
+    if (Math.max(0, Number(seats) || 0) < getRequiredSeatCount()) {
+        return "Unavailable";
     }
 
     if (bookingState.tableId === tableId) {
@@ -124,7 +187,7 @@ function getReservedTableCountForSlot() {
     const { restaurantId, date, time } = bookingState;
     const tableIds = new Set(
         getRestaurantTableLayout().map(function ({ tableId }) {
-            return tableId;
+            return String(tableId);
         })
     );
 
@@ -132,18 +195,34 @@ function getReservedTableCountForSlot() {
         return 0;
     }
 
-    return getReservations()
+    return new Set(
+        getSafeBookingReservations()
         .filter(function (reservation) {
             return (
-                reservation.status === "active" &&
+                isBlockingReservation(reservation) &&
                 Number(reservation.restaurantId) === Number(restaurantId) &&
                 reservation.date === date &&
                 reservation.time === time
             );
         })
         .filter(function ({ tableId }) {
-            return tableIds.has(tableId);
-        }).length;
+            return tableIds.has(String(tableId));
+        })
+        .map(function ({ tableId }) {
+            return String(tableId);
+        })
+    ).size;
+}
+
+function getAvailableTableCountForSlot() {
+    if (!isBookingTimeAvailable()) {
+        return 0;
+    }
+
+    return getRestaurantTableLayout().filter(function (table) {
+        const status = getTableStatus(table);
+        return status === "Available" || status === "Selected";
+    }).length;
 }
 
 function isSlotFull() {
@@ -153,7 +232,7 @@ function isSlotFull() {
         return false;
     }
 
-    return tableLayout.length > 0 && getReservedTableCountForSlot() >= tableLayout.length;
+    return tableLayout.length > 0 && getAvailableTableCountForSlot() === 0;
 }
 
 function getSlotAvailabilityStatus() {
@@ -167,13 +246,13 @@ function getSlotAvailabilityStatus() {
         return "No tables configured";
     }
 
-    const reservedTableCount = getReservedTableCountForSlot();
+    const availableTableCount = getAvailableTableCountForSlot();
 
-    if (reservedTableCount >= tableLayout.length) {
+    if (availableTableCount === 0) {
         return "Full / Waitlist open";
     }
 
-    if (reservedTableCount >= Math.ceil(tableLayout.length * 0.6)) {
+    if (availableTableCount <= Math.max(2, Math.floor(tableLayout.length * 0.4))) {
         return "Limited availability";
     }
 
@@ -186,6 +265,10 @@ function hasGuestJoinedWaitlist(profile = getGuestProfile()) {
     }
 
     return getWaitlist().some(function (entry) {
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+            return false;
+        }
+
         return (
             Number(entry.restaurantId) === Number(bookingState.restaurantId) &&
             entry.date === bookingState.date &&
@@ -205,7 +288,9 @@ function joinWaitlist() {
     }
 
     saveWaitlist([
-        ...getWaitlist(),
+        ...getWaitlist().filter(function (entry) {
+            return entry && typeof entry === "object" && !Array.isArray(entry);
+        }),
         {
             waitlistId: `waitlist-${Date.now()}`,
             guestName: profile.name,
@@ -243,8 +328,8 @@ function renderWaitlistStatus() {
                         ? tableLayout.length === 0
                             ? "No tables are configured for this restaurant."
                             : slotFull
-                              ? "All tables are reserved for this date and time."
-                              : `${tableLayout.length - getReservedTableCountForSlot()} tables remain for this slot.`
+                              ? "No remaining table can accommodate this party for the selected slot."
+                              : `${getAvailableTableCountForSlot()} ${getAvailableTableCountForSlot() === 1 ? "table fits" : "tables fit"} this party for the selected slot.`
                         : "Choose a future slot within this restaurant's operating hours."
                 }
             </p>
@@ -278,7 +363,7 @@ function renderTableMap() {
             const { tableId, seats, experience } = table;
             const status = getTableStatus(table);
             const matchesExperience = experience === bookingState.experienceFilter;
-            const isDisabled = status === "Reserved" || status === "Disabled" || !matchesExperience;
+            const isDisabled = status === "Reserved" || status === "Unavailable" || !matchesExperience;
 
             return `
             <button
@@ -311,12 +396,12 @@ function renderTableExperienceControls() {
                         aria-checked="${bookingState.experienceFilter === experience}"
                         data-experience-filter="${experience}"
                     >
-                        <span class="table-experience-icon" aria-hidden="true">${experience === "Regular" ? "♧" : experience === "Premium" ? "♕" : "◇"}</span>
+                        <span class="table-experience-icon" aria-hidden="true">${experience.slice(0, 1)}</span>
                         <span>
                             <strong>${experience}</strong>
                             <small>${details.subtitle}</small>
                         </span>
-                        <span class="table-experience-check" aria-hidden="true">✓</span>
+                        <span class="table-experience-check" aria-hidden="true">Active</span>
                     </button>
                 `;
                 })
@@ -405,6 +490,177 @@ function renderConfirmationSummary(selectedTable) {
     return `Table ${selectedTable.tableId} · Seats ${seatSummary}`;
 }
 
+function renderPartySizeControl(selectedTable) {
+    const minimumPartySize = Math.max(1, 1 + getAcceptedInvitedGuestCount());
+    const partySize = normalizeBookingPartySize(bookingState.partySize);
+    const capacityMessage = selectedTable
+        ? `${selectedTable.seats}-seat capacity`
+        : `${getAvailableTableCountForSlot()} matching ${getAvailableTableCountForSlot() === 1 ? "table" : "tables"}`;
+
+    return `
+        <div class="booking-party-control">
+            <div>
+                <span class="booking-control-label">Guests</span>
+                <small>${escapeHTML(capacityMessage)}</small>
+            </div>
+            <div class="booking-stepper" role="group" aria-label="Party size">
+                <button type="button" data-party-size-action="decrease" aria-label="Decrease party size" ${partySize <= minimumPartySize ? "disabled" : ""}>−</button>
+                <output id="bookingPartySizeValue" aria-live="polite">${partySize}</output>
+                <button type="button" data-party-size-action="increase" aria-label="Increase party size" ${partySize >= 8 ? "disabled" : ""}>+</button>
+            </div>
+        </div>
+    `;
+}
+
+function renderBookingSelectionSummary(selectedTable, restaurant = getSelectedRestaurant()) {
+    const validSeatIds = selectedTable ? getValidSelectedSeatIds(selectedTable) : [];
+    const pricing = selectedTable
+        ? calculateReservationPrice({
+              table: selectedTable,
+              time: bookingState.time,
+              couponCode: bookingState.couponCode,
+              memberTier: bookingState.memberTier
+          })
+        : null;
+
+    return `
+        <div class="booking-selection-summary" id="bookingSelectionSummary" aria-live="polite">
+            <div><span>Restaurant</span><strong>${escapeHTML(restaurant?.name || "Not selected")}</strong></div>
+            <div><span>Table</span><strong>${escapeHTML(selectedTable ? `${selectedTable.tableId} · ${getTableExperience(selectedTable)}` : "Choose in 3D")}</strong></div>
+            <div><span>Seats</span><strong>${escapeHTML(validSeatIds.length > 0 ? validSeatIds.join(", ") : `${getRequiredSeatCount()} required`)}</strong></div>
+            <div><span>Price</span><strong>${pricing ? formatUSD(pricing.finalTotal) : "After table"}</strong></div>
+        </div>
+    `;
+}
+
+function getBookingValidationMessage(profile, selectedTable) {
+    if (!isBookingTimeAvailable()) {
+        return "Choose a future date and an available restaurant time.";
+    }
+
+    if (!selectedTable) {
+        return "Choose an available table in the 3D floor plan.";
+    }
+
+    if (getTableStatus(selectedTable) !== "Selected") {
+        return "That table is no longer available for this slot. Choose another table.";
+    }
+
+    if (!doesBookingFitTable(selectedTable)) {
+        return `${getInviteCapacityMessage(selectedTable)} Choose a larger table or reduce the party size.`;
+    }
+
+    if (!canConfirmSeatSelection(selectedTable)) {
+        const selectedCount = getValidSelectedSeatIds(selectedTable).length;
+        return `Select exactly ${getRequiredSeatCount()} ${getRequiredSeatCount() === 1 ? "seat" : "seats"}. ${selectedCount} selected.`;
+    }
+
+    if (!hasBookingCapacity(profile)) {
+        return `This guest has reached ${MAX_ACTIVE_RESERVATIONS} active reservations.`;
+    }
+
+    return "Everything is ready. Confirm once to reserve this table.";
+}
+
+function syncBookingProgress() {
+    const progress = document.querySelector("#bookingProgress");
+    if (!progress) {
+        return;
+    }
+
+    const selectedTable = getSelectedBookingTable();
+    const seatSelectionComplete = Boolean(selectedTable && canConfirmSeatSelection(selectedTable));
+    const currentStep = !getSelectedRestaurant()
+        ? "details"
+        : bookingState.confirmedReservation
+          ? "confirm"
+          : seatSelectionComplete
+            ? "confirm"
+            : "table";
+    const stepOrder = ["details", "table", "extras", "confirm"];
+    const currentIndex = stepOrder.indexOf(currentStep);
+
+    progress.querySelectorAll("[data-booking-progress-step]").forEach(function (step) {
+        const stepIndex = stepOrder.indexOf(step.dataset.bookingProgressStep);
+        const isCurrent = stepIndex === currentIndex;
+        const isComplete = stepIndex < currentIndex || Boolean(bookingState.confirmedReservation && stepIndex <= currentIndex);
+        step.classList.toggle("is-current", isCurrent);
+        step.classList.toggle("is-complete", isComplete);
+        if (isCurrent) {
+            step.setAttribute("aria-current", "step");
+        } else {
+            step.removeAttribute("aria-current");
+        }
+    });
+}
+
+function renderBookingSuccess(reservation) {
+    const seats = Array.isArray(reservation.selectedSeatIds) ? reservation.selectedSeatIds : [];
+
+    return `
+        <section class="profile-panel booking-success-panel">
+            <p class="eyebrow">Reservation confirmed</p>
+            <h2>Your table is ready.</h2>
+            <p>We saved exactly one reservation. Your check-in details are ready below and in My Bookings.</p>
+            <div class="booking-success-facts">
+                <div><span>Restaurant</span><strong>${escapeHTML(reservation.restaurantName)}</strong></div>
+                <div><span>Date &amp; time</span><strong>${escapeHTML(reservation.date)} · ${escapeHTML(formatBookingTimeDisplay(reservation.time))}</strong></div>
+                <div><span>Table</span><strong>${escapeHTML(`${reservation.tableId} · ${normalizeTableExperience(reservation.tableExperience)}`)}</strong></div>
+                <div><span>Seats</span><strong>${escapeHTML(seats.join(", ") || "Assigned at arrival")}</strong></div>
+            </div>
+            <div class="booking-actions">
+                <button class="primary-action" type="button" id="viewMyBookingsButton">View My Bookings</button>
+                <button class="secondary-action" type="button" id="startAnotherBookingButton">Book another table</button>
+                <button class="secondary-action" type="button" id="successBackToRestaurantsButton">Back to restaurants</button>
+            </div>
+        </section>
+        ${renderCheckInCard(reservation)}
+    `;
+}
+
+function resetBookingForRestaurant() {
+    const restaurant = getSelectedRestaurant();
+    if (!restaurant) {
+        return;
+    }
+
+    const date = getTodayDateValue();
+    bookingState = {
+        ...createEmptyBookingState(),
+        restaurantId: restaurant.id,
+        date,
+        time: getDefaultBookingTime(date, restaurant)
+    };
+    bookingConfirmationInProgress = false;
+    bookingMessage = "Booking options reset.";
+    invitedGuestMessage = "";
+    seatSelectionMessage = "";
+    renderBookingView();
+}
+
+function updateBookingPartySize(nextPartySize) {
+    const minimumPartySize = Math.max(1, 1 + getAcceptedInvitedGuestCount());
+    const partySize = Math.min(8, Math.max(minimumPartySize, normalizeBookingPartySize(nextPartySize)));
+    const selectedTable = getSelectedBookingTable();
+    const tableStillFits = selectedTable && Number(selectedTable.seats) >= partySize;
+
+    bookingState = {
+        ...bookingState,
+        partySize,
+        tableId: tableStillFits ? bookingState.tableId : "",
+        selectedSeatIds: [],
+        confirmedReservation: null
+    };
+    bookingMessage = "";
+    invitedGuestMessage = "";
+    seatSelectionMessage = selectedTable
+        ? tableStillFits
+            ? "Party size changed. Select your seats again."
+            : "Party size changed. Choose a table with enough seats."
+        : "";
+    renderBookingView();
+}
+
 function revealBookingTableFallback(bookingView) {
     const fallback = bookingView?.querySelector("#bookingTableFallback");
     const stage = bookingView?.querySelector("#bookingTable3DStage");
@@ -429,6 +685,9 @@ function destroyBookingTableSelector() {
 function initializeBookingTableSelector(bookingView) {
     const container = bookingView.querySelector("#bookingTable3D");
     const returnButton = bookingView.querySelector("#returnToFloorButton");
+    const resetButton = bookingView.querySelector("#reset3DViewButton");
+    const zoomInButton = bookingView.querySelector("#zoomIn3DButton");
+    const zoomOutButton = bookingView.querySelector("#zoomOut3DButton");
     const token = ++bookingTableSelector3DInitToken;
 
     if (!container) {
@@ -448,6 +707,9 @@ function initializeBookingTableSelector(bookingView) {
         const initialized = module.initBookingTableSelector3D({
             container,
             returnButton,
+            resetButton,
+            zoomInButton,
+            zoomOutButton,
             tables: getRestaurantTableLayout(),
             experienceFilter: bookingState.experienceFilter,
             selectedTableId: bookingState.tableId,
@@ -485,13 +747,46 @@ function renderBookingView() {
     const restaurant = getSelectedRestaurant();
 
     if (!restaurant) {
+        bookingView.classList.remove("is-confirmed");
         bookingView.innerHTML = `
-            <section class="profile-panel">
-                <h3>Select a restaurant first.</h3>
+            <section class="profile-panel booking-empty-panel">
+                <p class="eyebrow">No restaurant selected</p>
+                <h3>Choose a restaurant to open its floor plan.</h3>
+                <p>Your date, time, and party preferences will carry into this page from Explore.</p>
+                <button class="primary-action" type="button" id="emptyBackToRestaurantsButton">Explore restaurants</button>
             </section>
         `;
+        bookingView.querySelector("#emptyBackToRestaurantsButton")?.addEventListener("click", function () {
+            return showDiscoveryPage("restaurants");
+        });
+        syncBookingProgress();
         return;
     }
+
+    if (bookingState.confirmedReservation) {
+        const confirmedReservation = bookingState.confirmedReservation;
+        bookingView.classList.add("is-confirmed");
+        bookingView.innerHTML = renderBookingSuccess(confirmedReservation);
+        bookingView.querySelector("#viewMyBookingsButton")?.addEventListener("click", showProfilePage);
+        bookingView.querySelector("#startAnotherBookingButton")?.addEventListener("click", function () {
+            startBooking(confirmedReservation.restaurantId, {
+                date: confirmedReservation.date,
+                time: confirmedReservation.time,
+                partySize: confirmedReservation.partySize,
+                mood: confirmedReservation.mood
+            });
+        });
+        bookingView.querySelector("#successBackToRestaurantsButton")?.addEventListener("click", function () {
+            return showDiscoveryPage("restaurants");
+        });
+        syncBookingProgress();
+        requestAnimationFrame(function () {
+            return renderRealQRCode(confirmedReservation);
+        });
+        return;
+    }
+
+    bookingView.classList.remove("is-confirmed");
 
     const { name, cuisine, rating, priceLevel, image } = restaurant;
     bookingState.experienceFilter = normalizeTableExperience(bookingState.experienceFilter);
@@ -509,7 +804,7 @@ function renderBookingView() {
     const canConfirm = Boolean(
         profile &&
         selectedTable &&
-        canGuestBook(profile) &&
+        hasBookingCapacity(profile) &&
         getTableStatus(selectedTable) === "Selected" &&
         isSelectedTimeAvailable &&
         !isOverTableCapacity &&
@@ -530,6 +825,7 @@ function renderBookingView() {
                     <span class="summary-chip">${escapeHTML(cuisine)}</span>
                     <span class="summary-chip">Rating ${escapeHTML(rating)}</span>
                     <span class="summary-chip">${escapeHTML(priceLevel)}</span>
+                    <span class="summary-chip">${bookingState.partySize} ${bookingState.partySize === 1 ? "guest" : "guests"}</span>
                 </div>
                 ${createRestaurantBadgeSections(restaurant)}
                 ${bookingMessage ? `<p class="profile-message">${escapeHTML(bookingMessage)}</p>` : ""}
@@ -538,8 +834,8 @@ function renderBookingView() {
 
         <section class="profile-panel booking-controls-panel">
             <div class="form-heading">
-                <p class="eyebrow">Select date & time</p>
-                <h3>Choose your reservation slot</h3>
+                <p class="eyebrow">Reservation controls</p>
+                <h3>Set your visit</h3>
             </div>
 
             <div class="booking-slot-layout">
@@ -555,26 +851,49 @@ function renderBookingView() {
                     </div>
                 </div>
             </div>
+            ${renderPartySizeControl(selectedTable)}
+            ${renderBookingSelectionSummary(selectedTable, restaurant)}
+            <button class="booking-reset-action" type="button" id="resetBookingButton">Reset booking options</button>
         </section>
 
         <section class="profile-panel booking-table-panel">
-            <div class="form-heading">
-                <p class="eyebrow">Choose table</p>
-                <h3>Choose one available table</h3>
+            <div class="booking-table-heading">
+                <div class="form-heading">
+                    <p class="eyebrow">Interactive floor plan</p>
+                    <h2>${selectedTable ? `Table ${escapeHTML(selectedTable.tableId)} selected` : "Choose your exact table"}</h2>
+                    <p class="summary-muted">Drag to rotate, scroll or use the controls to zoom, then select exact chairs.</p>
+                </div>
+                ${
+                    selectedTable
+                        ? `<button class="secondary-action booking-change-table" type="button" id="changeTableButton">Change table</button>`
+                        : ""
+                }
             </div>
             ${renderWaitlistStatus()}
-            ${renderTableExperienceControls()}
-            <div class="table-status-legend">
-                <span class="legend-dot available"></span> Available
-                <span class="legend-dot selected"></span> Selected
-                <span class="legend-dot reserved"></span> Reserved
-                <span class="legend-dot disabled"></span> Disabled
-            </div>
             <div class="booking-3d-stage" id="bookingTable3DStage">
                 <div class="booking-3d-toolbar">
-                    <button class="booking-floor-return" type="button" id="returnToFloorButton"><span aria-hidden="true">←</span> Return to Floor</button>
+                    <button class="booking-floor-return" type="button" id="returnToFloorButton">Full floor</button>
+                    <div class="booking-3d-actions" aria-label="3D view controls">
+                        <span class="booking-3d-hint">Drag to rotate · Scroll to zoom</span>
+                        <button type="button" id="reset3DViewButton">Reset view</button>
+                        <button type="button" id="zoomOut3DButton" aria-label="Zoom out">−</button>
+                        <button type="button" id="zoomIn3DButton" aria-label="Zoom in">+</button>
+                    </div>
                 </div>
-                <div class="booking-table-3d" id="bookingTable3D"></div>
+                <div class="booking-3d-filterbar">
+                    ${renderTableExperienceControls()}
+                </div>
+                <div class="booking-table-3d" id="bookingTable3D">
+                    <div class="booking-3d-loading" role="status">
+                        <strong>Preparing the dining room…</strong>
+                    </div>
+                </div>
+                <div class="booking-3d-legend-overlay table-status-legend" aria-label="Table status legend">
+                    <span><i class="legend-dot available"></i> Available</span>
+                    <span><i class="legend-dot selected"></i> Selected</span>
+                    <span><i class="legend-dot reserved"></i> Reserved</span>
+                    <span><i class="legend-dot unavailable"></i> Unavailable</span>
+                </div>
                 ${renderTableInformationStrip(selectedTable)}
             </div>
             <div class="table-map table-map-accessible" id="bookingTableFallback" aria-label="Mirrored accessible table selector">
@@ -601,33 +920,13 @@ function renderBookingView() {
             <p class="summary-muted" id="bookingConfirmationSummary">
                 ${escapeHTML(renderConfirmationSummary(selectedTable))}
             </p>
-            ${
-                profile && !canGuestBook(profile)
-                    ? `
-                <p class="booking-warning">This guest has reached ${MAX_ACTIVE_RESERVATIONS} active reservations.</p>
-            `
-                    : ""
-            }
-            ${
-                !isSelectedTimeAvailable
-                    ? `
-                <p class="booking-warning">Select a future time within this restaurant's operating hours before confirming.</p>
-            `
-                    : ""
-            }
-            ${
-                isOverTableCapacity
-                    ? `
-                <p class="booking-warning">${escapeHTML(getInviteCapacityMessage(selectedTable))} Update RSVPs before confirming.</p>
-            `
-                    : ""
-            }
+            <p class="booking-validation ${canConfirm ? "is-ready" : ""}" id="bookingValidationMessage">
+                ${escapeHTML(getBookingValidationMessage(profile, selectedTable))}
+            </p>
             <button class="primary-action" type="button" id="confirmBookingButton" ${canConfirm ? "" : "disabled"}>
-                Confirm Booking
+                ${canConfirm ? "Confirm reservation" : "Complete table & seat selection"}
             </button>
         </section>
-
-        ${renderCheckInCard(bookingState.confirmedReservation)}
     `;
 
     bookingView.querySelector("#bookingDateInput").addEventListener("change", function (event) {
@@ -668,6 +967,27 @@ function renderBookingView() {
             seatSelectionMessage = "";
             renderBookingView();
         });
+    });
+
+    bookingView.querySelectorAll("[data-party-size-action]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            const adjustment = button.dataset.partySizeAction === "increase" ? 1 : -1;
+            updateBookingPartySize(normalizeBookingPartySize(bookingState.partySize) + adjustment);
+        });
+    });
+
+    bookingView.querySelector("#resetBookingButton")?.addEventListener("click", resetBookingForRestaurant);
+    bookingView.querySelector("#changeTableButton")?.addEventListener("click", function () {
+        bookingState = {
+            ...bookingState,
+            tableId: "",
+            selectedSeatIds: [],
+            confirmedReservation: null
+        };
+        bookingMessage = "";
+        invitedGuestMessage = "";
+        seatSelectionMessage = "Choose another available table.";
+        renderBookingView();
     });
 
     bookingView.querySelectorAll("[data-experience-filter]").forEach(function (button) {
@@ -784,12 +1104,7 @@ function renderBookingView() {
     bookingView.querySelector("#confirmBookingButton").addEventListener("click", confirmBooking);
 
     initializeBookingTableSelector(bookingView);
-
-    if (bookingState.confirmedReservation) {
-        requestAnimationFrame(function () {
-            return renderRealQRCode(bookingState.confirmedReservation);
-        });
-    }
+    syncBookingProgress();
 }
 
 function attachSeatFallbackHandlers(bookingView = document.querySelector("#bookingView")) {
@@ -819,6 +1134,11 @@ function updateBookingSeatSelectionUI() {
         confirmationSummary.textContent = renderConfirmationSummary(selectedTable);
     }
 
+    const selectionSummary = bookingView.querySelector("#bookingSelectionSummary");
+    if (selectionSummary) {
+        selectionSummary.outerHTML = renderBookingSelectionSummary(selectedTable);
+    }
+
     const seatFallback = bookingView.querySelector("#bookingSeatFallback");
     if (seatFallback) {
         seatFallback.innerHTML = renderSeatFallbackContent(selectedTable);
@@ -826,12 +1146,21 @@ function updateBookingSeatSelectionUI() {
     }
 
     const confirmButton = bookingView.querySelector("#confirmBookingButton");
-    if (confirmButton) {
-        confirmButton.disabled = !(
-            canGuestBook(getCurrentUserProfile()) &&
+    const canConfirm = Boolean(
+        hasBookingCapacity(getCurrentUserProfile()) &&
             isBookingTimeAvailable() &&
+            doesBookingFitTable(selectedTable) &&
             canConfirmSeatSelection(selectedTable)
-        );
+    );
+    if (confirmButton) {
+        confirmButton.disabled = !canConfirm;
+        confirmButton.textContent = canConfirm ? "Confirm reservation" : "Complete table & seat selection";
+    }
+
+    const validationMessage = bookingView.querySelector("#bookingValidationMessage");
+    if (validationMessage) {
+        validationMessage.textContent = getBookingValidationMessage(getCurrentUserProfile(), selectedTable);
+        validationMessage.classList.toggle("is-ready", canConfirm);
     }
 
     bookingTableSelector3DModule?.updateBookingTableSelector3D({
@@ -839,6 +1168,7 @@ function updateBookingSeatSelectionUI() {
         selectedSeatIds: [...bookingState.selectedSeatIds],
         requiredSeatCount: getRequiredSeatCount()
     });
+    syncBookingProgress();
 }
 
 function handleSeatToggle(seatId) {
@@ -911,6 +1241,10 @@ function handleTableSelect(eventOrTableId) {
 }
 
 function confirmBooking() {
+    if (bookingConfirmationInProgress || bookingState.confirmedReservation) {
+        return;
+    }
+
     const profile = getCurrentUserProfile();
     const restaurant = getSelectedRestaurant();
     const table = getRestaurantTableLayout(restaurant).find(function ({ tableId }) {
@@ -928,8 +1262,8 @@ function confirmBooking() {
         return;
     }
 
-    if (!table || !canGuestBook(profile) || getTableStatus(table) !== "Selected" || !canConfirmSeatSelection(table)) {
-        bookingMessage = "Unable to save this booking. Check the booking cap and table status.";
+    if (!table || !hasBookingCapacity(profile) || getTableStatus(table) !== "Selected" || !canConfirmSeatSelection(table)) {
+        bookingMessage = getBookingValidationMessage(profile, table);
         renderBookingView();
         return;
     }
@@ -956,6 +1290,7 @@ function confirmBooking() {
         subtotal: calculatePreOrderSubtotal(menuItems)
     };
     const splitBill = calculateSplitBill(pricing.finalTotal, preOrder.subtotal, getBillParticipants(profile));
+    bookingConfirmationInProgress = true;
     const reservationId = `reservation-${Date.now()}`;
     const reservation = {
         reservationId,
@@ -973,6 +1308,8 @@ function confirmBooking() {
         experienceFee: pricing.experienceFee,
         date: bookingState.date,
         time: bookingState.time,
+        partySize: getRequiredSeatCount(),
+        mood: bookingState.mood,
         pricing,
         guests,
         splitBill,
@@ -980,7 +1317,14 @@ function confirmBooking() {
         status: "active"
     };
 
-    saveReservations([...getReservations(), reservation]);
+    try {
+        saveReservations([...getSafeBookingReservations(), reservation]);
+    } catch {
+        bookingConfirmationInProgress = false;
+        bookingMessage = "This reservation could not be saved in this browser. Check storage access and try again.";
+        renderBookingView();
+        return;
+    }
     bookingState = {
         ...bookingState,
         tableId: "",

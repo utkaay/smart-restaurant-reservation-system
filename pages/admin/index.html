@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | Jack's Restaurant Management Portal</title>
+    <title>Admin Dashboard | Jack's Management Portal</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="../../styles/base.css">
     <link rel="stylesheet" href="../../styles/home.css">
@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="../../styles/restaurants.css">
     <link rel="stylesheet" href="../../styles/refinements.css">
     <link rel="stylesheet" href="../../styles/responsive.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&amp;display=swap">
     <link rel="stylesheet" href="../../styles/admin-layout.css">
     <link rel="stylesheet" href="../../styles/admin-components.css">
     <link rel="stylesheet" href="../../styles/admin-responsive.css">
@@ -23,40 +24,80 @@
 <body class="admin-body" data-admin-page="dashboard">
     <div class="admin-shell">
         <aside class="admin-sidebar" id="adminSidebar" aria-label="Admin sections">
-            <a class="admin-brand" href="./index.html">Jack's Restaurant Management Portal</a>
+            <a class="admin-brand" href="./index.html" aria-label="Jack's Management Portal dashboard">
+                <span class="admin-brand-wordmark">Jack&rsquo;s</span>
+                <span class="admin-brand-subtitle">Management Portal</span>
+            </a>
 
             <nav class="admin-section-nav" aria-label="Admin section navigation">
-                <button class="admin-nav-item is-active" type="button" data-admin-section="dashboard">Dashboard</button>
-                <button class="admin-nav-item" type="button" data-admin-section="restaurants">Restaurant Manager</button>
-                <button class="admin-nav-item" type="button" data-admin-section="reservations">Reservations</button>
-                <button class="admin-nav-item" type="button" data-admin-section="tables">Tables</button>
-                <button class="admin-nav-item" type="button" data-admin-section="settings">Settings</button>
+                <button class="admin-nav-item is-active" type="button" data-admin-section="dashboard">
+                    <span class="material-symbols-outlined" aria-hidden="true">dashboard</span><span>Dashboard</span>
+                </button>
+                <button class="admin-nav-item" type="button" data-admin-section="restaurants">
+                    <span class="material-symbols-outlined" aria-hidden="true">storefront</span><span>Restaurant Manager</span>
+                </button>
+                <button class="admin-nav-item" type="button" data-admin-section="reservations">
+                    <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span><span>Reservations</span>
+                </button>
+                <button class="admin-nav-item" type="button" data-admin-section="tables">
+                    <span class="material-symbols-outlined" aria-hidden="true">table_restaurant</span><span>Tables</span>
+                </button>
+                <button class="admin-nav-item" type="button" data-admin-section="support">
+                    <span class="material-symbols-outlined" aria-hidden="true">inbox</span><span>Support</span>
+                    <span class="admin-nav-count" id="adminSupportNavCount" hidden>0</span>
+                </button>
+                <button class="admin-nav-item" type="button" data-admin-section="settings">
+                    <span class="material-symbols-outlined" aria-hidden="true">settings</span><span>Settings</span>
+                </button>
             </nav>
 
             <div class="admin-sidebar-actions">
-                <button class="secondary-action" type="button" id="viewCustomerSiteButton">View Customer Site</button>
-                <button class="primary-action" type="button" id="adminLogoutButton">Logout</button>
+                <button class="admin-sidebar-link" type="button" id="viewCustomerSiteButton">
+                    <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+                    <span>View customer site</span>
+                </button>
+
+                <div class="admin-identity" aria-label="Current administrator">
+                    <span class="admin-identity-avatar" id="adminIdentityInitials" aria-hidden="true">A</span>
+                    <span class="admin-identity-copy">
+                        <strong id="adminIdentityName">Administrator</strong>
+                        <small>Local portal admin</small>
+                    </span>
+                </div>
+
+                <button class="admin-sidebar-link" type="button" id="adminLogoutButton">
+                    <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+                    <span>Logout</span>
+                </button>
             </div>
         </aside>
 
+        <button class="admin-sidebar-backdrop" type="button" id="adminSidebarBackdrop" aria-label="Close Admin navigation" hidden></button>
+
         <div class="admin-content-shell">
-            <header class="admin-mobile-header">
-                <button class="secondary-action admin-menu-button" type="button" id="adminMenuButton" aria-controls="adminSidebar" aria-expanded="false">Menu</button>
-                <span class="admin-mobile-brand">Jack's Portal</span>
+            <header class="admin-topbar">
+                <button class="admin-menu-button" type="button" id="adminMenuButton" aria-controls="adminSidebar" aria-expanded="false">
+                    <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+                    <span class="sr-only">Open menu</span>
+                </button>
+                <span class="admin-mobile-brand">Jack&rsquo;s Management</span>
             </header>
 
             <main class="admin-main">
                 <div class="admin-page-heading">
                     <div>
+                        <p class="admin-page-kicker" id="adminPageKicker">Operations overview</p>
                         <h1 id="adminPageTitle">Dashboard</h1>
                         <p id="adminPageSubtitle">Manage restaurants, reservations, pricing, and table availability.</p>
                     </div>
+                    <p class="admin-page-date" id="adminPageDate" aria-label="Current date"></p>
                 </div>
 
                 <div class="admin-view" id="adminDashboard" aria-live="polite"></div>
             </main>
         </div>
-</div>
+    </div>
+
     <script src="../../data/factories/restaurant-factory.js"></script>
     <script src="../../data/factories/booking-factory.js"></script>
     <script src="../../data/factories/user-factory.js"></script>
@@ -66,6 +107,7 @@
     <script src="../../scripts/pages/admin/config.js"></script>
     <script src="../../scripts/pages/admin/core.js"></script>
     <script src="../../scripts/pages/admin/restaurant-management.js"></script>
+    <script src="../../scripts/pages/admin/support-management.js"></script>
     <script src="../../scripts/pages/admin/dashboard-views.js"></script>
     <script src="../../scripts/pages/admin/actions.js"></script>
     <script src="../../scripts/pages/admin/auth.js"></script>

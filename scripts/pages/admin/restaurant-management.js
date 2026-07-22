@@ -19,10 +19,14 @@ function createCheckboxChoices(options, selectedValues, inputName) {
 function renderAdminRestaurantList() {
     const allRestaurants = getRestaurants();
     const cleanSearchTerm = adminRestaurantSearchTerm.trim().toLowerCase();
-    const restaurants = allRestaurants.filter(function ({ name = "", cuisine = "", location = "" }) {
-        const searchableText = `${name} ${cuisine} ${location}`.toLowerCase();
-        return searchableText.includes(cleanSearchTerm);
-    });
+    const restaurants = allRestaurants
+        .filter(function ({ name = "", cuisine = "", location = "" }) {
+            const searchableText = `${name} ${cuisine} ${location}`.toLowerCase();
+            return searchableText.includes(cleanSearchTerm);
+        })
+        .filter(function ({ priceLevel = "" }) {
+            return adminRestaurantPriceFilter === "all" || priceLevel === adminRestaurantPriceFilter;
+        });
 
     if (allRestaurants.length === 0) {
         return `
@@ -43,20 +47,25 @@ function renderAdminRestaurantList() {
     }
 
     return restaurants
-        .map(function ({ id, name, cuisine, location, rating, priceLevel }) {
+        .map(function ({ id, name, cuisine, location, rating, priceLevel, image, openingTime, closingTime, tableLayout = [] }) {
+            const imageMarkup = isPreviewableImageSource(image)
+                ? `<img src="${escapeHTML(image)}" alt="" loading="lazy">`
+                : `<span class="material-symbols-outlined" aria-hidden="true">restaurant</span>`;
             return `
             <article class="admin-list-item restaurant-management-card">
+                <div class="restaurant-management-image">${imageMarkup}</div>
                 <div class="restaurant-management-main">
                     <strong>${escapeHTML(name)}</strong>
                     <span>${escapeHTML(cuisine)} in ${escapeHTML(location)}</span>
+                    <small>${escapeHTML(formatTimeForDisplay(openingTime))} &ndash; ${escapeHTML(formatTimeForDisplay(closingTime))}</small>
                 </div>
                 <div class="restaurant-management-meta">
-                    <span>Rating ${escapeHTML(rating)}</span>
-                    <span>${escapeHTML(priceLevel)}</span>
+                    <span><span class="material-symbols-outlined" aria-hidden="true">star</span>${escapeHTML(rating)}</span>
+                    <span>${escapeHTML(priceLevel)} &middot; ${tableLayout.length} tables</span>
                 </div>
                 <div class="admin-list-actions">
-                    <button class="secondary-action" type="button" data-edit-restaurant-id="${id}">Edit</button>
-                    <button class="danger-action" type="button" data-delete-restaurant-id="${id}">Delete</button>
+                    <button class="secondary-action" type="button" data-edit-restaurant-id="${id}"><span class="material-symbols-outlined" aria-hidden="true">edit</span>Edit</button>
+                    <button class="danger-action" type="button" data-delete-restaurant-id="${id}"><span class="material-symbols-outlined" aria-hidden="true">delete</span>Delete</button>
                 </div>
             </article>
         `;
@@ -102,7 +111,7 @@ function renderTableLayoutEditor() {
                             }).join("")}
                         </select>
                     </label>
-                    <button class="primary-action" type="submit" ${selectedRestaurant ? "" : "disabled"}>Add Table</button>
+                    <button class="primary-action" type="submit" ${selectedRestaurant ? "" : "disabled"}><span class="material-symbols-outlined" aria-hidden="true">add</span>Add Table</button>
                 </div>
             </form>
 
@@ -124,7 +133,7 @@ function renderTableLayoutEditor() {
                                     <strong>${escapeHTML(tableId)}</strong>
                                     <span>${seats} seats &middot; ${escapeHTML(experience)}</span>
                                 </div>
-                                <button class="danger-action" type="button" data-delete-table-id="${escapeHTML(tableId)}">Delete</button>
+                                <button class="danger-action" type="button" data-delete-table-id="${escapeHTML(tableId)}"><span class="material-symbols-outlined" aria-hidden="true">delete</span>Delete</button>
                             </article>
                         `;
                         })
@@ -138,10 +147,11 @@ function renderTableLayoutEditor() {
 
 function createRestaurantFormPanel() {
     return `
-        <section class="profile-panel admin-panel" id="restaurantManagerPanel">
+        <section class="profile-panel admin-panel restaurant-editor-panel" id="restaurantManagerPanel">
             <div class="form-heading">
                 <p class="eyebrow">Restaurant manager</p>
-                <h3>${editingRestaurantId ? "Edit restaurant" : "Add a restaurant"}</h3>
+                <h2>${editingRestaurantId ? "Edit restaurant" : "Add a restaurant"}</h2>
+                <p>${editingRestaurantId ? "Update the selected listing without changing its ID or customer data contract." : "Create a restaurant listing compatible with Explore and booking."}</p>
             </div>
 
             <form class="admin-form" id="addRestaurantForm">
@@ -203,8 +213,8 @@ function createRestaurantFormPanel() {
                             </select>
                         </label>
                         <label>
-                            Standard Badges
-                            <input type="text" name="badges" placeholder="Patio, Seafood, Date night">
+                            Dining and Dietary Tags
+                            <input type="text" name="badges" placeholder="Patio, Vegetarian, Halal, Date night">
                         </label>
                     </div>
                 </fieldset>
@@ -269,6 +279,7 @@ function createPriceTiersPanel() {
                 <h3>Booking table fees</h3>
                 <p>Changes are saved to the existing price tier configuration used by customer booking pricing.</p>
             </div>
+            <form class="admin-form" id="priceTierForm" novalidate>
             <div class="price-tier-grid">
                 ${Object.keys(DEFAULT_PRICE_TIERS)
                     .map(function (seats) {
@@ -281,6 +292,11 @@ function createPriceTiersPanel() {
                     })
                     .join("")}
             </div>
+            <div class="settings-save-row">
+                <p class="admin-inline-error" id="priceTierError" aria-live="polite" hidden></p>
+                <button class="primary-action" type="submit"><span class="material-symbols-outlined" aria-hidden="true">save</span>Save pricing</button>
+            </div>
+            </form>
         </section>
     `;
 }
@@ -306,7 +322,8 @@ function renderDataOverview() {
         ["restaurants", storageKeys.restaurants],
         ["reservations", storageKeys.reservations],
         ["waitlist entries", storageKeys.waitlist],
-        ["contact messages", storageKeys.contactMessages]
+        ["contact messages", storageKeys.contactMessages],
+        ["support requests", storageKeys.supportRequests]
     ];
 
     return `
@@ -367,16 +384,21 @@ function createSavedRestaurantsPanel() {
                     <p class="eyebrow">Saved restaurants</p>
                     <h3>${getRestaurants().length} restaurants</h3>
                 </div>
-                <label class="admin-search-field">
-                    <span>Search saved restaurants</span>
-                    <input
-                        type="search"
-                        id="adminRestaurantSearch"
-                        value="${escapeHTML(adminRestaurantSearchTerm)}"
-                        placeholder="Search by name, cuisine, or location"
-                        autocomplete="off"
-                    >
-                </label>
+                <div class="restaurant-list-filters">
+                    <label class="admin-search-field">
+                        <span>Search saved restaurants</span>
+                        <input type="search" id="adminRestaurantSearch" value="${escapeHTML(adminRestaurantSearchTerm)}" placeholder="Name, cuisine, or location" autocomplete="off">
+                    </label>
+                    <label>
+                        Price
+                        <select id="adminRestaurantPriceFilter">
+                            <option value="all">All prices</option>
+                            ${["$", "$$", "$$$", "$$$$"].map(function (price) {
+                                return `<option value="${price}" ${adminRestaurantPriceFilter === price ? "selected" : ""}>${price}</option>`;
+                            }).join("")}
+                        </select>
+                    </label>
+                </div>
             </div>
             <div class="admin-list" id="adminRestaurantList">
                 ${renderAdminRestaurantList()}
@@ -397,6 +419,7 @@ function attachManagementHandlers() {
     const resetRestaurantsButton = adminView.querySelector("#resetRestaurantsButton");
     const resetPriceTiersButton = adminView.querySelector("#resetPriceTiersButton");
     const restaurantSearch = adminView.querySelector("#adminRestaurantSearch");
+    const restaurantPriceFilter = adminView.querySelector("#adminRestaurantPriceFilter");
     const imageInput = adminView.querySelector("#restaurantImageInput");
     const imageUploadInput = adminView.querySelector("#restaurantImageUpload");
     const reservationSearch = adminView.querySelector("#reservationSearchInput");
@@ -408,22 +431,13 @@ function attachManagementHandlers() {
     const tableDateInput = adminView.querySelector("#tableDateInput");
     const tableTimeSelect = adminView.querySelector("#tableTimeSelect");
     const addTableForm = adminView.querySelector("#addTableForm");
+    const priceTierForm = adminView.querySelector("#priceTierForm");
 
     if (restaurantForm) {
         restaurantForm.addEventListener("submit", handleAddRestaurant);
     }
 
-    adminView.querySelectorAll("[data-edit-restaurant-id]").forEach(function (button) {
-        button.addEventListener("click", function () {
-            return startEditRestaurant(button.dataset.editRestaurantId);
-        });
-    });
-    adminView.querySelectorAll("[data-delete-restaurant-id]").forEach(function (button) {
-        button.addEventListener("click", handleDeleteRestaurant);
-    });
-    adminView.querySelectorAll("[data-price-tier-seats]").forEach(function (input) {
-        input.addEventListener("change", handlePriceTierUpdate);
-    });
+    attachRestaurantListHandlers();
     adminView.querySelectorAll("[data-delete-table-id]").forEach(function (button) {
         button.addEventListener("click", handleDeleteTable);
     });
@@ -445,6 +459,17 @@ function attachManagementHandlers() {
             adminRestaurantSearchTerm = event.target.value;
             updateAdminRestaurantList();
         });
+    }
+
+    if (restaurantPriceFilter) {
+        restaurantPriceFilter.addEventListener("change", function (event) {
+            adminRestaurantPriceFilter = event.target.value;
+            updateAdminRestaurantList();
+        });
+    }
+
+    if (priceTierForm) {
+        priceTierForm.addEventListener("submit", handlePriceTierFormSubmit);
     }
 
     if (imageInput) {
@@ -544,7 +569,25 @@ function updateAdminRestaurantList() {
 
     if (restaurantList) {
         restaurantList.innerHTML = renderAdminRestaurantList();
+        attachRestaurantListHandlers();
     }
+}
+
+function attachRestaurantListHandlers() {
+    const restaurantList = document.querySelector("#adminRestaurantList");
+
+    if (!restaurantList) {
+        return;
+    }
+
+    restaurantList.querySelectorAll("[data-edit-restaurant-id]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            return startEditRestaurant(button.dataset.editRestaurantId);
+        });
+    });
+    restaurantList.querySelectorAll("[data-delete-restaurant-id]").forEach(function (button) {
+        button.addEventListener("click", handleDeleteRestaurant);
+    });
 }
 
 function attachReservationListHandlers() {
@@ -674,7 +717,7 @@ function handleRestaurantImageUpload(event) {
     if (file.size > MAX_RESTAURANT_IMAGE_UPLOAD_BYTES) {
         uploadInput.value = "";
         updateRestaurantImagePreview(getCurrentRestaurantImageSource());
-        showRestaurantImageError("Image uploads must be 3 MB or smaller. Compress large images before uploading.");
+        showRestaurantImageError("Image uploads must be 2 MB or smaller. Compress large images before uploading.");
         return;
     }
 

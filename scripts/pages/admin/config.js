@@ -10,6 +10,7 @@ const storageKeys = {
     reservations: "reservations",
     waitlist: "waitlist",
     contactMessages: "contactMessages",
+    supportRequests: "jacksSupportRequests",
     adminSession: "adminSession"
 };
 
@@ -22,10 +23,20 @@ const DEFAULT_CLOSING_TIME = "22:00";
 const BOOKING_TIME_ZONE = "Asia/Dubai";
 const TIME_SLOT_INTERVAL_MINUTES = 30;
 const MAX_RESTAURANT_IMAGE_UPLOAD_BYTES = 2 * 1024 * 1024;
+const SUPPORT_REQUEST_TOPICS = [
+    "Reservation Help",
+    "Table Selection",
+    "Account",
+    "Cancellation",
+    "Technical Problem",
+    "Other"
+];
+const SUPPORT_REQUEST_STATUSES = ["new", "in-progress", "resolved"];
 
 let editingRestaurantId = null;
 let activeAdminSection = "dashboard";
 let adminRestaurantSearchTerm = "";
+let adminRestaurantPriceFilter = "all";
 let adminReservationSearchTerm = "";
 let adminReservationStatusFilter = "all";
 let adminReservationRestaurantFilter = "all";
@@ -38,6 +49,11 @@ let adminSelectedTableTime = "";
 let adminActionMessage = "";
 let adminActionMessageType = "success";
 let pendingRestaurantImageDataUrl = "";
+let adminSupportSearchTerm = "";
+let adminSupportTopicFilter = "all";
+let adminSupportStatusFilter = "all";
+let adminSelectedSupportRequestId = null;
+let adminActionInProgress = false;
 
 function normalizeEmail(email = "") {
     return String(email).trim().toLowerCase();

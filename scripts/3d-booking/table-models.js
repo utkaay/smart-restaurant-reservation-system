@@ -241,7 +241,8 @@ export function createTable(table, instance) {
     root.add(proxy);
     tableProxyMeshes.push(proxy);
 
-    const label = document.createElement("div");
+    const label = document.createElement("button");
+    label.type = "button";
     label.className = `booking-table-3d-label tier-${experience.toLowerCase()}`;
     label.dataset.tableLabel = tableId;
     label.innerHTML = `<span class="booking-table-status-dot" aria-hidden="true"></span><strong>${tableId}</strong><span class="booking-table-tier-badge">${experience}</span>`;

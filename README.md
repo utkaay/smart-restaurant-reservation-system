@@ -3,7 +3,7 @@
 ## Project structure
 
 - `index.html` is the restaurant discovery home page.
-- `assets/` contains videos and project artifacts.
+- `assets/` contains only runtime images and videos used by the application.
 - `data/factories/` contains constant default data only.
 - `data/seeders/seeders.js` is the only file that inserts factory data into localStorage.
 - `pages/` contains separate Booking, Profile, Login, Signup, Concierge, and Contact pages.

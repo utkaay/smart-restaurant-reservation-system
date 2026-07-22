@@ -16,23 +16,33 @@
     <link rel="stylesheet" href="../styles/restaurants.css">
     <link rel="stylesheet" href="../styles/refinements.css">
     <link rel="stylesheet" href="../styles/responsive.css">
+    <link rel="stylesheet" href="../styles/customer-header.css">
 </head>
 <body data-customer-page="login">
-    <header class="site-header">
-        <nav class="nav">
-            <a class="logo" href="../index.html" id="homeLink">Jack&rsquo;s Smart Reservation System</a>
-            <div class="nav-groups">
-                <div class="nav-links main-nav" aria-label="Main navigation">
-                    <a href="../index.html#restaurants">Restaurants</a>
-                    <a href="concierge.html" id="smartConciergeLink">Smart Concierge</a>
-                    <a href="contact.html">Contact</a>
-                </div>
-                <div class="nav-links auth-nav" aria-label="Account navigation">
-                    <a href="login.html" id="authNavLink" aria-label="Account"></a>
-                    <button class="nav-action is-hidden" type="button" id="logoutButton" hidden>Logout</button>
+    <header class="customer-header" data-customer-header data-header-variant="internal">
+        <div class="customer-header__inner">
+            <a class="customer-header__brand" href="../index.html#home" id="homeLink" aria-label="Jack's home">
+                <span class="customer-header__brand-wordmark">JACK&rsquo;S</span>
+                <small class="customer-header__brand-subtitle">Smart Reservation System</small>
+            </a>
+            <button class="customer-header__menu" type="button" aria-expanded="false" aria-controls="customerHeaderPanel" aria-label="Open navigation menu" data-customer-menu-button>
+                <span class="customer-header__menu-lines" aria-hidden="true"></span>
+            </button>
+            <div class="customer-header__panel" id="customerHeaderPanel">
+                <nav class="customer-header__nav" aria-label="Primary navigation">
+                    <a class="customer-header__link" href="../index.html#home" data-header-route="discover">Discover</a>
+                    <a class="customer-header__link" href="../index.html#restaurants" data-header-route="restaurants">Restaurants</a>
+                    <a class="customer-header__link" href="concierge.html" id="smartConciergeLink" data-header-route="concierge">Smart Concierge</a>
+                    <a class="customer-header__link" href="profile.html" data-header-route="bookings" data-customer-member hidden>My Bookings</a>
+                    <a class="customer-header__link" href="contact.html" data-header-route="contact">Contact</a>
+                </nav>
+                <div class="customer-header__actions" aria-label="Account and reservation navigation">
+                    <a class="customer-header__auth-link" href="login.html" id="authNavLink" data-header-route="account" data-profile-nav-initials aria-label="Login" aria-current="page">Login</a>
+                    <button class="customer-header__logout is-hidden" type="button" id="logoutButton" data-customer-member hidden>Logout</button>
+                    <a class="customer-header__cta" href="../index.html#searchForm" data-header-route="find-table">Find a Table</a>
                 </div>
             </div>
-        </nav>
+        </div>
     </header>
 
     <main>
@@ -74,5 +84,6 @@
     <script src="../scripts/pages/booking-selection.js"></script>
     <script src="../scripts/pages/auth.js"></script>
     <script src="../scripts/pages/app.js"></script>
+    <script src="../scripts/pages/customer-header.js"></script>
 </body>
 </html>

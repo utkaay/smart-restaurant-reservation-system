@@ -1,6 +1,12 @@
 function getUsers() {
     const users = getFromStorage(storageKeys.users);
-    return Array.isArray(users) ? users.map(withUserRole) : [];
+    return Array.isArray(users)
+        ? users
+              .filter(function (user) {
+                  return user && typeof user === "object" && !Array.isArray(user);
+              })
+              .map(withUserRole)
+        : [];
 }
 
 function getStoredRecordCount(key) {
@@ -31,6 +37,8 @@ function hasValidAdminSession() {
 
     return Boolean(
         session &&
+        typeof session === "object" &&
+        !Array.isArray(session) &&
         adminUser &&
         session.userId === adminUser.id &&
         normalizeEmail(session.email) === ADMIN_EMAIL &&
@@ -248,16 +256,17 @@ function getUaeDateParts(date = new Date()) {
 }
 
 function normalizeRestaurantHours(restaurant = {}) {
-    const parsedHours = getStructuredHoursFromDisplay(restaurant.hours);
-    const openingTime = isValidRestaurantTime(restaurant.openingTime)
-        ? restaurant.openingTime
+    const safeRestaurant = restaurant && typeof restaurant === "object" && !Array.isArray(restaurant) ? restaurant : {};
+    const parsedHours = getStructuredHoursFromDisplay(safeRestaurant.hours);
+    const openingTime = isValidRestaurantTime(safeRestaurant.openingTime)
+        ? safeRestaurant.openingTime
         : parsedHours?.openingTime || DEFAULT_OPENING_TIME;
-    const closingTime = isValidRestaurantTime(restaurant.closingTime)
-        ? restaurant.closingTime
+    const closingTime = isValidRestaurantTime(safeRestaurant.closingTime)
+        ? safeRestaurant.closingTime
         : parsedHours?.closingTime || DEFAULT_CLOSING_TIME;
 
     return {
-        ...restaurant,
+        ...safeRestaurant,
         openingTime,
         closingTime
     };
@@ -296,21 +305,37 @@ function getRestaurants() {
     const savedRestaurants = getFromStorage(storageKeys.restaurants);
     const restaurants = Array.isArray(savedRestaurants) ? savedRestaurants : DEFAULT_RESTAURANTS;
 
-    return restaurants.map(function (restaurant) {
-        return {
-            ...normalizeRestaurantHours(restaurant),
-            distanceCategory: restaurant.distanceCategory || "Medium",
-            sustainabilityBadges: restaurant.sustainabilityBadges || [],
-            allergenBadges: restaurant.allergenBadges || [],
-            tableLayout: normalizeRestaurantTableLayout(restaurant.tableLayout)
-        };
-    });
+    return restaurants
+        .filter(function (restaurant) {
+            return restaurant && typeof restaurant === "object" && !Array.isArray(restaurant);
+        })
+        .map(function (restaurant) {
+            return {
+                ...normalizeRestaurantHours(restaurant),
+                distanceCategory: restaurant.distanceCategory || "Medium",
+                sustainabilityBadges: Array.isArray(restaurant.sustainabilityBadges)
+                    ? restaurant.sustainabilityBadges.filter(Boolean)
+                    : [],
+                allergenBadges: Array.isArray(restaurant.allergenBadges)
+                    ? restaurant.allergenBadges.filter(Boolean)
+                    : [],
+                badges: Array.isArray(restaurant.badges) ? restaurant.badges.filter(Boolean) : [],
+                menu: Array.isArray(restaurant.menu) ? restaurant.menu : [],
+                tableLayout: normalizeRestaurantTableLayout(restaurant.tableLayout)
+            };
+        });
 }
 
 function saveRestaurants(restaurants) {
+    const safeRestaurants = Array.isArray(restaurants)
+        ? restaurants.filter(function (restaurant) {
+              return restaurant && typeof restaurant === "object" && !Array.isArray(restaurant);
+          })
+        : [];
+
     saveToStorage(
         storageKeys.restaurants,
-        restaurants.map(function (restaurant) {
+        safeRestaurants.map(function (restaurant) {
             return {
                 ...normalizeRestaurantHours(restaurant),
                 tableLayout: normalizeRestaurantTableLayout(restaurant.tableLayout)
@@ -320,12 +345,17 @@ function saveRestaurants(restaurants) {
 }
 
 function getPriceTiers() {
-    const savedPriceTiers = getFromStorage(storageKeys.priceTiers) || {};
+    const storedPriceTiers = getFromStorage(storageKeys.priceTiers);
+    const savedPriceTiers =
+        storedPriceTiers && typeof storedPriceTiers === "object" && !Array.isArray(storedPriceTiers)
+            ? storedPriceTiers
+            : {};
 
-    return {
-        ...DEFAULT_PRICE_TIERS,
-        ...savedPriceTiers
-    };
+    return Object.keys(DEFAULT_PRICE_TIERS).reduce(function (tiers, seats) {
+        const savedValue = Number(savedPriceTiers[seats]);
+        tiers[seats] = Number.isFinite(savedValue) && savedValue >= 0 ? savedValue : DEFAULT_PRICE_TIERS[seats];
+        return tiers;
+    }, {});
 }
 
 function savePriceTiers(priceTiers) {
@@ -334,27 +364,42 @@ function savePriceTiers(priceTiers) {
 
 function getReservations() {
     const reservations = getFromStorage(storageKeys.reservations);
-    return Array.isArray(reservations) ? reservations : [];
+    return Array.isArray(reservations)
+        ? reservations.filter(function (reservation) {
+              return reservation && typeof reservation === "object" && !Array.isArray(reservation);
+          })
+        : [];
 }
 
 function saveReservations(reservations) {
-    saveToStorage(storageKeys.reservations, reservations);
+    saveToStorage(
+        storageKeys.reservations,
+        Array.isArray(reservations)
+            ? reservations.filter(function (reservation) {
+                  return reservation && typeof reservation === "object" && !Array.isArray(reservation);
+              })
+            : []
+    );
 }
 
 function getWaitlist() {
     const waitlist = getFromStorage(storageKeys.waitlist);
-    return Array.isArray(waitlist) ? waitlist : [];
+    return Array.isArray(waitlist)
+        ? waitlist.filter(function (entry) {
+              return entry && typeof entry === "object" && !Array.isArray(entry);
+          })
+        : [];
 }
 
 function getActiveReservations() {
     return getReservations().filter(function ({ status }) {
-        return status === "active";
+        return ["active", "confirmed"].includes(String(status || "").toLowerCase());
     });
 }
 
 function getWaitingEntries() {
     return getWaitlist().filter(function ({ status }) {
-        return status === "waiting";
+        return String(status || "").toLowerCase() === "waiting";
     });
 }
 
@@ -451,7 +496,7 @@ function getAcceptedAttendeeCount(reservation = {}) {
 }
 
 function getReservationStatus(reservation = {}) {
-    return reservation.status || "unknown";
+    return String(reservation.status || "unknown").trim().toLowerCase();
 }
 
 function getKnownReservationStatuses() {
@@ -481,7 +526,7 @@ function getReservationSummary() {
     return {
         total: reservations.length,
         active: reservations.filter(function ({ status }) {
-            return status === "active";
+            return ["active", "confirmed"].includes(String(status || "").toLowerCase());
         }).length,
         upcomingToday: reservations.filter(function (reservation) {
             return (
@@ -699,7 +744,7 @@ function getAdminTableStatus({ tableId }) {
 
     const isReserved = getReservations().some(function (reservation) {
         return (
-            reservation.status === "active" &&
+            ["active", "confirmed"].includes(getReservationStatus(reservation)) &&
             Number(reservation.restaurantId) === Number(adminSelectedRestaurantId) &&
             reservation.date === adminSelectedTableDate &&
             reservation.time === adminSelectedTableTime &&
@@ -708,6 +753,72 @@ function getAdminTableStatus({ tableId }) {
     });
 
     return isReserved ? "Reserved" : "Available";
+}
+
+function getDashboardTableSummary() {
+    const restaurants = getRestaurants();
+    const tableKeys = new Set();
+
+    restaurants.forEach(function (restaurant) {
+        getRestaurantTableLayout(restaurant).forEach(function ({ tableId }) {
+            tableKeys.add(`${restaurant.id}::${String(tableId).toLowerCase()}`);
+        });
+    });
+
+    const reservedTableKeys = new Set();
+    getActiveReservations().forEach(function (reservation) {
+        const key = `${reservation.restaurantId}::${String(reservation.tableId || "").toLowerCase()}`;
+
+        if (reservation.tableId && tableKeys.has(key)) {
+            reservedTableKeys.add(key);
+        }
+    });
+
+    return {
+        total: tableKeys.size,
+        reserved: reservedTableKeys.size,
+        available: Math.max(0, tableKeys.size - reservedTableKeys.size)
+    };
+}
+
+function getReservationStatusCounts() {
+    return getReservations().reduce(
+        function (counts, reservation) {
+            const status = getReservationStatus(reservation);
+
+            if (["active", "confirmed"].includes(status)) {
+                counts.active += 1;
+            } else if (status === "completed") {
+                counts.completed += 1;
+            } else if (status === "cancelled") {
+                counts.cancelled += 1;
+            }
+
+            return counts;
+        },
+        { active: 0, completed: 0, cancelled: 0 }
+    );
+}
+
+function getRestaurantReservationDistribution() {
+    const activeReservations = getActiveReservations();
+
+    return getRestaurants()
+        .map(function (restaurant) {
+            return {
+                id: restaurant.id,
+                name: restaurant.name || "Unnamed restaurant",
+                count: activeReservations.filter(function (reservation) {
+                    return (
+                        Number(reservation.restaurantId) === Number(restaurant.id) ||
+                        (!reservation.restaurantId && reservation.restaurantName === restaurant.name)
+                    );
+                }).length
+            };
+        })
+        .sort(function (firstRestaurant, secondRestaurant) {
+            return secondRestaurant.count - firstRestaurant.count || firstRestaurant.name.localeCompare(secondRestaurant.name);
+        });
 }
 
 function getAdminTableCounts() {

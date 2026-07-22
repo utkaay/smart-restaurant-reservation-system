@@ -1,5 +1,5 @@
 const PROJECT_SEED_VERSION_KEY = "projectSeedVersion";
-const PROJECT_SEED_VERSION = 1;
+const PROJECT_SEED_VERSION = 2;
 
 function saveFactoryDataToStorage(storageKey) {
     if (!Object.hasOwn(LOCAL_STORAGE_FACTORY, storageKey)) {

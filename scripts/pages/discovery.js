@@ -58,50 +58,192 @@ function createRestaurantBadgeSections({ badges = [], sustainabilityBadges = [],
     `;
 }
 
-function filterRestaurants() {
-    const cleanSearchTerm = searchTerm.toLowerCase();
-    const cleanActiveFilter = activeFilter.toLowerCase();
+const discoveryFilterDefaults = {
+    cuisine: "All",
+    location: "All",
+    price: "All",
+    rating: "All",
+    dietary: "All"
+};
 
-    return getRestaurants().filter(function (restaurant) {
-        const { name, cuisine, location } = restaurant;
-        const restaurantTags = getRestaurantSearchTags(restaurant).join(" ");
-        const searchableText = `${name} ${cuisine} ${location} ${restaurantTags}`.toLowerCase();
-        const categoryText = `${cuisine} ${restaurantTags}`.toLowerCase();
-        const matchesSearch = searchableText.includes(cleanSearchTerm);
-        const matchesCategory = activeFilter === "All" || categoryText.includes(cleanActiveFilter);
+const discoveryCuisineFilters = filters.filter(function (filterName) {
+    return !["Rooftop", "Family Friendly"].includes(filterName);
+});
 
-        return matchesSearch && matchesCategory;
-    });
+let discoveryFacetFilters = {
+    ...discoveryFilterDefaults,
+    cuisine: discoveryCuisineFilters.includes(activeFilter) ? activeFilter : "All",
+    dietary: ["Rooftop", "Family Friendly"].includes(activeFilter) ? activeFilter : "All"
+};
+
+const discoveryPlanDefaults = Object.freeze({
+    datePreset: "tonight",
+    date: "",
+    time: "19:30",
+    partySize: 2,
+    mood: "Date night"
+});
+
+let discoveryPlanState = { ...discoveryPlanDefaults };
+
+function getDiscoveryBookingPreferences() {
+    return {
+        date: discoveryPlanState.date,
+        time: discoveryPlanState.time,
+        partySize: discoveryPlanState.partySize,
+        mood: discoveryPlanState.mood
+    };
 }
 
-function createRestaurantCard(restaurant) {
+function getDiscoveryMoodScore(restaurant, mood = discoveryPlanState.mood) {
+    const normalizedMood = String(mood || "").trim().toLowerCase();
+    const restaurantTags = getRestaurantSearchTags(restaurant);
+    const moodKeywords = getMoodKeywords(mood).map(function (keyword) {
+        return keyword.toLowerCase();
+    });
+    let score = restaurantTags.includes(normalizedMood) ? 10 : 0;
+
+    moodKeywords.forEach(function (keyword, index) {
+        if (restaurantTags.includes(keyword)) {
+            score += index === 0 ? 4 : 1;
+        }
+    });
+
+    return score;
+}
+
+function filterRestaurants() {
+    const cleanSearchTerm = searchTerm.toLowerCase();
+
+    return getRestaurants()
+        .filter(function (restaurant) {
+        const { name, cuisine, location, priceLevel, rating } = restaurant;
+        const restaurantTags = getRestaurantSearchTags(restaurant).join(" ");
+        const searchableText = `${name} ${cuisine} ${location} ${priceLevel} ${restaurantTags}`.toLowerCase();
+        const matchesSearch = searchableText.includes(cleanSearchTerm);
+        const matchesCuisine =
+            discoveryFacetFilters.cuisine === "All" ||
+            cuisine.toLowerCase().includes(discoveryFacetFilters.cuisine.toLowerCase());
+        const matchesLocation =
+            discoveryFacetFilters.location === "All" || location === discoveryFacetFilters.location;
+        const matchesPrice = discoveryFacetFilters.price === "All" || priceLevel === discoveryFacetFilters.price;
+        const matchesRating =
+            discoveryFacetFilters.rating === "All" || Number(rating) >= Number(discoveryFacetFilters.rating);
+        const matchesDietary =
+            discoveryFacetFilters.dietary === "All" ||
+            searchableText.includes(discoveryFacetFilters.dietary.toLowerCase());
+
+        return matchesSearch && matchesCuisine && matchesLocation && matchesPrice && matchesRating && matchesDietary;
+        })
+        .map(function (restaurant, originalIndex) {
+            return {
+                restaurant,
+                originalIndex,
+                moodScore: getDiscoveryMoodScore(restaurant)
+            };
+        })
+        .sort(function (first, second) {
+            return second.moodScore - first.moodScore || first.originalIndex - second.originalIndex;
+        })
+        .map(function ({ restaurant }) {
+            return restaurant;
+        });
+}
+
+function getRestaurantMatchPercentage(restaurant) {
+    return Math.min(99, Math.max(80, Math.round(Number(restaurant.rating || 4) * 20)));
+}
+
+function getRestaurantAvailabilityTimes(restaurant, index) {
+    const timeSets = [
+        ["7:00", "7:30", "8:15"],
+        ["7:15", "8:00"],
+        ["7:30", "8:30"],
+        ["7:00", "7:45", "8:30"],
+        ["7:15", "8:15"],
+        ["7:30", "9:00"]
+    ];
+
+    return timeSets[index % timeSets.length];
+}
+
+function createRestaurantCard(restaurant, index) {
     const { id, name, cuisine, rating, hours, priceLevel, location, image } = restaurant;
+    const matchPercentage = getRestaurantMatchPercentage(restaurant);
+    const availabilityTimes = getRestaurantAvailabilityTimes(restaurant, index);
+    const safeName = escapeHTML(name);
 
     return `
-        <article class="restaurant-card">
+        <article class="restaurant-card ${index === 0 ? "is-featured" : ""}">
             <div class="card-image">
-                <span class="card-image-media" style="background-image: linear-gradient(180deg, rgba(10, 15, 20, 0.03), rgba(10, 15, 20, 0.28)), url('${image}')"></span>
+                <img
+                    class="card-image-media"
+                    src="${escapeHTML(image)}"
+                    alt="Dining room at ${safeName}"
+                    loading="${index < 3 ? "eager" : "lazy"}"
+                >
+                <span class="discovery-match-badge">
+                    <span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span>
+                    ${matchPercentage}% match
+                </span>
+                <button
+                    class="discovery-favorite-button"
+                    type="button"
+                    aria-label="Save ${safeName}"
+                    aria-pressed="false"
+                >
+                    <span class="material-symbols-outlined" aria-hidden="true">favorite</span>
+                </button>
             </div>
 
             <div class="card-body">
-                <div class="card-meta">
-                    <span class="rating">Rating ${rating}</span>
-                    <span class="price">${priceLevel}</span>
-                    <span class="cuisine">${cuisine}</span>
+                <div class="discovery-card-heading">
+                    <h3>${safeName}</h3>
+                    <div class="card-meta" aria-label="Restaurant rating and price">
+                        <span class="rating"><span class="material-symbols-outlined" aria-hidden="true">star</span>${escapeHTML(rating)}</span>
+                        <span class="price">${escapeHTML(priceLevel)}</span>
+                    </div>
                 </div>
 
-                <h3>${name}</h3>
-                <p class="location">${location}</p>
-
-                <div class="meta-row">
-                    <span>Open ${hours}</span>
-                </div>
+                <p class="location">
+                    <span>${escapeHTML(cuisine)}</span>
+                    <span aria-hidden="true">&middot;</span>
+                    <span>${escapeHTML(location)}</span>
+                </p>
 
                 ${createRestaurantBadgeSections(restaurant)}
 
-                <button class="book-button" type="button" data-restaurant-id="${id}">
-                    Start Booking
-                </button>
+                <div class="discovery-availability">
+                    <span class="discovery-availability-label">Available</span>
+                    <div class="discovery-time-slots" aria-label="Available times at ${safeName}">
+                        ${availabilityTimes
+                            .map(function (time) {
+                                return `<button type="button" class="discovery-time-slot" data-time="${time}">${time}</button>`;
+                            })
+                            .join("")}
+                    </div>
+                </div>
+
+                <div class="discovery-card-actions">
+                    <button
+                        class="book-button"
+                        type="button"
+                        data-restaurant-id="${id}"
+                        aria-label="Start Booking at ${safeName}"
+                    >
+                        View tables
+                    </button>
+                    <button class="book-button discovery-exact-table-button" type="button" data-restaurant-id="${id}">
+                        <span class="material-symbols-outlined" aria-hidden="true">deployed_code</span>
+                        Choose exact table
+                    </button>
+                </div>
+
+                <div class="discovery-hours sr-only">
+                    <span>Open ${escapeHTML(hours)}</span>
+                    <span class="cuisine">${escapeHTML(cuisine)}</span>
+                    <span class="price">${priceLevel}</span>
+                </div>
             </div>
         </article>
     `;
@@ -109,7 +251,12 @@ function createRestaurantCard(restaurant) {
 
 function renderRestaurants() {
     const restaurantGrid = document.querySelector("#restaurantGrid");
+    const resultCount = document.querySelector("#discoveryResultCount");
     const restaurantList = filterRestaurants();
+
+    if (resultCount) {
+        resultCount.textContent = `${restaurantList.length} ${restaurantList.length === 1 ? "restaurant" : "restaurants"}`;
+    }
 
     if (restaurantList.length === 0) {
         restaurantGrid.innerHTML = `
@@ -124,20 +271,71 @@ function renderRestaurants() {
     restaurantGrid.innerHTML = restaurantList.map(createRestaurantCard).join("");
 }
 
-function createFilterButton(filterName) {
-    const isActive = filterName === activeFilter;
+function createDiscoveryFilterOptions(options, selectedValue, defaultLabel) {
+    return options
+        .map(function (option) {
+            const optionLabel = option === "All" ? defaultLabel : option;
+            return `<option value="${escapeHTML(option)}" ${option === selectedValue ? "selected" : ""}>${escapeHTML(optionLabel)}</option>`;
+        })
+        .join("");
+}
+
+function createDiscoveryFilterControl({ key, label, icon, options }) {
+    const selectedValue = discoveryFacetFilters[key];
+    const displayValue = selectedValue === "All" ? label : selectedValue;
 
     return `
-        <button class="filter-pill ${isActive ? "active" : ""}" type="button" data-filter="${filterName}">
-            ${filterName}
-        </button>
+        <label class="home-discovery-filter-control ${selectedValue !== "All" ? "is-active" : ""}">
+            <span class="material-symbols-outlined home-discovery-filter-icon" aria-hidden="true">${icon}</span>
+            <span class="home-discovery-filter-value">${escapeHTML(displayValue)}</span>
+            <span class="material-symbols-outlined home-discovery-filter-chevron" aria-hidden="true">expand_more</span>
+            <select data-discovery-filter="${key}" aria-label="${escapeHTML(label)} filter">
+                ${createDiscoveryFilterOptions(options, selectedValue, `Any ${label.toLowerCase()}`)}
+            </select>
+        </label>
     `;
 }
 
 function renderFilters() {
     const filterPills = document.querySelector("#filterPills");
-    const allFilters = ["All", ...filters];
-    filterPills.innerHTML = allFilters.map(createFilterButton).join("");
+    const restaurants = getRestaurants();
+    const uniqueValues = function (values) {
+        return [...new Set(values.filter(Boolean))];
+    };
+    const filterControls = [
+        {
+            key: "cuisine",
+            label: "Cuisine",
+            icon: "restaurant",
+            options: ["All", ...uniqueValues(restaurants.map(function (restaurant) { return restaurant.cuisine; }))]
+        },
+        {
+            key: "location",
+            label: "Location",
+            icon: "location_on",
+            options: ["All", ...uniqueValues(restaurants.map(function (restaurant) { return restaurant.location; }))]
+        },
+        {
+            key: "price",
+            label: "Price",
+            icon: "attach_money",
+            options: ["All", ...uniqueValues(restaurants.map(function (restaurant) { return restaurant.priceLevel; }))]
+        },
+        {
+            key: "rating",
+            label: "Rating",
+            icon: "star",
+            options: ["All", "4.5", "4.7", "4.8"]
+        },
+        {
+            key: "dietary",
+            label: "Dietary",
+            icon: "eco",
+            options: ["All", "Vegetarian", "Organic", "Family Friendly", "Rooftop"]
+        }
+    ];
+
+    filterPills.innerHTML = filterControls.map(createDiscoveryFilterControl).join("");
 }
 
 function updateRestaurantResults() {
@@ -191,7 +389,11 @@ function getMoodKeywords(mood) {
         Casual: ["patio", "rooftop", "brunch", "quick seating", "tacos"]
     };
 
-    return moodKeywords[mood] || [];
+    const matchingMood = Object.keys(moodKeywords).find(function (moodName) {
+        return moodName.toLowerCase() === String(mood || "").trim().toLowerCase();
+    });
+
+    return moodKeywords[matchingMood] || [];
 }
 
 function getBudgetLevel(priceLevel = "$") {

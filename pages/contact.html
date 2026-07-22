@@ -3,103 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contact Jack's support for reservation, table selection, account, cancellation, and technical help.">
     <title>Contact Support | Jack&rsquo;s Smart Reservation System</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="../styles/base.css">
-    <link rel="stylesheet" href="../styles/home.css">
-    <link rel="stylesheet" href="../styles/account.css">
-    <link rel="stylesheet" href="../styles/concierge.css">
     <link rel="stylesheet" href="../styles/contact.css">
-    <link rel="stylesheet" href="../styles/booking.css">
-    <link rel="stylesheet" href="../styles/booking-3d.css">
-    <link rel="stylesheet" href="../styles/animations.css">
-    <link rel="stylesheet" href="../styles/restaurants.css">
-    <link rel="stylesheet" href="../styles/refinements.css">
-    <link rel="stylesheet" href="../styles/responsive.css">
+    <link rel="stylesheet" href="../styles/customer-header.css">
 </head>
 <body data-customer-page="contact">
-    <header class="site-header">
-        <nav class="nav">
-            <a class="logo" href="../index.html" id="homeLink">Jack&rsquo;s Smart Reservation System</a>
-            <div class="nav-groups">
-                <div class="nav-links main-nav" aria-label="Main navigation">
-                    <a href="../index.html#restaurants">Restaurants</a>
-                    <a href="concierge.html" id="smartConciergeLink">Smart Concierge</a>
-                    <a href="contact.html" aria-current="page">Contact</a>
-                </div>
-                <div class="nav-links auth-nav" aria-label="Account navigation">
-                    <a href="login.html" id="authNavLink" aria-label="Account"></a>
-                    <button class="nav-action is-hidden" type="button" id="logoutButton" hidden>Logout</button>
+    <header class="customer-header" data-customer-header data-header-variant="internal">
+        <div class="customer-header__inner">
+            <a class="customer-header__brand" href="../index.html#home" id="homeLink" aria-label="Jack's home">
+                <span class="customer-header__brand-wordmark">JACK&rsquo;S</span>
+                <small class="customer-header__brand-subtitle">Smart Reservation System</small>
+            </a>
+            <button class="customer-header__menu" type="button" aria-expanded="false" aria-controls="customerHeaderPanel" aria-label="Open navigation menu" data-customer-menu-button>
+                <span class="customer-header__menu-lines" aria-hidden="true"></span>
+            </button>
+            <div class="customer-header__panel" id="customerHeaderPanel">
+                <nav class="customer-header__nav" aria-label="Primary navigation">
+                    <a class="customer-header__link" href="../index.html#home" data-header-route="discover">Discover</a>
+                    <a class="customer-header__link" href="../index.html#restaurants" data-header-route="restaurants">Restaurants</a>
+                    <a class="customer-header__link" href="concierge.html" id="smartConciergeLink" data-header-route="concierge">Smart Concierge</a>
+                    <a class="customer-header__link" href="profile.html" data-header-route="bookings" data-customer-member hidden>My Bookings</a>
+                    <a class="customer-header__link" href="contact.html" data-header-route="contact" aria-current="page">Contact</a>
+                </nav>
+                <div class="customer-header__actions" aria-label="Account and reservation navigation">
+                    <a class="customer-header__auth-link" href="login.html" id="authNavLink" data-header-route="account" data-profile-nav-initials aria-label="Login">Login</a>
+                    <button class="customer-header__logout is-hidden" type="button" id="logoutButton" data-customer-member hidden>Logout</button>
+                    <a class="customer-header__cta" href="../index.html#searchForm" data-header-route="find-table">Find a Table</a>
                 </div>
             </div>
-        </nav>
+        </div>
     </header>
 
-    <main>
-        <section class="profile-page page-view" id="contact">
-            <div class="profile-page-inner">
-                <div class="profile-page-heading contact-page-heading">
-                    <div class="contact-introduction">
-                        <h1>Need help?</h1>
-                        <p>We&rsquo;re here to answer questions about reservations, bookings, and your dining experience.</p>
+    <main class="contact-main">
+        <section class="contact-hero" aria-labelledby="contactTitle">
+            <div>
+                <p class="contact-eyebrow">Guest support</p>
+                <h1 id="contactTitle">How can we help?</h1>
+                <p>Tell us what you need and we&rsquo;ll make the next step clear&mdash;from reservation changes to table selection.</p>
+            </div>
+            <div class="contact-response-note" aria-label="Typical response time">
+                <span class="contact-response-icon" aria-hidden="true">
+                    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 7v5l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                </span>
+                <span><strong>One business day</strong><small>Typical response time</small></span>
+            </div>
+        </section>
+
+        <div class="contact-layout">
+            <section class="contact-form-card" aria-labelledby="supportFormTitle">
+                <div class="contact-card-heading">
+                    <div>
+                        <p class="contact-eyebrow">Send a request</p>
+                        <h2 id="supportFormTitle">Tell us how we can assist</h2>
                     </div>
+                    <span class="contact-required-note"><span aria-hidden="true">*</span> Required</span>
                 </div>
 
-                <div class="contact-layout">
-                    <section class="profile-panel contact-panel">
-                        <form class="contact-form" id="contactForm" novalidate>
-                            <p class="profile-message contact-success" id="contactSuccess" hidden aria-live="polite"></p>
+                <form class="contact-form" id="contactForm" novalidate>
+                    <div id="contactFormFields">
+                        <div class="contact-field-grid">
+                            <div class="contact-field">
+                                <label for="contactName">Name <span aria-hidden="true">*</span></label>
+                                <input id="contactName" name="name" type="text" autocomplete="name" maxlength="100" aria-describedby="contactNameError" required>
+                                <span class="contact-field-error" id="contactNameError" data-contact-error="name"></span>
+                            </div>
+                            <div class="contact-field">
+                                <label for="contactEmail">Email <span aria-hidden="true">*</span></label>
+                                <input id="contactEmail" name="email" type="email" inputmode="email" autocomplete="email" maxlength="160" aria-describedby="contactEmailError" required>
+                                <span class="contact-field-error" id="contactEmailError" data-contact-error="email"></span>
+                            </div>
+                        </div>
 
-                            <label>
-                                Name
-                                <input type="text" name="name" autocomplete="name" required>
-                                <span class="field-error" data-contact-error="name"></span>
-                            </label>
+                        <div class="contact-field">
+                            <label for="contactTopic">Support topic <span aria-hidden="true">*</span></label>
+                            <select id="contactTopic" name="topic" aria-describedby="contactTopicHint contactTopicError" required>
+                                <option value="">Choose a topic</option>
+                                <option value="Reservation Help">Reservation Help</option>
+                                <option value="Table Selection">Table Selection</option>
+                                <option value="Account">Account</option>
+                                <option value="Cancellation">Cancellation</option>
+                                <option value="Technical Problem">Technical Problem</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <span class="contact-field-hint" id="contactTopicHint">Choosing a topic helps route your request.</span>
+                            <span class="contact-field-error" id="contactTopicError" data-contact-error="topic"></span>
+                        </div>
 
-                            <label>
-                                Email
-                                <input type="email" name="email" autocomplete="email" required>
-                                <span class="field-error" data-contact-error="email"></span>
-                            </label>
+                        <div class="contact-field contact-reservation-field" id="contactReservationField" hidden>
+                            <label for="contactReservationId">Reservation ID <span class="contact-optional">Optional</span></label>
+                            <input id="contactReservationId" name="reservationId" type="text" list="contactReservationOptions" autocomplete="off" maxlength="100" aria-describedby="contactReservationHint contactReservationError">
+                            <datalist id="contactReservationOptions"></datalist>
+                            <span class="contact-field-hint" id="contactReservationHint">Select a saved booking or enter the ID from your confirmation.</span>
+                            <span class="contact-field-error" id="contactReservationError" data-contact-error="reservationId"></span>
+                        </div>
 
-                            <label>
-                                Subject
-                                <input type="text" name="subject" required>
-                                <span class="field-error" data-contact-error="subject"></span>
-                            </label>
+                        <div class="contact-field">
+                            <div class="contact-label-row">
+                                <label for="contactMessage">Message <span aria-hidden="true">*</span></label>
+                                <span id="contactMessageCount" aria-live="polite">0 / 1,500</span>
+                            </div>
+                            <textarea id="contactMessage" name="message" rows="4" minlength="20" maxlength="1500" aria-describedby="contactMessageHint contactMessageError contactMessageCount" required></textarea>
+                            <span class="contact-field-hint" id="contactMessageHint">Include relevant dates or details, but never payment information.</span>
+                            <span class="contact-field-error" id="contactMessageError" data-contact-error="message"></span>
+                        </div>
 
-                            <label>
-                                Message
-                                <textarea name="message" rows="6" required></textarea>
-                                <span class="field-error" data-contact-error="message"></span>
-                            </label>
+                        <div class="contact-submit-row">
+                            <button class="contact-submit" id="contactSubmitButton" type="submit">
+                                <span class="contact-submit-label">Send Support Request</span>
+                                <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m5 12 14-7-4 14-3-6-7-1Zm7 1 7-8"/></svg>
+                            </button>
+                            <p>Your request is recorded securely in this browser for the support team&rsquo;s review.</p>
+                        </div>
+                    </div>
 
-                            <button class="primary-action" type="submit">Send Message</button>
-                        </form>
+                    <section class="contact-success-state" id="contactSuccess" role="status" aria-live="polite" hidden>
+                        <span class="contact-success-icon" aria-hidden="true">
+                            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 12 3 3 7-7m4 4a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                        </span>
+                        <p class="contact-eyebrow">Request recorded</p>
+                        <h3>We have your support request.</h3>
+                        <p>Your support request has been recorded in this browser. Keep this ID for reference:</p>
+                        <strong id="contactSuccessId"></strong>
+                        <div class="contact-success-actions">
+                            <button type="button" id="contactAnotherRequest">Send another request</button>
+                            <a href="mailto:jsarafah@students.haigazian.edu.lb">Email support directly</a>
+                        </div>
                     </section>
 
-                    <aside class="profile-panel contact-info-panel" aria-label="Contact information">
-                        <div>
-                            <p class="eyebrow">Support Email</p>
-                            <strong>jsarafah@students.haigazian.edu.lb</strong>
-                        </div>
-                        <div>
-                            <p class="eyebrow">Phone</p>
-                            <strong>+971 54 563 2108</strong>
-                            <br>
-                            <strong>+961 81 283 646</strong>
-                        </div>
-                        <div>
-                            <p class="eyebrow">Office Hours</p>
-                            <strong>9:00 AM &ndash; 6:00 PM (UTC+04:00)</strong>
-                        </div>
-                    </aside>
+                    <p class="contact-storage-error" id="contactStorageError" role="alert" hidden></p>
+                </form>
+            </section>
+
+            <aside class="contact-support-panel" aria-labelledby="directSupportTitle">
+                <div class="contact-panel-intro">
+                    <p class="contact-eyebrow">Direct support</p>
+                    <h2 id="directSupportTitle">We&rsquo;re here for every detail.</h2>
+                    <p>Prefer to speak with us? Choose the channel that works best for you.</p>
                 </div>
+
+                <address class="contact-methods">
+                    <div class="contact-method">
+                        <span class="contact-method-icon" aria-hidden="true">
+                            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6.5h18v11H3v-11Zm1 1 8 6 8-6"/></svg>
+                        </span>
+                        <div><span>Email</span><a href="mailto:jsarafah@students.haigazian.edu.lb">jsarafah@students.haigazian.edu.lb</a></div>
+                    </div>
+                    <div class="contact-method">
+                        <span class="contact-method-icon" aria-hidden="true">
+                            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M7 3 4 6c0 7.7 6.3 14 14 14l3-3-4-4-2 2c-3-1.3-4.7-3-6-6l2-2-4-4Z"/></svg>
+                        </span>
+                        <div><span>Phone</span><a href="tel:+971545632108">+971 54 563 2108</a><a href="tel:+96181283646">+961 81 283 646</a></div>
+                    </div>
+                    <div class="contact-method">
+                        <span class="contact-method-icon" aria-hidden="true">
+                            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 7v5l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                        </span>
+                        <div><span>Office hours</span><strong>9:00 AM&ndash;6:00 PM</strong><small>Gulf Standard Time (UTC+04:00)</small></div>
+                    </div>
+                    <div class="contact-method">
+                        <span class="contact-method-icon" aria-hidden="true">
+                            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12a7 7 0 1 1 2.1 5H3v-4m9-5v4l3 2"/></svg>
+                        </span>
+                        <div><span>Expected response</span><strong>Within one business day</strong><small>Monday through Friday</small></div>
+                    </div>
+                </address>
+
+                <div class="contact-panel-note">
+                    <svg aria-hidden="true" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3 4 6v5c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-3Zm-3 9 2 2 4-5"/></svg>
+                    <p><strong>Need help with an upcoming reservation?</strong> Include your reservation ID so we can assist faster.</p>
+                </div>
+            </aside>
+        </div>
+
+        <section class="contact-faq" aria-labelledby="contactFaqTitle">
+            <div class="contact-faq-heading">
+                <p class="contact-eyebrow">Quick answers</p>
+                <h2 id="contactFaqTitle">Frequently asked questions</h2>
+            </div>
+            <div class="contact-faq-list">
+                <details>
+                    <summary>Where can I find my reservation ID?<span aria-hidden="true">+</span></summary>
+                    <p>Open My Bookings and choose Manage on the relevant reservation. The ID appears in the reservation details.</p>
+                </details>
+                <details>
+                    <summary>Can I change or cancel a reservation?<span aria-hidden="true">+</span></summary>
+                    <p>Use My Bookings for available self-service options, or choose Reservation Help or Cancellation in this form.</p>
+                </details>
+                <details>
+                    <summary>How do I report a table selection problem?<span aria-hidden="true">+</span></summary>
+                    <p>Choose Table Selection and include the restaurant, date, table, and reservation ID when available.</p>
+                </details>
+                <details>
+                    <summary>Is this request sent by email?<span aria-hidden="true">+</span></summary>
+                    <p>No. This project records support requests in this browser. You can use the direct email link for an email conversation.</p>
+                </details>
             </div>
         </section>
     </main>
 
-    <footer class="footer">
+    <footer class="contact-footer">
         <p>&copy; 2026 Jack&rsquo;s Smart Reservation System. SE Bootcamp Project 1</p>
     </footer>
 
@@ -109,19 +214,11 @@
     <script src="../data/factories/user-factory.js"></script>
     <script src="../data/factories/local-storage-factory.js"></script>
 
-    <!-- Shared helper and the single seeder call site -->
+    <!-- Shared storage helper and the only localStorage seeder -->
     <script src="../scripts/pages/helper.js"></script>
     <script src="../data/seeders/seeders.js"></script>
 
-    <!-- Customer features -->
-    <script src="../scripts/pages/config.js"></script>
-    <script src="../scripts/pages/core.js"></script>
-    <script src="../scripts/pages/discovery.js"></script>
-    <script src="../scripts/pages/account.js"></script>
-    <script src="../scripts/pages/booking-schedule.js"></script>
-    <script src="../scripts/pages/booking-guests.js"></script>
-    <script src="../scripts/pages/booking-selection.js"></script>
-    <script src="../scripts/pages/auth.js"></script>
-    <script src="../scripts/pages/app.js"></script>
+    <script src="../scripts/pages/contact.js"></script>
+    <script src="../scripts/pages/customer-header.js"></script>
 </body>
 </html>

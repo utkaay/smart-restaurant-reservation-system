@@ -1,600 +1,486 @@
-.admin-body {
-    --admin-card-radius: var(--radius-md);
-    --admin-card-padding: 24px;
-    --admin-control-height: 46px;
-    --admin-hover-lift: translateY(-2px);
-    --admin-transition: 220ms ease;
-    --admin-card-shadow: 0 16px 34px rgba(39, 31, 21, 0.07);
-    --admin-card-shadow-hover: 0 20px 42px rgba(39, 31, 21, 0.1);
-
-    min-height: 100vh;
-    overflow-x: hidden;
-    color: var(--color-text);
-    background:
-        linear-gradient(180deg, rgba(255, 253, 248, 0.78), rgba(246, 239, 227, 0) 340px),
-        var(--color-background);
+body.admin-body {
+    --admin-deep: #061912;
+    --admin-deep-soft: #0a2a1e;
+    --admin-green: #07583d;
+    --admin-green-bright: #0b7350;
+    --admin-ivory: #f7f3e9;
+    --admin-surface: #fffdf7;
+    --admin-gold: #d2a64e;
+    --admin-gold-soft: #f1dfb5;
+    --admin-border: #ded6c7;
+    --admin-border-strong: #c9bda9;
+    --admin-text: #17211c;
+    --admin-muted: #687069;
+    --admin-danger: #a83e36;
+    --admin-success: #176543;
+    min-width: 320px;
+    margin: 0;
+    color: var(--admin-text);
+    background: var(--admin-ivory);
+    font-family: var(--font-body, "Inter", "Segoe UI", sans-serif);
 }
 
-.admin-body * {
-    min-width: 0;
+body.admin-body *,
+body.admin-body *::before,
+body.admin-body *::after {
+    box-sizing: border-box;
 }
 
-.admin-body button,
-.admin-body a,
-.admin-body input,
-.admin-body select,
-.admin-body textarea {
-    transition:
-        background-color var(--admin-transition),
-        border-color var(--admin-transition),
-        color var(--admin-transition),
-        box-shadow var(--admin-transition),
-        transform var(--admin-transition),
-        opacity var(--admin-transition);
+body.admin-body button,
+body.admin-body input,
+body.admin-body select,
+body.admin-body textarea {
+    font: inherit;
 }
 
-.admin-body .primary-action:active,
-.admin-body .secondary-action:active,
-.admin-body .danger-action:active,
-.admin-body .quick-action-button:active,
-.admin-body .admin-nav-item:active {
-    transform: translateY(0);
-}
-
-.admin-body input:focus,
-.admin-body select:focus,
-.admin-body textarea:focus,
-.admin-body button:focus-visible,
-.admin-body a:focus-visible {
-    outline: 0;
-    border-color: var(--color-primary);
-    box-shadow: var(--shadow-focus);
+body.admin-body .material-symbols-outlined {
+    font-size: 1.25rem;
+    font-weight: 300;
+    line-height: 1;
+    vertical-align: middle;
 }
 
 .admin-shell {
-    min-height: 100vh;
     display: grid;
-    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-columns: 252px minmax(0, 1fr);
+    min-height: 100vh;
 }
 
 .admin-sidebar {
     position: sticky;
     top: 0;
-    height: 100vh;
+    z-index: 30;
     display: flex;
+    height: 100vh;
+    min-height: 620px;
     flex-direction: column;
-    gap: 28px;
-    border-right: 1px solid var(--color-border);
-    padding: 28px 18px;
-    background: rgba(255, 253, 248, 0.92);
-    box-shadow: 12px 0 34px rgba(39, 31, 21, 0.05);
+    overflow: hidden auto;
+    border-right: 1px solid rgba(210, 166, 78, 0.26);
+    padding: 28px 14px 18px;
+    color: #f8f4e9;
+    background:
+        radial-gradient(circle at 10% 105%, rgba(19, 104, 74, 0.3), transparent 30%),
+        linear-gradient(180deg, #04160f 0%, #06251a 58%, #03130d 100%);
 }
 
 .admin-brand {
-    display: inline-flex;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-heading);
-    color: var(--color-primary-hover);
-    font-size: 1.18rem;
+    display: grid;
+    gap: 5px;
+    margin: 0 14px 32px;
+    color: #fffaf0;
+    text-decoration: none;
+}
+
+.admin-brand-wordmark {
+    font-family: var(--font-heading, Georgia, serif);
+    font-size: 2.15rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.admin-brand-subtitle {
+    color: var(--admin-gold);
+    font-size: 0.69rem;
     font-weight: 700;
-    line-height: 1.2;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
 }
 
 .admin-section-nav {
     display: grid;
-    gap: 8px;
+    gap: 5px;
 }
 
 .admin-nav-item {
-    min-height: var(--admin-control-height);
-    border: 1px solid transparent;
-    border-radius: var(--admin-card-radius);
+    position: relative;
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    width: 100%;
+    min-height: 48px;
+    align-items: center;
+    gap: 11px;
+    border: 0;
+    border-radius: 8px;
     padding: 0 14px;
-    color: var(--color-text-muted);
+    color: rgba(255, 250, 240, 0.76);
     background: transparent;
-    font-weight: 800;
     text-align: left;
     cursor: pointer;
-    transition:
-        background var(--admin-transition),
-        border-color var(--admin-transition),
-        color var(--admin-transition),
-        box-shadow var(--admin-transition),
-        transform var(--admin-transition);
+    transition: color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.admin-nav-item::before {
+    content: "";
+    position: absolute;
+    top: 9px;
+    bottom: 9px;
+    left: -14px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--admin-gold);
+    opacity: 0;
+    transform: scaleY(0.4);
+    transition: opacity 160ms ease, transform 160ms ease;
 }
 
 .admin-nav-item:hover,
-.admin-nav-item:focus-visible,
-.admin-nav-item.is-active {
-    border-color: rgba(203, 169, 106, 0.46);
-    color: var(--color-primary-hover);
-    background: var(--color-accent-soft);
-}
-
-.admin-nav-item:hover {
-    transform: translateX(2px);
-}
-
-.admin-nav-item.is-active {
-    box-shadow: inset 3px 0 0 var(--color-primary);
-}
-
 .admin-nav-item:focus-visible {
-    outline: 0;
-    box-shadow: var(--shadow-focus);
+    color: #fffaf0;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.admin-nav-item.is-active {
+    color: #fffaf0;
+    background: linear-gradient(90deg, rgba(12, 111, 76, 0.88), rgba(7, 78, 54, 0.72));
+}
+
+.admin-nav-item.is-active::before {
+    opacity: 1;
+    transform: scaleY(1);
+}
+
+.admin-nav-item.is-active .material-symbols-outlined {
+    color: var(--admin-gold);
+    font-variation-settings: "FILL" 1;
+}
+
+.admin-nav-count {
+    min-width: 23px;
+    border-radius: 999px;
+    padding: 3px 7px;
+    color: var(--admin-deep);
+    background: var(--admin-gold);
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-align: center;
 }
 
 .admin-sidebar-actions {
     display: grid;
-    gap: 10px;
+    gap: 8px;
+    border-top: 1px solid rgba(210, 166, 78, 0.24);
     margin-top: auto;
-    border-top: 1px solid var(--color-border);
-    padding-top: 16px;
+    padding: 16px 4px 0;
 }
 
-.admin-sidebar-actions .secondary-action,
-.admin-sidebar-actions .primary-action {
+.admin-sidebar-link {
+    display: flex;
     width: 100%;
-    min-height: var(--admin-control-height);
+    min-height: 42px;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    border-radius: 7px;
+    padding: 0 10px;
+    color: rgba(255, 250, 240, 0.78);
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.admin-sidebar-link:hover,
+.admin-sidebar-link:focus-visible {
+    color: #fffaf0;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.admin-identity {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    border-block: 1px solid rgba(255, 255, 255, 0.09);
+    padding: 13px 8px;
+}
+
+.admin-identity-avatar {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border: 1px solid var(--admin-gold);
+    border-radius: 50%;
+    color: var(--admin-gold);
+    background: rgba(255, 255, 255, 0.06);
+    font-family: var(--font-heading, Georgia, serif);
+}
+
+.admin-identity-copy {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.admin-identity-copy strong,
+.admin-identity-copy small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-identity-copy strong {
+    color: #fffaf0;
+    font-size: 0.84rem;
+}
+
+.admin-identity-copy small {
+    color: rgba(255, 250, 240, 0.58);
+    font-size: 0.7rem;
+}
+
+.admin-sidebar-backdrop {
+    display: none;
 }
 
 .admin-content-shell {
     min-width: 0;
 }
 
-.admin-mobile-header {
+.admin-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    min-height: 56px;
+    align-items: center;
+    justify-content: flex-end;
+    border-bottom: 1px solid var(--admin-border);
+    padding: 0 28px;
+    background: rgba(255, 253, 247, 0.94);
+    backdrop-filter: blur(12px);
+}
+
+.admin-menu-button,
+.admin-mobile-brand {
     display: none;
 }
 
+.admin-topbar-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--admin-muted);
+    font-size: 0.75rem;
+}
+
+.admin-topbar-status .material-symbols-outlined {
+    color: var(--admin-green);
+}
+
 .admin-main {
-    width: min(1240px, calc(100% - 48px));
-    margin-inline: auto;
-    padding: 44px 0 72px;
+    width: min(100%, 1660px);
+    margin: 0 auto;
+    padding: 22px 28px 42px;
 }
 
 .admin-page-heading {
     display: flex;
-    align-items: flex-end;
+    align-items: end;
     justify-content: space-between;
     gap: 24px;
-    margin-bottom: 24px;
+    margin-bottom: 18px;
 }
 
 .admin-page-heading h1 {
-    max-width: 760px;
-    margin: 0;
-    font-size: clamp(2.35rem, 5vw, 3.8rem);
+    margin: 2px 0 3px;
+    color: var(--admin-deep);
+    font-family: var(--font-heading, Georgia, serif);
+    font-size: clamp(2rem, 3vw, 2.75rem);
+    font-weight: 500;
+    line-height: 1;
 }
 
 .admin-page-heading p {
-    max-width: 720px;
-    margin: 12px 0 0;
-    color: var(--color-text-muted);
-    font-size: 1.02rem;
-    font-weight: 700;
+    margin: 0;
 }
 
-.admin-view,
-.admin-section,
-.dashboard-grid,
-.admin-panel {
-    min-width: 0;
+.admin-page-kicker {
+    color: var(--admin-green);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+#adminPageSubtitle {
+    color: var(--admin-muted);
+    font-size: 0.86rem;
+}
+
+.admin-page-date {
+    color: var(--admin-muted);
+    font-size: 0.78rem;
+    white-space: nowrap;
 }
 
 .admin-view,
 .admin-section {
+    min-width: 0;
+}
+
+.admin-section {
     display: grid;
-    gap: 18px;
-    animation: adminFadeUp 220ms ease both;
-}
-
-.admin-feedback-message {
-    margin: 0 0 6px;
-    border: 1px solid rgba(35, 106, 78, 0.22);
-    border-radius: var(--admin-card-radius);
-    padding: 13px 16px;
-    color: var(--color-primary-hover);
-    background: var(--color-success-soft);
-    box-shadow: 0 10px 24px rgba(39, 31, 21, 0.06);
-    font-weight: 800;
-    animation: adminFadeUp 220ms ease both;
-}
-
-.admin-feedback-message.error {
-    border-color: rgba(168, 74, 66, 0.28);
-    color: var(--color-danger);
-    background: var(--color-danger-soft);
-}
-
-.dashboard-overview-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 14px;
 }
 
-.overview-card {
+/* Admin login */
+.admin-login-body {
+    overflow: hidden;
+}
+
+.admin-login-shell {
     display: grid;
-    gap: 10px;
-    min-height: 142px;
-    border: 1px solid rgba(201, 181, 150, 0.72);
-    border-radius: var(--admin-card-radius);
-    padding: 20px;
-    background: var(--color-card);
-    box-shadow: var(--shadow-light);
-    transition:
-        border-color var(--admin-transition),
-        box-shadow var(--admin-transition),
-        transform var(--admin-transition);
+    grid-template-columns: minmax(480px, 57%) minmax(420px, 43%);
+    min-height: 100vh;
 }
 
-.overview-card:hover {
-    border-color: var(--color-border-strong);
-    box-shadow: var(--admin-card-shadow-hover);
-    transform: var(--admin-hover-lift);
-}
-
-.overview-card span,
-.reservation-meta {
-    color: var(--color-text-muted);
-    font-size: var(--type-caption);
-    font-weight: 800;
-    text-transform: uppercase;
-}
-
-.overview-card strong {
-    color: var(--color-primary-hover);
-    font-family: var(--font-heading);
-    font-size: 2.3rem;
-    line-height: 1;
-}
-
-.overview-card p {
-    margin: 0;
-    color: var(--color-text-muted);
-    font-weight: 700;
-}
-
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.75fr);
-    gap: 18px;
-    align-items: start;
-}
-
-.admin-panel {
-    display: grid;
-    gap: 18px;
-    border-color: rgba(201, 181, 150, 0.72);
-    border-radius: var(--admin-card-radius);
-    padding: var(--admin-card-padding);
-    box-shadow: var(--shadow-light);
-}
-
-.admin-panel-wide {
-    grid-column: 1 / -1;
-}
-
-.admin-panel h2,
-.admin-panel h3 {
-    margin: 0;
-}
-
-.admin-list,
-.reservation-list,
-.quick-action-list {
-    display: grid;
-    gap: 10px;
-}
-
-.reservation-list-item,
-.admin-list-item {
-    min-width: 0;
-    border: 1px solid var(--color-border);
-    border-radius: var(--admin-card-radius);
-    padding: 14px;
-    background: var(--color-field);
-}
-
-.reservation-list-item {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 12px;
-    align-items: center;
-}
-
-.reservation-list-item strong,
-.admin-list-item strong {
-    display: block;
-    overflow-wrap: anywhere;
-}
-
-.reservation-list-item p {
-    margin: 4px 0 0;
-    color: var(--color-text-muted);
-    font-weight: 700;
-    overflow-wrap: anywhere;
-}
-
-.settings-card .form-heading p:not(.eyebrow) {
-    margin: 0;
-    color: var(--color-text-muted);
-    font-weight: 700;
-}
-
-.settings-tools-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-}
-
-.settings-tool-card,
-.settings-count-card {
-    min-width: 0;
-    border: 1px solid var(--color-border);
-    border-radius: var(--admin-card-radius);
-    padding: 16px;
-    background: var(--color-field);
-}
-
-.settings-tool-card {
+.admin-login-brand-panel {
+    position: relative;
     display: flex;
-    align-items: center;
+    min-height: 100vh;
+    flex-direction: column;
     justify-content: space-between;
-    gap: 16px;
+    overflow: hidden;
+    padding: clamp(34px, 4vw, 64px);
+    color: #fffaf0;
+    background-image:
+        linear-gradient(90deg, rgba(2, 20, 13, 0.96) 0%, rgba(2, 20, 13, 0.75) 55%, rgba(2, 20, 13, 0.56) 100%),
+        linear-gradient(180deg, rgba(2, 18, 12, 0.12), rgba(2, 18, 12, 0.88)),
+        url("../assets/home/curated-date-night.png");
+    background-position: center;
+    background-size: cover;
 }
 
-.settings-tool-card h3,
-.settings-tool-card p {
-    margin: 0;
+.admin-login-brand-panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent 60%, rgba(2, 18, 12, 0.48));
 }
 
-.settings-tool-card p {
-    margin-top: 5px;
-    color: var(--color-text-muted);
-    font-weight: 700;
+.admin-login-brand,
+.admin-login-brand-copy,
+.admin-login-live-summary {
+    position: relative;
+    z-index: 1;
 }
 
-.settings-count-grid {
+.admin-login-brand {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 12px;
-}
-
-.settings-count-card {
-    display: grid;
-    gap: 8px;
-}
-
-.settings-count-card span {
-    color: var(--color-text-muted);
-    font-size: var(--type-caption);
-    font-weight: 900;
-    text-transform: uppercase;
-}
-
-.settings-count-card strong {
-    color: var(--color-primary-hover);
-    font-family: var(--font-heading);
-    font-size: 2rem;
-    line-height: 1;
-}
-
-.reservation-controls-grid {
-    display: grid;
-    grid-template-columns: minmax(220px, 1.4fr) repeat(4, minmax(150px, 1fr));
-    gap: 14px;
-    align-items: end;
-}
-
-.reservation-controls-grid label,
-.reservation-card-actions label {
-    display: grid;
-    gap: 8px;
-    color: var(--color-text);
-    font-size: 0.88rem;
-    font-weight: 800;
-}
-
-.reservation-controls-grid input,
-.reservation-controls-grid select,
-.reservation-card-actions select {
-    width: 100%;
-    min-height: var(--admin-control-height);
-    border: 1px solid var(--color-border);
-    border-radius: var(--admin-card-radius);
-    padding: 0 12px;
-    color: var(--color-text);
-    background: var(--color-field);
-    outline: 0;
-}
-
-.reservation-controls-grid input:focus,
-.reservation-controls-grid select:focus,
-.reservation-card-actions select:focus {
-    border-color: var(--color-primary);
-    box-shadow: var(--shadow-focus);
-}
-
-.reservation-management-list {
-    display: grid;
-    gap: 12px;
-}
-
-.reservation-management-card {
-    display: grid;
-    gap: 14px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--admin-card-radius);
-    padding: 16px;
-    background: var(--color-field);
-    transition:
-        border-color var(--admin-transition),
-        box-shadow var(--admin-transition),
-        transform var(--admin-transition);
-}
-
-.reservation-management-card:hover {
-    border-color: var(--color-border-strong);
-    box-shadow: var(--admin-card-shadow-hover);
-    transform: var(--admin-hover-lift);
-}
-
-.reservation-card-main {
-    display: grid;
-    grid-template-columns: minmax(180px, 1.2fr) minmax(180px, 1.2fr) repeat(4, minmax(110px, 0.7fr));
-    gap: 12px;
-    align-items: start;
-}
-
-.reservation-card-main div {
-    min-width: 0;
-}
-
-.reservation-card-main span,
-.reservation-detail-list span {
-    display: block;
-    color: var(--color-text-muted);
-    font-size: var(--type-caption);
-    font-weight: 800;
-}
-
-.reservation-card-main strong,
-.reservation-detail-list strong {
-    display: block;
-    overflow-wrap: anywhere;
-}
-
-.reservation-card-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: end;
-    justify-content: flex-end;
-    gap: 10px;
-}
-
-.reservation-status-badge {
-    display: inline-flex;
-    align-items: center;
-    min-height: 34px;
-    border-radius: var(--radius-pill);
-    padding: 8px 12px;
-    color: var(--color-text-muted);
-    background: var(--color-background-secondary);
-    font-size: var(--type-caption);
-    font-weight: 900;
-    text-transform: uppercase;
-}
-
-.reservation-status-badge.status-active,
-.reservation-status-badge.status-confirmed {
-    color: var(--color-primary-hover);
-    background: var(--color-success-soft);
-}
-
-.reservation-status-badge.status-completed {
-    color: var(--color-warning);
-    background: var(--color-warning-soft);
-}
-
-.reservation-status-badge.status-cancelled {
-    color: var(--color-danger);
-    background: var(--color-danger-soft);
-}
-
-.reservation-details-panel {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-    border-top: 1px solid var(--color-border);
-    padding-top: 14px;
-}
-
-.reservation-details-panel section {
-    display: grid;
-    gap: 10px;
-    min-width: 0;
-    border: 1px solid rgba(201, 181, 150, 0.62);
-    border-radius: var(--admin-card-radius);
-    padding: 14px;
-    background: var(--color-card);
-}
-
-.reservation-details-panel h3 {
-    margin: 0;
-    font-size: 1.18rem;
-}
-
-.reservation-detail-list {
-    display: grid;
-    gap: 8px;
-}
-
-.reservation-detail-list div {
-    min-width: 0;
-    border-top: 1px solid var(--color-border);
-    padding-top: 8px;
-}
-
-.reservation-detail-list div:first-child {
-    border-top: 0;
-    padding-top: 0;
-}
-
-.table-controls-grid {
-    display: grid;
-    grid-template-columns: minmax(220px, 1.4fr) repeat(2, minmax(160px, 0.8fr));
-    gap: 14px;
-    align-items: end;
-}
-
-.table-controls-grid label {
-    display: grid;
-    gap: 8px;
-    color: var(--color-text);
-    font-size: 0.88rem;
-    font-weight: 800;
-}
-
-.table-controls-grid select,
-.table-controls-grid input {
-    width: 100%;
-    min-height: var(--admin-control-height);
-    border: 1px solid var(--color-border);
-    border-radius: var(--admin-card-radius);
-    padding: 0 12px;
-    color: var(--color-text);
-    background: var(--color-field);
-    outline: 0;
-}
-
-.table-controls-grid select:focus,
-.table-controls-grid input:focus {
-    border-color: var(--color-primary);
-    box-shadow: var(--shadow-focus);
-}
-
-.table-legend-panel {
-    padding: 16px 20px;
-}
-
-.table-legend-panel .table-status-legend {
-    margin: 0;
-}
-
-.table-legend-panel .table-status-legend span {
-    display: inline-flex;
-    align-items: center;
     gap: 7px;
 }
 
-.table-group-header {
-    display: flex;
-    align-items: end;
-    justify-content: space-between;
-    gap: 14px;
+.admin-login-brand-copy {
+    max-width: 650px;
 }
 
-.table-layout-editor {
+.admin-login-brand-copy .eyebrow {
+    margin: 0 0 13px;
+    color: var(--admin-gold);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.admin-login-brand-copy h1 {
+    margin: 0;
+    color: #fffaf0;
+    font-family: var(--font-heading, Georgia, serif);
+    font-size: clamp(3.2rem, 5.2vw, 5rem);
+    font-weight: 400;
+    line-height: 0.98;
+}
+
+.admin-login-brand-copy > p:last-child {
+    max-width: 560px;
+    margin: 22px 0 0;
+    color: rgba(255, 250, 240, 0.78);
+    font-size: 0.95rem;
+    line-height: 1.55;
+}
+
+.admin-login-live-summary {
     display: grid;
-    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid rgba(210, 166, 78, 0.52);
+    padding-top: 18px;
+}
+
+.admin-login-live-summary > div {
+    display: grid;
+    gap: 3px;
+    border-right: 1px solid rgba(210, 166, 78, 0.32);
+    padding: 0 24px;
+    text-align: center;
+}
+
+.admin-login-live-summary > div:first-child {
+    padding-left: 0;
+}
+
+.admin-login-live-summary > div:last-child {
+    border-right: 0;
+    padding-right: 0;
+}
+
+.admin-login-live-summary strong {
+    color: var(--admin-gold);
+    font-family: var(--font-heading, Georgia, serif);
+    font-size: 2rem;
+    font-weight: 400;
+}
+
+.admin-login-live-summary span {
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.admin-login-form-panel {
+    display: grid;
+    min-height: 100vh;
+    place-items: center;
+    overflow-y: auto;
+    padding: 34px clamp(34px, 6vw, 86px);
+    background: var(--admin-ivory);
+}
+
+.admin-login-card {
+    width: min(100%, 520px);
+}
+
+.admin-login-heading .eyebrow {
+    margin: 0 0 14px;
+    color: var(--admin-green);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.admin-login-heading h2 {
+    margin: 0;
+    color: var(--admin-deep);
+    font-family: var(--font-heading, Georgia, serif);
+    font-size: clamp(2.65rem, 4vw, 4rem);
+    font-weight: 400;
+    line-height: 1;
+}
+
+.admin-login-heading > p:last-child {
+    margin: 14px 0 0;
+    color: var(--admin-muted);
+    line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-nav-item,
+    .admin-nav-item::before {
+        transition: none;
+    }
 }

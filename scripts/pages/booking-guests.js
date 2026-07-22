@@ -9,7 +9,7 @@ function getSeatId(tableId, seatIndex) {
 }
 
 function getRequiredSeatCount() {
-    return 1 + getAcceptedInvitedGuestCount();
+    return Math.max(normalizeBookingPartySize(bookingState.partySize), 1 + getAcceptedInvitedGuestCount());
 }
 
 function getValidSelectedSeatIds(table = getSelectedBookingTable()) {
@@ -393,11 +393,11 @@ function getRestaurantMenu(restaurantId = bookingState.restaurantId) {
         return Number(id) === Number(restaurantId);
     });
 
-    return restaurant?.menu || [];
+    return Array.isArray(restaurant?.menu) ? restaurant.menu : [];
 }
 
 function updatePreOrderItem(itemId, quantity) {
-    const safeQuantity = Math.max(0, Math.floor(Number(quantity) || 0));
+    const safeQuantity = Math.min(20, Math.max(0, Math.floor(Number(quantity) || 0)));
     const nextPreOrderItems = { ...bookingState.preOrderItems };
 
     if (safeQuantity === 0) {
@@ -476,6 +476,7 @@ function renderPreOrder() {
                                     <input
                                         type="number"
                                         min="0"
+                                        max="20"
                                         step="1"
                                         value="${quantity}"
                                         data-pre-order-item-id="${id}"

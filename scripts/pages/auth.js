@@ -348,7 +348,7 @@ function continueAfterAuth() {
         const restaurantId = pendingAction.restaurantId;
 
         clearPendingAction();
-        startBooking(Number(restaurantId));
+        startBooking(Number(restaurantId), pendingAction);
         return;
     }
 
