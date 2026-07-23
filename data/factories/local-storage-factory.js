@@ -1,5 +1,6 @@
 const DEFAULT_CONTACT_MESSAGES = [];
 const DEFAULT_SUPPORT_REQUESTS = [];
+const DEFAULT_FAVORITE_RESTAURANT_IDS = [];
 
 const LOCAL_STORAGE_FACTORY = {
     restaurants: DEFAULT_RESTAURANTS,
@@ -8,5 +9,6 @@ const LOCAL_STORAGE_FACTORY = {
     waitlist: DEFAULT_WAITLIST,
     users: DEFAULT_USERS,
     contactMessages: DEFAULT_CONTACT_MESSAGES,
-    jacksSupportRequests: DEFAULT_SUPPORT_REQUESTS
+    jacksSupportRequests: DEFAULT_SUPPORT_REQUESTS,
+    favoriteRestaurantIds: DEFAULT_FAVORITE_RESTAURANT_IDS
 };
