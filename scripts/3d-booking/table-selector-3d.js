@@ -16,29 +16,15 @@ const HOME_TARGET = new THREE.Vector3(0, 0.15, 0.1);
 let activeInstance = null;
 let webGLSupportCache;
 
-function createWebGLContext() {
-    try {
-        const canvas = document.createElement("canvas");
-        return (
-            canvas.getContext("webgl2", { failIfMajorPerformanceCaveat: true }) ||
-            canvas.getContext("webgl", { failIfMajorPerformanceCaveat: true })
-        );
-    } catch (error) {
-        return null;
-    }
-}
-
 export function isBookingTableSelector3DSupported() {
     if (webGLSupportCache !== undefined) {
         return webGLSupportCache;
     }
 
-    const context =
-        typeof window !== "undefined" && typeof window.WebGLRenderingContext !== "undefined"
-            ? createWebGLContext()
-            : null;
-    webGLSupportCache = Boolean(context);
-    context?.getExtension("WEBGL_lose_context")?.loseContext();
+    webGLSupportCache =
+        typeof window !== "undefined" &&
+        (typeof window.WebGL2RenderingContext !== "undefined" ||
+            typeof window.WebGLRenderingContext !== "undefined");
     return webGLSupportCache;
 }
 
@@ -49,9 +35,19 @@ function createInstance(options) {
     scene.fog = new THREE.Fog(0x2b2440, 28, 52);
 
     const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 60);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        failIfMajorPerformanceCaveat: false,
+        powerPreference: "default"
+    });
+    const webGLContext = renderer.getContext();
+    const rendererInfoExtension = webGLContext.getExtension("WEBGL_debug_renderer_info");
+    const rendererName = rendererInfoExtension
+        ? webGLContext.getParameter(rendererInfoExtension.UNMASKED_RENDERER_WEBGL)
+        : webGLContext.getParameter(webGLContext.RENDERER);
+    const usesSoftwareRenderer = /swiftshader|warp|software/i.test(String(rendererName || ""));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = !usesSoftwareRenderer;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.domElement.className = "booking-table-3d-canvas";
     renderer.domElement.setAttribute("role", "img");
@@ -103,7 +99,13 @@ function createInstance(options) {
         sceneAnimationFrame: 0,
         lastSceneAnimationTime: 0,
         sceneAnimationStartedAt: 0,
-        reducedMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || false,
+        maxPixelRatio: usesSoftwareRenderer ? 1 : 1.5,
+        reducedMotion:
+            usesSoftwareRenderer ||
+            window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ||
+            false,
+        contextLost: false,
+        contextRecoveryTimer: 0,
         disposed: false,
         listeners: []
     };
@@ -718,8 +720,30 @@ function attachInteractions(instance) {
 
     function onContextLost(event) {
         event.preventDefault();
-        instance.onFailure?.();
-        destroyBookingTableSelector3D();
+        instance.contextLost = true;
+        cancelAnimationFrame(instance.cameraAnimationFrame);
+        cancelAnimationFrame(instance.sceneAnimationFrame);
+        instance.cameraAnimationFrame = 0;
+        instance.sceneAnimationFrame = 0;
+        clearTimeout(instance.contextRecoveryTimer);
+        instance.contextRecoveryTimer = window.setTimeout(function () {
+            if (!instance.disposed && instance.contextLost) {
+                instance.onFailure?.();
+                destroyBookingTableSelector3D();
+            }
+        }, 5000);
+    }
+
+    function onContextRestored() {
+        if (instance.disposed) {
+            return;
+        }
+        instance.contextLost = false;
+        clearTimeout(instance.contextRecoveryTimer);
+        instance.contextRecoveryTimer = 0;
+        applyVisualState(instance);
+        resize(instance);
+        startSceneAnimation(instance);
     }
 
     canvas.addEventListener("pointerdown", onPointerDown);
@@ -731,6 +755,7 @@ function attachInteractions(instance) {
     canvas.addEventListener("wheel", onWheel, { passive: false });
     canvas.addEventListener("keydown", onKeyDown);
     canvas.addEventListener("webglcontextlost", onContextLost);
+    canvas.addEventListener("webglcontextrestored", onContextRestored);
     instance.returnButton?.addEventListener("click", onReturn);
     instance.resetButton?.addEventListener("click", onReturn);
     instance.zoomInButton?.addEventListener("click", onZoomIn);
@@ -760,7 +785,8 @@ function attachInteractions(instance) {
         [canvas, "click", onClick],
         [canvas, "wheel", onWheel],
         [canvas, "keydown", onKeyDown],
-        [canvas, "webglcontextlost", onContextLost]
+        [canvas, "webglcontextlost", onContextLost],
+        [canvas, "webglcontextrestored", onContextRestored]
     );
     if (instance.returnButton) {
         instance.listeners.push([instance.returnButton, "click", onReturn]);
@@ -780,7 +806,9 @@ function resize(instance) {
     const width = Math.max(1, instance.container.clientWidth);
     const height = Math.max(1, instance.container.clientHeight);
     const isMobile = width < 680;
-    instance.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.5));
+    instance.renderer.setPixelRatio(
+        Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : instance.maxPixelRatio)
+    );
     instance.renderer.setSize(width, height, false);
     instance.camera.aspect = width / height;
     instance.camera.updateProjectionMatrix();
@@ -879,6 +907,7 @@ export function destroyBookingTableSelector3D() {
     instance.disposed = true;
     cancelAnimationFrame(instance.cameraAnimationFrame);
     cancelAnimationFrame(instance.sceneAnimationFrame);
+    clearTimeout(instance.contextRecoveryTimer);
     instance.resizeObserver?.disconnect();
     instance.listeners.forEach(function ([target, type, handler]) {
         return target.removeEventListener(type, handler);

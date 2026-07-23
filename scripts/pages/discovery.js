@@ -76,6 +76,42 @@ let discoveryFacetFilters = {
     dietary: ["Rooftop", "Family Friendly"].includes(activeFilter) ? activeFilter : "All"
 };
 
+let discoveryFavoritesOnly = false;
+
+function getFavoriteRestaurantIds() {
+    const savedIds = getFromStorage(storageKeys.favoriteRestaurantIds);
+
+    if (!Array.isArray(savedIds)) {
+        return [];
+    }
+
+    return [...new Set(savedIds
+        .map(function (restaurantId) {
+            return Number(restaurantId);
+        })
+        .filter(function (restaurantId) {
+            return Number.isInteger(restaurantId) && restaurantId > 0;
+        }))];
+}
+
+function isRestaurantFavorite(restaurantId) {
+    return getFavoriteRestaurantIds().includes(Number(restaurantId));
+}
+
+function toggleFavoriteRestaurant(restaurantId) {
+    const normalizedRestaurantId = Number(restaurantId);
+    const favoriteRestaurantIds = getFavoriteRestaurantIds();
+    const isFavorite = favoriteRestaurantIds.includes(normalizedRestaurantId);
+    const nextFavoriteRestaurantIds = isFavorite
+        ? favoriteRestaurantIds.filter(function (favoriteRestaurantId) {
+            return favoriteRestaurantId !== normalizedRestaurantId;
+        })
+        : [...favoriteRestaurantIds, normalizedRestaurantId];
+
+    saveToStorage(storageKeys.favoriteRestaurantIds, nextFavoriteRestaurantIds);
+    return !isFavorite;
+}
+
 const discoveryPlanDefaults = Object.freeze({
     datePreset: "tonight",
     date: "",
@@ -132,8 +168,9 @@ function filterRestaurants() {
         const matchesDietary =
             discoveryFacetFilters.dietary === "All" ||
             searchableText.includes(discoveryFacetFilters.dietary.toLowerCase());
+        const matchesFavorites = !discoveryFavoritesOnly || isRestaurantFavorite(restaurant.id);
 
-        return matchesSearch && matchesCuisine && matchesLocation && matchesPrice && matchesRating && matchesDietary;
+        return matchesSearch && matchesCuisine && matchesLocation && matchesPrice && matchesRating && matchesDietary && matchesFavorites;
         })
         .map(function (restaurant, originalIndex) {
             return {
@@ -150,28 +187,10 @@ function filterRestaurants() {
         });
 }
 
-function getRestaurantMatchPercentage(restaurant) {
-    return Math.min(99, Math.max(80, Math.round(Number(restaurant.rating || 4) * 20)));
-}
-
-function getRestaurantAvailabilityTimes(restaurant, index) {
-    const timeSets = [
-        ["7:00", "7:30", "8:15"],
-        ["7:15", "8:00"],
-        ["7:30", "8:30"],
-        ["7:00", "7:45", "8:30"],
-        ["7:15", "8:15"],
-        ["7:30", "9:00"]
-    ];
-
-    return timeSets[index % timeSets.length];
-}
-
 function createRestaurantCard(restaurant, index) {
     const { id, name, cuisine, rating, hours, priceLevel, location, image } = restaurant;
-    const matchPercentage = getRestaurantMatchPercentage(restaurant);
-    const availabilityTimes = getRestaurantAvailabilityTimes(restaurant, index);
     const safeName = escapeHTML(name);
+    const isFavorite = isRestaurantFavorite(id);
 
     return `
         <article class="restaurant-card ${index === 0 ? "is-featured" : ""}">
@@ -182,15 +201,12 @@ function createRestaurantCard(restaurant, index) {
                     alt="Dining room at ${safeName}"
                     loading="${index < 3 ? "eager" : "lazy"}"
                 >
-                <span class="discovery-match-badge">
-                    <span class="material-symbols-outlined" aria-hidden="true">auto_awesome</span>
-                    ${matchPercentage}% match
-                </span>
                 <button
-                    class="discovery-favorite-button"
+                    class="discovery-favorite-button ${isFavorite ? "is-saved" : ""}"
                     type="button"
-                    aria-label="Save ${safeName}"
-                    aria-pressed="false"
+                    data-restaurant-id="${id}"
+                    aria-label="${isFavorite ? "Remove" : "Add"} ${safeName} ${isFavorite ? "from" : "to"} favorites"
+                    aria-pressed="${String(isFavorite)}"
                 >
                     <span class="material-symbols-outlined" aria-hidden="true">favorite</span>
                 </button>
@@ -212,17 +228,6 @@ function createRestaurantCard(restaurant, index) {
                 </p>
 
                 ${createRestaurantBadgeSections(restaurant)}
-
-                <div class="discovery-availability">
-                    <span class="discovery-availability-label">Available</span>
-                    <div class="discovery-time-slots" aria-label="Available times at ${safeName}">
-                        ${availabilityTimes
-                            .map(function (time) {
-                                return `<button type="button" class="discovery-time-slot" data-time="${time}">${time}</button>`;
-                            })
-                            .join("")}
-                    </div>
-                </div>
 
                 <div class="discovery-card-actions">
                     <button
@@ -335,7 +340,18 @@ function renderFilters() {
         }
     ];
 
-    filterPills.innerHTML = filterControls.map(createDiscoveryFilterControl).join("");
+    filterPills.innerHTML = `
+        ${filterControls.map(createDiscoveryFilterControl).join("")}
+        <button
+            class="home-discovery-favorites-filter ${discoveryFavoritesOnly ? "is-active" : ""}"
+            type="button"
+            data-discovery-favorites
+            aria-pressed="${String(discoveryFavoritesOnly)}"
+        >
+            <span class="material-symbols-outlined home-discovery-filter-icon" aria-hidden="true">favorite</span>
+            <span>Favorites</span>
+        </button>
+    `;
 }
 
 function updateRestaurantResults() {

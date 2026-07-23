@@ -66,5 +66,6 @@ const storageKeys = {
     waitlist: "waitlist",
     restaurants: "restaurants",
     priceTiers: "priceTiers",
-    contactMessages: "contactMessages"
+    contactMessages: "contactMessages",
+    favoriteRestaurantIds: "favoriteRestaurantIds"
 };
